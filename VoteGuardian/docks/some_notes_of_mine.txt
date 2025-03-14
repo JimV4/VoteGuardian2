@@ -1,0 +1,11 @@
+O proof server είναι locally. Αυτός φτιάχνει τα proofs τα οποία στέλνονται on-chain. Δεν δημιουργεί κάποιο connection, απλώς στέλνει τα proofs 
+στο network
+
+
+Remember, anyone who uses this bulletin board will be required to abide by its rules, but they must do the work of proving they satisfied the contract. When they make changes to the bulletin board, they submit proofs that they followed the rules, and observers can quickly verify their proofs. Such proofs, which observers can verify without access to the data that enabled the proof construction, are called zero-knowledge proofs, and they are implemented using mathematical circuits.
+
+These ideas are not at all new; some of the important papers about zero-knowledge proofs were published in the 1980s. The more recent developments are advances in the way such proofs can be generated and verified automatically, without human intervention, and the way they can be combined with public blockchains.
+
+
+Ο organizer θα έχει μια λίστα από eligible_voters οπου θα κρατάει τα hashes των secret_keys των φοιτητών. Ο κάθε
+φοιτητής θα έχει ως secret key μια τιμή που το hash της θα είναι εντός της λίστας eligible_voters

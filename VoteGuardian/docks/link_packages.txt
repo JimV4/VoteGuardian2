@@ -1,0 +1,12 @@
+cd contract
+npm link
+cd ../api
+npm link @midnight-ntwrk/vote-guardian-contract
+
+
+
+
+cd contract
+npm link
+cd ../cli
+npm link @midnight-ntwrk/vote-guardian-contract

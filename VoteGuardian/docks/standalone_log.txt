@@ -1,0 +1,56 @@
+Έχω κάνει αλλαγή στο package.json όπου πλέον τρέχω μόνο το standalone.js. Πριν έχω τρέξει docker compose -f standalone.yml up -d για να τρέξουν
+οι containers και έχω κάνει manually στο config.ts του standalone map τα host ports
+
+
+contract address: 0200a3ffef2883076ca4c969972a0b3d16f52e0474cd2667f804dfb06680899c138d
+organizer secret key: 20b6e742b5caefd90b1ed60377f17d4179e6d78c4bc74768761750412a1be47b
+
+username: "a", password: "test", secretKey: "a321167dcb98e8a106f0bc55f9f196d8e29058d183c1f4487e7f78ff0d85fcec"
+                                 publicKey: "bce09f0809506b45d05d8c67b89f9721c7fff98a3ac584ed045dffca9aececd9"
+
+Ο a, έγινε add_voter, ψήφισε κανονικά. Δοκίμασε να ξαναψηφίσει και ΣΩΣΤΑ έβγαλε μήνυμα λάθους
+ότι You have already voted!
+
+--------------------------------------------------------------------------------------------------------------------
+
+username: "b", password: "test", secretKey: "79b6f351cec49112e11d33d92eeeb6b42fd5319e477bb62f49a8cfc5f086b491"
+                                 publicKey: "d0bf680df091fbf025d1918cb7c3841f3e5f12ef4649ba7a5ea0ef89a689d4ee"
+
+O b, έγινε add_voter , ψήφισε κανονικά Δοκίμασε να ξαναψηφίσει και ΣΩΣΤΑ έβγαλε μήνυμα λάθους
+ότι You have already voted! Δοκίμασε να κάνει add_voter και ΣΩΣΤΑ έβγαλε μήνυμα λάθους 
+You are not authorized to add a voter!
+
+--------------------------------------------------------------------------------------------------------------------
+username: "c", password: "test", secretKey: "35b8c507e3e8658f1f038651542bfa77f96c46d728814618da39e9d25550794a"
+                                 publicKey: "130d6c5c8f0651f8c134852a62e8bbee9cb1b0ffc3b734538747ac16bd20062a"
+
+O c, έγινε add_voter , ψήφισε κανονικά. Δοκίμασε να ξαναψηφίσει και ΣΩΣΤΑ έβγαλε μήνυμα λάθους
+ότι You have already voted! Δοκίμασε να κάνει add_voter και ΣΩΣΤΑ έβγαλε μήνυμα λάθους 
+You are not authorized to add a voter!
+
+----------------------------------------------------------------------------
+username: "d", password: "test", secretKey: "a505bf9f347bce516a05111df63f3afd0cc4fa4361ee9a706bc7d417535935f5"
+                                 publicKey: "068ba8fd0bc622311a99a187f9526c934ff8033527bd3e98aeb069741a5b14db"
+
+O d, έγινε add_voter , ψήφισε κανονικά. Δοκίμασε να κάνει add_voter και του έβγαλε λάθος όπως έπρεπε.
+
+----------------------------------------------------------------------------
+username: "e", password: "test", secretKey: "ed65addddf19d3ef91a104eae95d63511672bdc0a5cd4d1e4595d26e666ddccc"
+                                 publicKey: "0caf695bd3a5b031ba3fbb95b3d21205e56e93f968eb769ab888ae46bbed964c"
+
+O e, έγινε add_voter , ψήφισε κανονικά.
+
+----------------------------------------------------------------------------
+username: "f", password: "test", secretKey: "9f542cb79c51e978c068058607c706ba987c2b5474b11afae1d564211dac1dea"
+                                 publicKey: "cbc072b9042ada0be7a0940a08b4fea0ba3d65e7bf43a34ad7c91c220bf46eb1"
+
+O f, έγινε add_voter  , ψήφισε κανονικά.
+
+----------------------------------------------------------------------------
+username: "g", password: "test", secretKey: "91610125ffff7b6da6c952c52c136e91235951644d1b5b9edfa85ca6dff1f482"
+                                 publicKey: "974ecdc48e46699748bff29637cbd020fb455df5f3b35a91ad1f8dd5a84b9a1d"
+
+O f, έγινε add_voter. Δοκίμασε να βάλει invalid option και σωστά δεν υπήρχε. Ψήφισε μετά κανονικά.
+
+
+Δουλεύει όπως περιμένουμε στο local network για 7 voters-- 18/02/2025
