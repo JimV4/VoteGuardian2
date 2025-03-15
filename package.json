@@ -30,6 +30,7 @@
     "@midnight-ntwrk/midnight-js-utils": "0.2.5",
     "@midnight-ntwrk/wallet": "^3.6.3",
     "@midnight-ntwrk/wallet-api": "^3.4.2",
+    "axios": "^1.8.3",
     "express": "^4.21.2",
     "fp-ts": "^2.16.1",
     "io-ts": "^2.2.20",

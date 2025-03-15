@@ -41,6 +41,7 @@ import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-pri
 import { type ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import { toHex } from '@midnight-ntwrk/midnight-js-utils';
 import { getLedgerNetworkId, getZswapNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
+import axios from 'axios';
 
 // @ts-expect-error: It's needed to make Scala.js and WASM code able to use cryptography
 globalThis.crypto = webcrypto;
@@ -221,6 +222,7 @@ const displayPrivateState = async (providers: VoteGuardianProviders, logger: Log
 
 const MAIN_LOOP_QUESTION = `
 You can do one of the following:
+  9. Verify Identity
   0. Create a voting
   1. Cast a vote
   2. Add a voter
@@ -255,6 +257,25 @@ const mainLoop = async (providers: VoteGuardianProviders, rli: Interface, logger
       await displayQuestionsAndOptions(providers, VoteGuardianApi.deployedContract, logger);
       const choice = await rli.question(MAIN_LOOP_QUESTION);
       switch (choice) {
+        case '9': {
+          const username = await rli.question('Enter username: ');
+          const password = await rli.question('Enter password: ');
+          try {
+            const response = await axios.post('http://localhost:3000/login', {
+              username,
+              password,
+            });
+
+            const signature = response.data.signature;
+            const credential = response.data.credential;
+            console.log('Signature:', signature);
+
+            return signature; // You can use this variable later
+          } catch (error) {
+            console.error('Error:', error);
+          }
+        }
+
         case '0': {
           const question = await rli.question(`What is the question? `);
           await VoteGuardianApi.create_voting(question);
