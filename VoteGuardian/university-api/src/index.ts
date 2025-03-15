@@ -80,13 +80,14 @@ app.post('/login', async (req, res) => {
     if (user) {
       const subject = { username, password };
       const signature: Signature = generateSignature(fromRawSubject(subject), pad('0x123', 32));
-      const credentialBytes = new Uint8Array(32);
-      crypto.getRandomValues(credentialBytes);
-      const credentialHex = toHex(credentialBytes);
+      const msg = Buffer.from(hashSubject(subject), 'hex');
+      // const credentialBytes = new Uint8Array(32);
+      // crypto.getRandomValues(credentialBytes);
+      // const credentialHex = toHex(credentialBytes);
       res
         .status(200)
         .end(
-          JSON.stringify({ message: 'User found', signature, credentialHex }, (_, value) =>
+          JSON.stringify({ message: 'User found', signature, msg }, (_, value) =>
             typeof value === 'bigint' ? value.toString() : value,
           ),
         );
