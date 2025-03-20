@@ -5,6 +5,7 @@
 
 import { Ledger, Maybe, ledger } from './managed/vote-guardian/contract/index.cjs';
 import { MerkleTreePath, WitnessContext } from '@midnight-ntwrk/compact-runtime';
+import { type SignedCredentialSubject } from '@midnight-ntwrk/university-contract';
 
 /* **********************************************************************
  * The only hidden state needed by the VoteGuardian contract is
@@ -16,14 +17,12 @@ import { MerkleTreePath, WitnessContext } from '@midnight-ntwrk/compact-runtime'
  */
 
 export type VoteGuardianPrivateState = {
-  readonly secretKey: Uint8Array;
-  voterPublicKeyPath: MerkleTreePath<Uint8Array>;
+  readonly localSignedCredential?: SignedCredentialSubject;
 };
 
 // φτιάχνει objects τύπου VoteGuardianPrivateState
-export const createVoteGuardianPrivateState = (secretKey: Uint8Array, voterPublicKeyPath: MerkleTreePath<Uint8Array>) => ({
-  secretKey,
-  voterPublicKeyPath,
+export const createVoteGuardianPrivateState = () => ({
+  localSignedCredential: undefined,
 });
 
 /* **********************************************************************
@@ -61,19 +60,19 @@ export const witnesses = {
   // και το νέο secret key του poster
   // εδώ το Ledger προέρχεται από το index.d.cts που παράγει ο compiler και το VoteGuardianPrivateState προέρχεται από πάνω
   // το local_secret_key ΔΕΝ αλλάζει το private state
-  local_secret_key: ({
+  local_signed_credential: ({
     privateState,
     ledger,
-  }: WitnessContext<Ledger, VoteGuardianPrivateState>): [VoteGuardianPrivateState, Uint8Array] => [
+  }: WitnessContext<Ledger, VoteGuardianPrivateState>): [VoteGuardianPrivateState, SignedCredentialSubject] => [
     privateState,
-    privateState.secretKey,
+    privateState.localSignedCredential,
   ],
 
-  find_voter_public_key: (
-    { privateState, ledger }: WitnessContext<Ledger, VoteGuardianPrivateState>,
-    item: Uint8Array,
-  ): [VoteGuardianPrivateState, MerkleTreePath<Uint8Array>] => [
-    createVoteGuardianPrivateState(privateState.secretKey, ledger.eligibleVoters.findPathForLeaf(item)!),
-    ledger.eligibleVoters.findPathForLeaf(item)!,
-  ],
+  // find_voter_public_key: (
+  //   { privateState, ledger }: WitnessContext<Ledger, VoteGuardianPrivateState>,
+  //   item: Uint8Array,
+  // ): [VoteGuardianPrivateState, MerkleTreePath<Uint8Array>] => [
+  //   createVoteGuardianPrivateState(privateState.secretKey, ledger.eligibleVoters.findPathForLeaf(item)!),
+  //   ledger.eligibleVoters.findPathForLeaf(item)!,
+  // ],
 };

@@ -8,6 +8,7 @@
 
 import { type ContractAddress, convert_bigint_to_Uint8Array } from '@midnight-ntwrk/compact-runtime';
 import { type Logger } from 'pino';
+import { type Signature } from '@midnight-ntwrk/university-contract';
 import type {
   VoteGuardianDerivedState,
   VoteGuardianContract,
@@ -27,6 +28,7 @@ import * as utils from './utils/index.js';
 import { deployContract, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { combineLatest, map, tap, from, type Observable } from 'rxjs';
 import { toHex } from '@midnight-ntwrk/midnight-js-utils';
+import type { PrivateStateProvider } from '@midnight-ntwrk/midnight-js-types/dist/private-state-provider';
 
 /** @internal */
 // ο τύπος Contract έρχεται από το αρχείο index.d.cts. Το witnesses έρχεται από το αρχείο witnesses.ts
@@ -48,6 +50,7 @@ export interface DeployedVoteGuardianAPI {
   close_voting: () => Promise<void>;
   create_voting: (vote_question: string) => Promise<void>;
   add_option: (vote_option: string, index: string) => Promise<void>;
+  verify_identity: (msg: Uint8Array, signature: Signature) => Promise<void>;
   // count_votes: () => Promise<void>;
 }
 
@@ -73,7 +76,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
   private constructor(
     // θυμίζω ΄ότι το DeployedVoteGuardianContract είναι alias gia FoundContract
     public readonly deployedContract: DeployedVoteGuardianContract,
-    providers: VoteGuardianProviders,
+    public readonly providers: VoteGuardianProviders,
     private readonly logger?: Logger,
   ) {
     this.deployedContractAddress = deployedContract.deployTxData.public.contractAddress;
@@ -147,6 +150,18 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
    * @remarks
    * This method can fail during local circuit execution if the voting is not open.
    */
+  static async getOrCreateInitialPrivateState(
+    privateStateProvider: PrivateStateProvider<VoteGuardianPrivateState>,
+  ): Promise<VoteGuardianPrivateState> {
+    let state = await privateStateProvider.get('voteGuardianPrivateState');
+    if (state === null) {
+      state = createVoteGuardianPrivateState();
+      await privateStateProvider.set('voteGuardianPrivateState', state);
+    }
+    return state;
+  }
+
+
 
   async add_voter(voter_public_key: Uint8Array): Promise<void> {
     try {
@@ -213,6 +228,21 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
   async cast_vote(encrypted_vote: string): Promise<void> {
     try {
       this.logger?.info(`casted votee: ${encrypted_vote}`);
+
+      const initialState = await VoteGuardianAPI.getOrCreateInitialPrivateState(this.providers.privateStateProvider);
+      const newState: ShopPrivateState = {
+        ...initialState,
+        orders: {
+          ...initialState.orders,
+          [orderId]: order,
+        },
+        signedCredentialSubject,
+      };
+      await this.providers.privateStateProvider.set('initial', newState);
+      this.privateStates$.next(newState);
+
+
+
       const txData = await this.deployedContract.callTx.cast_vote(encrypted_vote);
 
       this.logger?.trace({
@@ -332,15 +362,14 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       const DeployedVoteGuardianContract = await deployContract(providers, {
         privateStateKey: 'voteGuardianPrivateState',
         contract: VoteGuardianContractInstance,
-        initialPrivateState: createVoteGuardianPrivateState(utils.randomBytes(32), {
-          leaf: new Uint8Array(32),
-          path: [
-            {
-              sibling: { field: BigInt(0) },
-              goes_left: false,
-            },
-          ],
-        }),
+        initialPrivateState: createVoteGuardianPrivateState(
+          hashed_credential: new Uint8Array(32),
+          signature: {
+                    pk: { x: 0n, y: 0n },
+                    R: { x: 0n, y: 0n },
+                    s: 0n
+                  }
+        ),
         // initialPrivateState: createVoteGuardianPrivateState(utils.hexToBytes(secretKey)),
       });
 
@@ -396,17 +425,14 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       privateStateKey: 'voteGuardianPrivateState',
       // initialPrivateState: createVoteGuardianPrivateState(utils.randomBytes(32)),
       // initialPrivateState: createVoteGuardianPrivateState(utils.hexToBytes(secretKey)),
-      initialPrivateState:
-        // (await providers.privateStateProvider.get('voteGuardianPrivateState')) ??
-        createVoteGuardianPrivateState(utils.hexToBytes(secretKey), {
-          leaf: new Uint8Array(32),
-          path: [
-            {
-              sibling: { field: BigInt(0) },
-              goes_left: false,
-            },
-          ],
-        }),
+     initialPrivateState: createVoteGuardianPrivateState(
+          hashed_credential: new Uint8Array(32),
+          signature: {
+                    pk: { x: 0n, y: 0n },
+                    R: { x: 0n, y: 0n },
+                    s: 0n
+                  }
+        ),
     });
 
     logger?.trace({

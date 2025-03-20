@@ -27,12 +27,12 @@ module Crypto {
   // Could be used as a credential subject as defined in https://w3c-ccg.github.io/vc-data-model/#credential-subject
   // We need a standard for a canonical representation of a credential subject, so we can hash it consistently
   export struct CredentialSubject {
-      username: Bytes<32>; // The id of the subject (midnight wallet own_public_key)
-      password: Bytes<32>;
+    username: Bytes<32>; // The id of the subject (midnight wallet own_public_key)
+    password: Bytes<32>;
   }
 
   export struct SignedCredentialSubject {
-    subject: CredentialSubject;
+    hashed_credential: Bytes<32>;
     signature: Signature;
   }
 

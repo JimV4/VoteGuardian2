@@ -192,6 +192,11 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
     return this.#initializedProviders ?? (this.#initializedProviders = initializeProviders(this.logger));
   }
 
+  async getWalletPublicKey(): Promise<string> {
+    const providers = await this.getProviders(); // Wait for the promise to resolve
+    return providers.walletProvider.coinPublicKey;
+  }
+
   private async deployDeployment(deployment: BehaviorSubject<VoteGuardianDeployment>): Promise<void> {
     try {
       console.log('here2');

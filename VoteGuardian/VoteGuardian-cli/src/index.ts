@@ -38,11 +38,11 @@ import { type Logger } from 'pino';
 import { type Config, StandaloneConfig } from './config.js';
 import type { StartedDockerComposeEnvironment, DockerComposeEnvironment } from 'testcontainers';
 import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
-import { Signature, type ContractAddress } from '@midnight-ntwrk/compact-runtime';
+import { type ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import { toHex } from '@midnight-ntwrk/midnight-js-utils';
 import { getLedgerNetworkId, getZswapNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import axios from 'axios';
-import { type SignedCredential } from '@midnight-ntwrk/university-contract';
+import { type SignedCredential, type Signature } from '@midnight-ntwrk/university-contract';
 
 // @ts-expect-error: It's needed to make Scala.js and WASM code able to use cryptography
 globalThis.crypto = webcrypto;
@@ -209,7 +209,7 @@ const displayPrivateState = async (providers: VoteGuardianProviders, logger: Log
 //     const boardState = ledgerState.state === STATE.occupied ? 'occupied' : 'vacant';
 //     const latestMessage = ledgerState.state === STATE.occupied ? ledgerState.message : 'none';
 //     logger.info(`Current state is: '${boardState}'`);
-//     logger.info(`Current message is: '${latestMessage}'`);
+//     logger.info(`Current message is: '$f{latestMessage}'`);
 //     logger.info(`Current instance is: ${ledgerState.instance}`);
 //     logger.info(`Current poster is: '${ledgerState.isOwner ? 'you' : 'not you'}'`);
 //   }
@@ -270,7 +270,7 @@ const mainLoop = async (providers: VoteGuardianProviders, rli: Interface, logger
             const signature: Signature = response.data.signature;
             const msg: string = response.data.msg;
             const msgBytes: Uint8Array = utils.hexToBytes(msg);
-            await VoteGuardianApi.verify_signature(msgBytes, signature);
+            await VoteGuardianApi.verify_identity(msgBytes, signature);
 
             console.log('Signature:', signature);
           } catch (error) {

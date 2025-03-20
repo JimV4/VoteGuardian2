@@ -16,6 +16,7 @@ import { theme } from './config/theme';
 import '@midnight-ntwrk/dapp-connector-api';
 import * as pino from 'pino';
 import { DeployedVoteGuardianProvider } from './contexts';
+import { SignedCredentialSubjectProvider } from './contexts/SignedCredentialSubjectContext.tsx';
 
 const networkId = import.meta.env.VITE_NETWORK_ID as NetworkId;
 // Ensure that the network IDs are set within the Midnight libraries.
@@ -34,7 +35,9 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <CssBaseline />
     <ThemeProvider theme={theme}>
       <DeployedVoteGuardianProvider logger={logger}>
-        <App />
+        <SignedCredentialSubjectProvider>
+          <App />
+        </SignedCredentialSubjectProvider>
       </DeployedVoteGuardianProvider>
     </ThemeProvider>
   </React.StrictMode>,
