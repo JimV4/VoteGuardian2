@@ -94,9 +94,9 @@ export circuit add_option(vote_option: Opaque<"string">, i: Opaque<"string">): [
     vote_option_map.insert(i, vote_option);
 }
 
-export circuit verify_identity(msg: Bytes<32>, signature: Signature): [] {
-  verify_signature(msg, signature);
-}
+// export circuit verify_identity(msg: Bytes<32>, signature: Signature): [] {
+//   verify_signature(msg, signature);
+// }
 
 // Function to compute a public key for a voter based on secret key
 export circuit public_key(sk: Bytes<32>): Bytes<32> {

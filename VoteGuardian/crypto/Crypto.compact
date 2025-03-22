@@ -28,7 +28,7 @@ module Crypto {
   // We need a standard for a canonical representation of a credential subject, so we can hash it consistently
   export struct CredentialSubject {
     username: Bytes<32>; // The id of the subject (midnight wallet own_public_key)
-    password: Bytes<32>;
+    hashed_secret: Bytes<32>;
   }
 
   export struct SignedCredentialSubject {

@@ -4,18 +4,18 @@ import { type SignedCredentialSubject, type Signature } from '@midnight-ntwrk/un
 const SignedCredentialSubjectContext = createContext<SignedCredentialSubject | null>(null);
 
 export const useSignedCredentialSubject = (): SignedCredentialSubject => {
-  const signedCredentialSubject = useContext(SignedCredentialSubjectContext);
-  if (!signedCredentialSubject) {
+  const context = useContext(SignedCredentialSubjectContext);
+  if (!context) {
     throw new Error('Signed Credential not Found');
   }
-  return signedCredentialSubject;
+  return context;
 };
 
 export const SignedCredentialSubjectProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [credential, setCredential] = useState<SignedCredentialSubject | null>(null);
+  const [signedCredentialSubject, setSignedCredentialSubject] = useState<SignedCredentialSubject | null>(null);
 
   return (
-    <SignedCredentialSubjectContext.Provider value={{ credential, setCredential }}>
+    <SignedCredentialSubjectContext.Provider value={{ signedCredentialSubject, setSignedCredentialSubject }}>
       {children}
     </SignedCredentialSubjectContext.Provider>
   );

@@ -35,7 +35,7 @@ const generateSignature = (subject: CredentialSubject, sk: Uint8Array): Signatur
 function fromRawSubject(raw: any): CredentialSubject {
   return {
     username: new Uint8Array(fromHex(raw.username)),
-    password: new Uint8Array(fromHex(raw.password)),
+    secrey: new Uint8Array(fromHex(raw.secret)),
   };
 }
 
@@ -60,7 +60,7 @@ db.once('open', () => {
 const userSchema = new mongoose.Schema({
   username: String,
   password: String,
-  publicKey: String,
+  hashed_secret: String,
 });
 
 const User = mongoose.model('User', userSchema);
@@ -78,7 +78,8 @@ app.post('/login', async (req, res) => {
     const user = await User.findOne({ username, password });
 
     if (user) {
-      const subject = { username, password };
+      const hashed_secret = user.hashed_secret;
+      const subject = { username, hashed_secret };
       const signature: Signature = generateSignature(fromRawSubject(subject), pad('0x123', 32));
       const msg = Buffer.from(hashSubject(subject), 'hex');
       // const credentialBytes = new Uint8Array(32);
@@ -86,11 +87,7 @@ app.post('/login', async (req, res) => {
       // const credentialHex = toHex(credentialBytes);
       res
         .status(200)
-        .end(
-          JSON.stringify({ message: 'User found', signature, msg }, (_, value) =>
-            typeof value === 'bigint' ? value.toString() : value,
-          ),
-        );
+        .end(JSON.stringify({ signature, msg }, (_, value) => (typeof value === 'bigint' ? value.toString() : value)));
       // if (!user.publicKey) {
       //   const secretKeybytes = new Uint8Array(32);
       //   crypto.getRandomValues(secretKeybytes);

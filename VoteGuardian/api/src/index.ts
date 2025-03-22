@@ -26,9 +26,10 @@ import {
 } from '@midnight-ntwrk/vote-guardian-contract';
 import * as utils from './utils/index.js';
 import { deployContract, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
-import { combineLatest, map, tap, from, type Observable } from 'rxjs';
+import { combineLatest, map, tap, from, type Observable, Subject, retry, concat, defer } from 'rxjs';
 import { toHex } from '@midnight-ntwrk/midnight-js-utils';
 import type { PrivateStateProvider } from '@midnight-ntwrk/midnight-js-types/dist/private-state-provider';
+import type { SignedCredentialSubject } from '@midnight-ntwrk/university-contract';
 
 /** @internal */
 // ο τύπος Contract έρχεται από το αρχείο index.d.cts. Το witnesses έρχεται από το αρχείο witnesses.ts
@@ -50,7 +51,7 @@ export interface DeployedVoteGuardianAPI {
   close_voting: () => Promise<void>;
   create_voting: (vote_question: string) => Promise<void>;
   add_option: (vote_option: string, index: string) => Promise<void>;
-  verify_identity: (msg: Uint8Array, signature: Signature) => Promise<void>;
+  // verify_identity: (msg: Uint8Array, signature: Signature) => Promise<void>;
   // count_votes: () => Promise<void>;
 }
 
@@ -79,62 +80,109 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
     public readonly providers: VoteGuardianProviders,
     private readonly logger?: Logger,
   ) {
+    const combine = (acc: VoteGuardianDerivedState, value: VoteGuardianDerivedState): VoteGuardianDerivedState => {
+      return {
+        voteState: (() => {
+          switch (value.voteState) {
+            case VOTE_STATE.open:
+              return "open";
+            case VOTE_STATE.closed:
+              return "closed";
+          }
+        })(),
+        votesList: value.votesList,
+        voteCount: value.voteCount,
+        voteQuestion: value.voteQuestion,
+      };
+    };
+
+
     this.deployedContractAddress = deployedContract.deployTxData.public.contractAddress;
+    this.privateStates$ = new Subject<VoteGuardianPrivateState>();
     this.state$ = combineLatest(
       [
-        // Combine public (ledger) state with...
-        providers.publicDataProvider.contractStateObservable(this.deployedContractAddress, { type: 'latest' }).pipe(
-          map((contractState) => ledger(contractState.data)),
-          tap((ledgerState) =>
-            logger?.trace({
-              ledgerStateChanged: {
-                ledgerState: {
-                  ...ledgerState,
-                  // state: ledgerState.state === STATE.occupied ? 'occupied' : 'vacant',
-                  voteState: () => {
-                    if (ledgerState.voteState === VOTE_STATE.open) {
-                      return 'open';
-                    } else if (ledgerState.voteState === VOTE_STATE.closed) {
-                      return 'closed';
-                    }
-                  },
-                  // votersMap: ledgerState.votersMap,
-                  // votesList: ledgerState.votesList,
-                  // voteCountForEachOption: ledgerState.voteCountForEachOption,
-                  // voteCount: ledgerState.voteCount,
-                  // poster: toHex(ledgerState.poster),
-                },
-              },
-            }),
-          ),
+        providers.publicDataProvider
+          .contractStateObservable(this.deployedContractAddress, { type: 'all' })
+          .pipe(map((contractState) => ledger(contractState.data))),
+        concat(
+          from(defer(() => providers.privateStateProvider.get('voteGuardianPrivateState') as Promise<VoteGuardianPrivateState>)),
+          this.privateStates$,
         ),
-        // ...private state...
-        //    since the private state of the bulletin board application never changes, we can query the
-        //    private state once and always use the same value with `combineLatest`. In applications
-        //    where the private state is expected to change, we would need to make this an `Observable`.
-        from(providers.privateStateProvider.get('voteGuardianPrivateState') as Promise<VoteGuardianPrivateState>),
       ],
-      // ...and combine them to produce the required derived state.
       (ledgerState, privateState) => {
-        const hashedSecretKey = pureCircuits.public_key(privateState.secretKey);
-
-        return {
-          voteState: ledgerState.voteState,
-          // votersMap: ledgerState.votersMap,
-          eligibleVoters: ledgerState.eligibleVoters,
-          votesList: ledgerState.votesList,
-          voteCount: ledgerState.voteCount,
-          voteQuestion: ledgerState.voteQuestion,
-          isOrganizer: toHex(ledgerState.votingOrganizer) === toHex(hashedSecretKey),
+        const result: VoteGuardianDerivedState = {
+          voteState: (() => {
+          switch (ledgerState.voteState) {
+            case VOTE_STATE.open:
+              return "open";
+            case VOTE_STATE.closed:
+              return "closed";
+          }
+        })(),
+        votesList: ledgerState.votesList,
+        voteCount: ledgerState.voteCount,
+        voteQuestion: ledgerState.voteQuestion,
         };
+        return result;
       },
-    );
+    )
+    // this.state$ = combineLatest(
+    //   [
+    //     // Combine public (ledger) state with...
+    //     providers.publicDataProvider.contractStateObservable(this.deployedContractAddress, { type: 'latest' }).pipe(
+    //       map((contractState) => ledger(contractState.data)),
+    //       tap((ledgerState) =>
+    //         logger?.trace({
+    //           ledgerStateChanged: {
+    //             ledgerState: {
+    //               ...ledgerState,
+    //               // state: ledgerState.state === STATE.occupied ? 'occupied' : 'vacant',
+    //               voteState: () => {
+    //                 if (ledgerState.voteState === VOTE_STATE.open) {
+    //                   return 'open';
+    //                 } else if (ledgerState.voteState === VOTE_STATE.closed) {
+    //                   return 'closed';
+    //                 }
+    //               },
+    //               // votersMap: ledgerState.votersMap,
+    //               // votesList: ledgerState.votesList,
+    //               // voteCountForEachOption: ledgerState.voteCountForEachOption,
+    //               // voteCount: ledgerState.voteCount,
+    //               // poster: toHex(ledgerState.poster),
+    //             },
+    //           },
+    //         }),
+    //       ),
+    //     ),
+    //     // ...private state...
+    //     //    since the private state of the bulletin board application never changes, we can query the
+    //     //    private state once and always use the same value with `combineLatest`. In applications
+    //     //    where the private state is expected to change, we would need to make this an `Observable`.
+    //     from(providers.privateStateProvider.get('voteGuardianPrivateState') as Promise<VoteGuardianPrivateState>),
+    //   ],
+    //   // ...and combine them to produce the required derived state.
+    //   (ledgerState, privateState) => {
+    //     const hashedSecretKey = pureCircuits.public_key(privateState.secretKey);
+
+    //     return {
+    //       voteState: ledgerState.voteState,
+    //       // votersMap: ledgerState.votersMap,
+    //       eligibleVoters: ledgerState.eligibleVoters,
+    //       votesList: ledgerState.votesList,
+    //       voteCount: ledgerState.voteCount,
+    //       voteQuestion: ledgerState.voteQuestion,
+    //       isOrganizer: toHex(ledgerState.votingOrganizer) === toHex(hashedSecretKey),
+    //     };
+    //   },
+    // );
   }
 
   /**
    * Gets the address of the current deployed contract.
    */
   readonly deployedContractAddress: ContractAddress;
+
+  readonly privateStates$: Subject<VoteGuardianPrivateState>;
 
   /**
    * Gets an observable stream of state changes based on the current public (ledger),
@@ -225,20 +273,16 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
    * This method can fail during local circuit execution if the voting is not open or the user has already voted.
    */
 
-  async cast_vote(encrypted_vote: string): Promise<void> {
+  async cast_vote(encrypted_vote: string, signedCredentialSubject: SignedCredentialSubject): Promise<void> {
     try {
       this.logger?.info(`casted votee: ${encrypted_vote}`);
 
       const initialState = await VoteGuardianAPI.getOrCreateInitialPrivateState(this.providers.privateStateProvider);
-      const newState: ShopPrivateState = {
+      const newState: VoteGuardianPrivateState = {
         ...initialState,
-        orders: {
-          ...initialState.orders,
-          [orderId]: order,
-        },
         signedCredentialSubject,
       };
-      await this.providers.privateStateProvider.set('initial', newState);
+      await this.providers.privateStateProvider.set('voteGuardianPrivateState', newState);
       this.privateStates$.next(newState);
 
 
