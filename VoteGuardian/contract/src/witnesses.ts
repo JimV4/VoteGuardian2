@@ -17,12 +17,12 @@ import { type SignedCredentialSubject } from '@midnight-ntwrk/university-contrac
  */
 
 export type VoteGuardianPrivateState = {
-  readonly localSignedCredential?: SignedCredentialSubject;
+  readonly localSignedCredentialSubject?: SignedCredentialSubject;
 };
 
 // φτιάχνει objects τύπου VoteGuardianPrivateState
 export const createVoteGuardianPrivateState = () => ({
-  localSignedCredential: undefined,
+  localSignedCredentialSubject: undefined,
 });
 
 /* **********************************************************************
@@ -60,12 +60,12 @@ export const witnesses = {
   // και το νέο secret key του poster
   // εδώ το Ledger προέρχεται από το index.d.cts που παράγει ο compiler και το VoteGuardianPrivateState προέρχεται από πάνω
   // το local_secret_key ΔΕΝ αλλάζει το private state
-  local_signed_credential: ({
+  local_signed_credential_subject: ({
     privateState,
     ledger,
   }: WitnessContext<Ledger, VoteGuardianPrivateState>): [VoteGuardianPrivateState, SignedCredentialSubject] => [
     privateState,
-    privateState.localSignedCredential,
+    privateState.localSignedCredentialSubject,
   ],
 
   // find_voter_public_key: (

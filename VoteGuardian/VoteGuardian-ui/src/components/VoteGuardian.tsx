@@ -27,6 +27,7 @@ import { type Observable } from 'rxjs';
 import { VOTE_STATE } from '@midnight-ntwrk/vote-guardian-contract';
 import { EmptyCardContent } from './VoteGuardian.EmptyCardContent';
 import { utils } from '@midnight-ntwrk/vote-guardian-api';
+import { useSignedCredentialSubject } from '../contexts/SignedCredentialSubjectContext';
 
 /** The props required by the {@link VoteGuardian} component. */
 export interface VoteGuardianProps {
@@ -59,6 +60,8 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   const [isWorking, setIsWorking] = useState(!!voteGuardianDeployment$);
   const [optionCounter, setOptionCounter] = useState(0);
   const [secretKey, setSecretKey] = useState<string>();
+
+  const signedCredentialSubject = useSignedCredentialSubject();
 
   // Two simple callbacks that call `resolve(...)` to either deploy or join a bulletin voteGuardian
   // contract. Since the `DeployedVoteGuardianContext` will create a new voteGuardian and update the UI, we
@@ -152,7 +155,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
     try {
       if (deployedVoteGuardianAPI) {
         setIsWorking(true);
-        await deployedVoteGuardianAPI.cast_vote(messagePrompt);
+        await deployedVoteGuardianAPI.cast_vote(messagePrompt, signedCredentialSubject);
       }
     } catch (error: unknown) {
       setErrorMessage(error instanceof Error ? error.message : String(error));

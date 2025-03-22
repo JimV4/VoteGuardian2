@@ -406,15 +406,15 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       const DeployedVoteGuardianContract = await deployContract(providers, {
         privateStateKey: 'voteGuardianPrivateState',
         contract: VoteGuardianContractInstance,
-        initialPrivateState: createVoteGuardianPrivateState(
-          hashed_credential: new Uint8Array(32),
-          signature: {
-                    pk: { x: 0n, y: 0n },
-                    R: { x: 0n, y: 0n },
-                    s: 0n
-                  }
-        ),
-        // initialPrivateState: createVoteGuardianPrivateState(utils.hexToBytes(secretKey)),
+        // initialPrivateState: createVoteGuardianPrivateState(
+        //   hashed_credential: new Uint8Array(32),
+        //   signature: {
+        //             pk: { x: 0n, y: 0n },
+        //             R: { x: 0n, y: 0n },
+        //             s: 0n
+        //           }
+        // ),
+        initialPrivateState: createVoteGuardianPrivateState(),
       });
 
       logger?.info('Passed deploy contract');
