@@ -19,6 +19,7 @@ import {
   type VoteGuardianPrivateState,
   Contract,
   createVoteGuardianPrivateState,
+  createVoteGuardianPrivateState2,
   ledger,
   pureCircuits,
   witnesses,
@@ -46,8 +47,8 @@ export interface DeployedVoteGuardianAPI {
   readonly deployedContractAddress: ContractAddress;
   readonly state$: Observable<VoteGuardianDerivedState>;
 
-  add_voter: (voter_public_key: Uint8Array) => Promise<void>;
-  cast_vote: (encrypted_vote: string) => Promise<void>;
+  // add_voter: (voter_public_key: Uint8Array) => Promise<void>;
+  cast_vote: (encrypted_vote: string, signedCredentialsSubject?: SignedCredentialSubject) => Promise<void>;
   close_voting: () => Promise<void>;
   create_voting: (vote_question: string) => Promise<void>;
   add_option: (vote_option: string, index: string) => Promise<void>;
@@ -80,21 +81,21 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
     public readonly providers: VoteGuardianProviders,
     private readonly logger?: Logger,
   ) {
-    const combine = (acc: VoteGuardianDerivedState, value: VoteGuardianDerivedState): VoteGuardianDerivedState => {
-      return {
-        voteState: (() => {
-          switch (value.voteState) {
-            case VOTE_STATE.open:
-              return 'open';
-            case VOTE_STATE.closed:
-              return 'closed';
-          }
-        })(),
-        votesList: value.votesList,
-        voteCount: value.voteCount,
-        voteQuestion: value.voteQuestion,
-      };
-    };
+    // const combine = (acc: VoteGuardianDerivedState, value: VoteGuardianDerivedState): VoteGuardianDerivedState => {
+    //   return {
+    //     voteState: (() => {
+    //       switch (value.voteState) {
+    //         case VOTE_STATE.open:
+    //           return 'open';
+    //         case VOTE_STATE.closed:
+    //           return 'closed';
+    //       }
+    //     })(),
+    //     votesList: value.votesList,
+    //     voteCount: value.voteCount,
+    //     voteQuestion: value.voteQuestion,
+    //   };
+    // };
 
     this.deployedContractAddress = deployedContract.deployTxData.public.contractAddress;
     this.privateStates$ = new Subject<VoteGuardianPrivateState>();
@@ -117,9 +118,9 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
           voteState: (() => {
             switch (ledgerState.voteState) {
               case VOTE_STATE.open:
-                return 'open';
+                return VOTE_STATE.open;
               case VOTE_STATE.closed:
-                return 'closed';
+                return VOTE_STATE.closed;
             }
           })(),
           votesList: ledgerState.votesList,
@@ -201,43 +202,43 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
    * @remarks
    * This method can fail during local circuit execution if the voting is not open.
    */
-  static async getOrCreateInitialPrivateState(
-    privateStateProvider: PrivateStateProvider<VoteGuardianPrivateState>,
-  ): Promise<VoteGuardianPrivateState> {
-    let state = await privateStateProvider.get('voteGuardianPrivateState');
-    if (state === null) {
-      state = createVoteGuardianPrivateState();
-      await privateStateProvider.set('voteGuardianPrivateState', state);
-    }
-    return state;
-  }
+  // static async getOrCreateInitialPrivateState(
+  //   privateStateProvider: PrivateStateProvider<VoteGuardianPrivateState>,
+  // ): Promise<VoteGuardianPrivateState> {
+  //   let state = await privateStateProvider.get('initial');
+  //   if (state === null) {
+  //     state = createVoteGuardianPrivateState();
+  //     await privateStateProvider.set('initial', state);
+  //   }
+  //   return state;
+  // }
 
-  async add_voter(voter_public_key: Uint8Array): Promise<void> {
-    try {
-      this.logger?.info('adding voter');
+  // async add_voter(voter_public_key: Uint8Array): Promise<void> {
+  //   try {
+  //     this.logger?.info('adding voter');
 
-      const txData = await this.deployedContract.callTx.add_voter(voter_public_key);
+  //     const txData = await this.deployedContract.callTx.add_voter(voter_public_key);
 
-      this.logger?.trace({
-        transactionAdded: {
-          circuit: 'add_voter',
-          txHash: txData.public.txHash,
-          blockHeight: txData.public.blockHeight,
-        },
-      });
-    } catch (error) {
-      console.log('asdasdasad');
-      console.log((error as Error).message);
-      console.log((error as Error).stack);
-      console.log(error);
-      // Log the full exception, including stack trace if available.
-      this.logger?.error('Error adding voter...', {
-        message: (error as Error).message,
-        stack: (error as Error).stack,
-        details: error, // Capture additional details if the error is a custom object.
-      });
-    }
-  }
+  //     this.logger?.trace({
+  //       transactionAdded: {
+  //         circuit: 'add_voter',
+  //         txHash: txData.public.txHash,
+  //         blockHeight: txData.public.blockHeight,
+  //       },
+  //     });
+  //   } catch (error) {
+  //     console.log('asdasdasad');
+  //     console.log((error as Error).message);
+  //     console.log((error as Error).stack);
+  //     console.log(error);
+  //     // Log the full exception, including stack trace if available.
+  //     this.logger?.error('Error adding voter...', {
+  //       message: (error as Error).message,
+  //       stack: (error as Error).stack,
+  //       details: error, // Capture additional details if the error is a custom object.
+  //     });
+  //   }
+  // }
 
   async add_option(vote_option: string, index: string): Promise<void> {
     try {
@@ -274,13 +275,12 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
    * This method can fail during local circuit execution if the voting is not open or the user has already voted.
    */
 
-  async cast_vote(encrypted_vote: string, signedCredentialSubject: SignedCredentialSubject): Promise<void> {
+  async cast_vote(encrypted_vote: string, signedCredentialSubject?: SignedCredentialSubject): Promise<void> {
     try {
       this.logger?.info(`casted votee: ${encrypted_vote}`);
 
-      const initialState = await VoteGuardianAPI.getOrCreateInitialPrivateState(this.providers.privateStateProvider);
+      // const initialState = await VoteGuardianAPI.getOrCreateInitialPrivateState(this.providers.privateStateProvider);
       const newState: VoteGuardianPrivateState = {
-        ...initialState,
         signedCredentialSubject,
       };
       await this.providers.privateStateProvider.set('voteGuardianPrivateState', newState);
@@ -402,18 +402,19 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       /* η συνάρτηση deployContract έρχεται από τη βιβλιοθήκη. Πα΄ίρνει ως παράμετρο ένα αντικείμενο τύπου MidnightProviders και ένα αντικείμενο που είναι το
       DeployContractOptions
       */
+      let pSignedCredentialSubject: SignedCredentialSubject = {
+        hashed_credential: new Uint8Array(32),
+        signature: {
+          pk: { x: 0n, y: 0n },
+          R: { x: 0n, y: 0n },
+          s: 0n,
+        },
+      };
       const DeployedVoteGuardianContract = await deployContract(providers, {
         privateStateKey: 'voteGuardianPrivateState',
         contract: VoteGuardianContractInstance,
-        // initialPrivateState: createVoteGuardianPrivateState(
-        //   hashed_credential: new Uint8Array(32),
-        //   signature: {
-        //             pk: { x: 0n, y: 0n },
-        //             R: { x: 0n, y: 0n },
-        //             s: 0n
-        //           }
-        // ),
-        initialPrivateState: createVoteGuardianPrivateState(),
+        initialPrivateState: { signedCredentialSubject: pSignedCredentialSubject },
+        // initialPrivateState: createVoteGuardianPrivateState(),
       });
 
       logger?.info('Passed deploy contract');
@@ -461,14 +462,22 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       },
     });
     console.log(`inside api ${secretKey}`);
-
+    let pSignedCredentialSubject: SignedCredentialSubject = {
+      hashed_credential: new Uint8Array(32),
+      signature: {
+        pk: { x: 0n, y: 0n },
+        R: { x: 0n, y: 0n },
+        s: 0n,
+      },
+    };
     const deployedVoteGuardianContract = await findDeployedContract(providers, {
       contractAddress,
       contract: VoteGuardianContractInstance,
       privateStateKey: 'voteGuardianPrivateState',
       // initialPrivateState: createVoteGuardianPrivateState(utils.randomBytes(32)),
       // initialPrivateState: createVoteGuardianPrivateState(utils.hexToBytes(secretKey)),
-      initialPrivateState: createVoteGuardianPrivateState(),
+      // initialPrivateState: createVoteGuardianPrivateState(),
+      initialPrivateState: { signedCredentialSubject: pSignedCredentialSubject },
     });
 
     logger?.trace({

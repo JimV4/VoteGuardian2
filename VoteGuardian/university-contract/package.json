@@ -13,11 +13,11 @@
     }
   },
   "scripts": {
-    "compact_west": "run-compactc src/identity.compact ./src/managed/identity",
+    "compact_west": "run-compactc src/University.compact ./src/managed/university",
     "compact": "yarn compact_west",
     "test": "jest",
     "prepack": "yarn build",
-    "build": "rm -rf dist && tsc --project tsconfig.build.json && cp -Rf ./src/managed ./dist/managed && cp ./src/identity.compact ./dist",
+    "build": "rm -rf dist && tsc --project tsconfig.build.json && cp -Rf ./src/managed ./dist/managed && cp ./src/University.compact ./dist",
     "lint": "eslint src",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

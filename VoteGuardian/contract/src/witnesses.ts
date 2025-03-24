@@ -5,7 +5,7 @@
 
 import { Ledger, Maybe, ledger } from './managed/vote-guardian/contract/index.cjs';
 import { MerkleTreePath, WitnessContext } from '@midnight-ntwrk/compact-runtime';
-import { type SignedCredentialSubject } from '@midnight-ntwrk/university-contract';
+import { type SignedCredentialSubject, type Signature } from '@midnight-ntwrk/university-contract';
 
 /* **********************************************************************
  * The only hidden state needed by the VoteGuardian contract is
@@ -17,13 +17,16 @@ import { type SignedCredentialSubject } from '@midnight-ntwrk/university-contrac
  */
 
 export type VoteGuardianPrivateState = {
-  readonly localSignedCredentialSubject?: SignedCredentialSubject;
+  readonly signedCredentialSubject?: SignedCredentialSubject;
 };
 
 // φτιάχνει objects τύπου VoteGuardianPrivateState
 export const createVoteGuardianPrivateState = () => ({
-  localSignedCredentialSubject: undefined,
+  signedCredentialSubject: undefined,
 });
+
+export const createVoteGuardianPrivateState2 = (pSignedCredentialSubject: SignedCredentialSubject): SignedCredentialSubject =>
+  pSignedCredentialSubject;
 
 /* **********************************************************************
  * The witnesses object for the bulletin board contract is an object
@@ -63,10 +66,11 @@ export const witnesses = {
   local_signed_credential_subject: ({
     privateState,
     ledger,
-  }: WitnessContext<Ledger, VoteGuardianPrivateState>): [VoteGuardianPrivateState, SignedCredentialSubject] => [
-    privateState,
-    privateState.localSignedCredentialSubject,
-  ],
+  }: WitnessContext<Ledger, VoteGuardianPrivateState>): [VoteGuardianPrivateState, SignedCredentialSubject] => {
+    if (privateState.signedCredentialSubject) {
+      return [privateState, privateState.signedCredentialSubject];
+    } else throw new Error('No identity found');
+  },
 
   // find_voter_public_key: (
   //   { privateState, ledger }: WitnessContext<Ledger, VoteGuardianPrivateState>,

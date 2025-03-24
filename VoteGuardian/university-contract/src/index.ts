@@ -1,8 +1,8 @@
 import { WitnessContext } from '@midnight-ntwrk/compact-runtime';
-import type { Contract as ContractType, Ledger, Witnesses } from './managed/contract/index.cjs';
-import ContractModule from './managed/contract/index.cjs';
+import type { Contract as ContractType, Ledger, Witnesses } from './managed/university/contract/index.cjs';
+import ContractModule from './managed/university/contract/index.cjs';
 
-export * from './managed/identity/contract/index.cjs';
+export * from './managed/university/contract/index.cjs';
 export const ledger = ContractModule.ledger;
 export const pureCircuits = ContractModule.pureCircuits;
 export const { Contract } = ContractModule;
