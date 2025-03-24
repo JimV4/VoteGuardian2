@@ -85,9 +85,9 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
         voteState: (() => {
           switch (value.voteState) {
             case VOTE_STATE.open:
-              return "open";
+              return 'open';
             case VOTE_STATE.closed:
-              return "closed";
+              return 'closed';
           }
         })(),
         votesList: value.votesList,
@@ -95,7 +95,6 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
         voteQuestion: value.voteQuestion,
       };
     };
-
 
     this.deployedContractAddress = deployedContract.deployTxData.public.contractAddress;
     this.privateStates$ = new Subject<VoteGuardianPrivateState>();
@@ -105,27 +104,31 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
           .contractStateObservable(this.deployedContractAddress, { type: 'all' })
           .pipe(map((contractState) => ledger(contractState.data))),
         concat(
-          from(defer(() => providers.privateStateProvider.get('voteGuardianPrivateState') as Promise<VoteGuardianPrivateState>)),
+          from(
+            defer(
+              () => providers.privateStateProvider.get('voteGuardianPrivateState') as Promise<VoteGuardianPrivateState>,
+            ),
+          ),
           this.privateStates$,
         ),
       ],
       (ledgerState, privateState) => {
         const result: VoteGuardianDerivedState = {
           voteState: (() => {
-          switch (ledgerState.voteState) {
-            case VOTE_STATE.open:
-              return "open";
-            case VOTE_STATE.closed:
-              return "closed";
-          }
-        })(),
-        votesList: ledgerState.votesList,
-        voteCount: ledgerState.voteCount,
-        voteQuestion: ledgerState.voteQuestion,
+            switch (ledgerState.voteState) {
+              case VOTE_STATE.open:
+                return 'open';
+              case VOTE_STATE.closed:
+                return 'closed';
+            }
+          })(),
+          votesList: ledgerState.votesList,
+          voteCount: ledgerState.voteCount,
+          voteQuestion: ledgerState.voteQuestion,
         };
         return result;
       },
-    )
+    );
     // this.state$ = combineLatest(
     //   [
     //     // Combine public (ledger) state with...
@@ -209,8 +212,6 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
     return state;
   }
 
-
-
   async add_voter(voter_public_key: Uint8Array): Promise<void> {
     try {
       this.logger?.info('adding voter');
@@ -284,8 +285,6 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       };
       await this.providers.privateStateProvider.set('voteGuardianPrivateState', newState);
       this.privateStates$.next(newState);
-
-
 
       const txData = await this.deployedContract.callTx.cast_vote(encrypted_vote);
 
@@ -469,14 +468,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       privateStateKey: 'voteGuardianPrivateState',
       // initialPrivateState: createVoteGuardianPrivateState(utils.randomBytes(32)),
       // initialPrivateState: createVoteGuardianPrivateState(utils.hexToBytes(secretKey)),
-     initialPrivateState: createVoteGuardianPrivateState(
-          hashed_credential: new Uint8Array(32),
-          signature: {
-                    pk: { x: 0n, y: 0n },
-                    R: { x: 0n, y: 0n },
-                    s: 0n
-                  }
-        ),
+      initialPrivateState: createVoteGuardianPrivateState(),
     });
 
     logger?.trace({

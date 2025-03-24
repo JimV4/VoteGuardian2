@@ -15,7 +15,7 @@ export interface EmptyCardContentProps {
   /** A callback that will be called to create a new bulletin voteGuardian. */
   onCreateVoteGuardianCallback: () => void;
   /** A callback that will be called to join an existing bulletin voteGuardian. */
-  onJoinVoteGuardianCallback: (contractAddress: ContractAddress, secretKey: string) => void;
+  onJoinVoteGuardianCallback: (contractAddress: ContractAddress /*, secretKey: string */) => void;
 }
 
 /**
@@ -74,7 +74,7 @@ export const EmptyCardContent: React.FC<Readonly<EmptyCardContentProps>> = ({
       />
 
       {/* Prompt for Secret Key */}
-      <TextPromptDialog
+      {/* <TextPromptDialog
         prompt="Enter secret key"
         isOpen={secretPromptOpen}
         onCancel={() => {
@@ -86,7 +86,7 @@ export const EmptyCardContent: React.FC<Readonly<EmptyCardContentProps>> = ({
             onJoinVoteGuardianCallback(contractAddress, secret);
           }
         }}
-      />
+      /> */}
     </React.Fragment>
   );
 };

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Button, Input } from '@/components/ui';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { type Signature, type SignedCredentialSubject } from '@midnight-ntwrk/university-compact';
+import { type Signature, type SignedCredentialSubject } from '@midnight-ntwrk/university-contract';
 import { useSignedCredentialSubject } from '../contexts/SignedCredentialSubjectContext';
 
 export const IdentityVerification: React.FC = () => {

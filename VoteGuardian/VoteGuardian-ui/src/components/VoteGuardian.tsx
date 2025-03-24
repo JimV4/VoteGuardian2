@@ -59,7 +59,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   const [messagePrompt, setMessagePrompt] = useState<string>();
   const [isWorking, setIsWorking] = useState(!!voteGuardianDeployment$);
   const [optionCounter, setOptionCounter] = useState(0);
-  const [secretKey, setSecretKey] = useState<string>();
+  // const [secretKey, setSecretKey] = useState<string>();
 
   const signedCredentialSubject = useSignedCredentialSubject();
 
@@ -68,27 +68,27 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   // don't have to do anything further once we've called `resolve`.
   const onCreateVoteGuardian = useCallback(() => voteGuardianApiProvider.resolve(), [voteGuardianApiProvider]);
   const onJoinVoteGuardian = useCallback(
-    (contractAddress: ContractAddress, secretKey: string) =>
-      voteGuardianApiProvider.resolve(contractAddress, secretKey),
+    (contractAddress: ContractAddress /*, secretKey: string */) =>
+      voteGuardianApiProvider.resolve(contractAddress /*, secretKey */),
     [voteGuardianApiProvider],
   );
 
-  const onDisplaySecretKey = useCallback(async () => {
-    try {
-      console.log('display');
-      if (deployedVoteGuardianAPI) {
-        setIsWorking(true);
-        const secretKey = await voteGuardianApiProvider.displaySecretKey();
-        console.log(secretKey);
-        setSecretKey(secretKey);
-        setMessagePrompt(secretKey);
-      }
-    } catch (error: unknown) {
-      setErrorMessage(error instanceof Error ? error.message : String(error));
-    } finally {
-      setIsWorking(false);
-    }
-  }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking]);
+  // const onDisplaySecretKey = useCallback(async () => {
+  //   try {
+  //     console.log('display');
+  //     if (deployedVoteGuardianAPI) {
+  //       setIsWorking(true);
+  //       const secretKey = await voteGuardianApiProvider.displaySecretKey();
+  //       console.log(secretKey);
+  //       setSecretKey(secretKey);
+  //       setMessagePrompt(secretKey);
+  //     }
+  //   } catch (error: unknown) {
+  //     setErrorMessage(error instanceof Error ? error.message : String(error));
+  //   } finally {
+  //     setIsWorking(false);
+  //   }
+  // }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking]);
 
   // Callback to handle the posting of a message. The message text is captured in the `messagePrompt`
   // state, and we just need to forward it to the `post` method of the `DeployedVoteGuardianAPI` instance
@@ -284,7 +284,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
           {/* END VOTING QUESTION */}
 
           {/* DISPLAY SECRET KEY */}
-          <Box
+          {/* <Box
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -318,7 +318,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
             <Button variant="contained" color="primary" size="small" onClick={onDisplaySecretKey}>
               Display secret key
             </Button>
-          </Box>
+          </Box> */}
           {/* END DISPLAY SECRET KEY */}
 
           {/* VOTING OPTIONS */}

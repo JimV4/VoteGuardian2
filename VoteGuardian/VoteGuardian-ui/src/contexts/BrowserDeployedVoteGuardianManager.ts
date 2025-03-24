@@ -105,12 +105,12 @@ export interface DeployedVoteGuardianAPIProvider {
    * For a given `contractAddress`, the method will attempt to find and join the identified bulletin voteGuardian
    * contract; otherwise it will attempt to deploy a new one.
    */
-  readonly resolve: (contractAddress?: ContractAddress, secretKey?: string) => Observable<VoteGuardianDeployment>;
+  readonly resolve: (contractAddress?: ContractAddress /*, secretKey?: string */) => Observable<VoteGuardianDeployment>;
 
   /**
    * Retrieves the secret key.
    */
-  displaySecretKey: () => Promise<string>;
+  // displaySecretKey: () => Promise<string>;
 }
 
 /**
@@ -138,8 +138,8 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
   readonly voteGuardianDeployments$: Observable<Array<Observable<VoteGuardianDeployment>>>;
 
   /** @inheritdoc */
-  resolve(contractAddress?: ContractAddress, secretKey?: string): Observable<VoteGuardianDeployment> {
-    console.log(secretKey);
+  resolve(contractAddress?: ContractAddress /*, secretKey?: string */): Observable<VoteGuardianDeployment> {
+    // console.log(secretKey);
     const deployments = this.#voteGuardianDeploymentsSubject.value;
     let deployment = deployments.find(
       (deployment) =>
@@ -155,7 +155,7 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
     });
 
     if (contractAddress) {
-      void this.joinDeployment(deployment, contractAddress, secretKey!);
+      void this.joinDeployment(deployment, contractAddress /*, secretKey! */);
     } else {
       void this.deployDeployment(deployment);
     }
@@ -165,22 +165,22 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
     return deployment;
   }
 
-  async displaySecretKey(): Promise<string> {
-    const providers = await this.getProviders();
-    if (providers !== undefined) {
-      const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+  // async displaySecretKey(): Promise<string> {
+  //   const providers = await this.getProviders();
+  //   if (providers !== undefined) {
+  //     const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
 
-      if (existingPrivateState) {
-        const secretKey = existingPrivateState.secretKey;
+  //     if (existingPrivateState) {
+  //       const secretKey = existingPrivateState.secretKey;
 
-        if (secretKey) {
-          return toHex(secretKey);
-        }
-        return 'no secret key';
-      }
-    }
-    return 'no secret key';
-  }
+  //       if (secretKey) {
+  //         return toHex(secretKey);
+  //       }
+  //       return 'no secret key';
+  //     }
+  //   }
+  //   return 'no secret key';
+  // }
 
   private getProviders(): Promise<VoteGuardianProviders> {
     // We use a cached `Promise` to hold the providers. This will:
@@ -222,12 +222,12 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
   private async joinDeployment(
     deployment: BehaviorSubject<VoteGuardianDeployment>,
     contractAddress: ContractAddress,
-    secretKey: string,
+    // secretKey: string,
   ): Promise<void> {
     try {
       console.log(secretKey);
       const providers = await this.getProviders();
-      const api = await VoteGuardianAPI.join(providers, contractAddress, secretKey, this.logger);
+      const api = await VoteGuardianAPI.join(providers, contractAddress, /*, secretKey, */ this.logger);
 
       deployment.next({
         status: 'deployed',

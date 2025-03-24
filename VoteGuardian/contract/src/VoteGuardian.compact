@@ -29,7 +29,7 @@ export ledger vote_option_map: Map<Opaque<"string">, Opaque<"string">>;
 
 // Constructor initializes the state
 constructor() {
-    voting_organizer = public_key(local_secret_key());
+    // voting_organizer = public_key(local_secret_key());
     vote_state = VOTE_STATE.open;
     vote_count.increment(0); // Initialize vote count at zero
     voting_nulifiers.reset_to_default();
@@ -50,7 +50,7 @@ export circuit cast_vote(vote_option: Opaque<"string">): [] {
     const signed_credential_subject = local_signed_credential_subject();
 
     // Ελέγχεται αν υπογραφή που λαμβάνει ο χρήστης για τα στοιχεία που έχει δώσει είναι έγκυρη
-    verify_signature(subject_hash(signed_credential_subject.hashed_credential), signed_credential_subject.signature);
+    verify_signature(signed_credential_subject.hashed_credential, signed_credential_subject.signature);
 
     //  // Υπολόγισε το nullifier για τον τρέχον χρήστη χασάρωντας το secret key του.
     // const voting_nullifier = nullifier(local_secret_key());
