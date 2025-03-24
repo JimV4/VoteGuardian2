@@ -1,0 +1,16 @@
+"@midnight-ntwrk/vote-guardian-cli@workspace:VoteGuardian/VoteGuardian-cli":
+  version: 0.0.0-use.local
+  resolution: "@midnight-ntwrk/vote-guardian-cli@workspace:VoteGuardian/VoteGuardian-cli"
+  dependencies:
+    "@midnight-ntwrk/vote-guardian-api": "workspace:*"
+    "@midnight-ntwrk/vote-guardian-contract": "workspace:*"
+    "@types/jest": "npm:^29.5.12"
+    "@types/ws": "npm:^8.5.9"
+    eslint: "npm:^8.52.0"
+    jest: "npm:^29.7.0"
+    pino: "npm:^8.16.1"
+    ts-jest: "npm:^29.1.2"
+    typescript: "npm:^5.2.2"
+    ws: "npm:^8.14.2"
+  languageName: unknown
+  linkType: soft
