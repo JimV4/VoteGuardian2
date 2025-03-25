@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Button, Input } from '@/components/ui';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button, Input, Card, CardContent, CardHeader } from '@mui/material';
 import { type Signature, type SignedCredentialSubject } from '@midnight-ntwrk/university-contract';
 import { useSignedCredentialSubject } from '../contexts/SignedCredentialSubjectContext';
+import { utils } from '@midnight-ntwrk/vote-guardian-api';
 
 export const IdentityVerification: React.FC = () => {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
@@ -20,9 +20,9 @@ export const IdentityVerification: React.FC = () => {
       const response = await axios.post('http://localhost:3000/login', credentials);
 
       const signature: Signature = response.data.signature;
-      const hashed_credential: string = response.data.msg;
+      const hashed_credential_str: string = response.data.msg;
 
-      signedCredentialSubject = { hashed_credential, signature };
+      signedCredentialSubject = { hashed_credential: utils.hexToBytes(hashed_credential_str), signature };
       setSignedCredentialSubject(signedCredentialSubject);
 
       alert(`Login successful: ${JSON.stringify(response.data)}`);
@@ -33,9 +33,7 @@ export const IdentityVerification: React.FC = () => {
 
   return (
     <Card className="max-w-md mx-auto p-6 mt-10 shadow-lg rounded-2xl">
-      <CardHeader>
-        <CardTitle className="text-xl font-bold">Identity Verification</CardTitle>
-      </CardHeader>
+      <CardHeader title={'Identity Verification'} />
       <CardContent className="flex flex-col gap-4">
         <Input
           type="text"

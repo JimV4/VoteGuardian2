@@ -30,6 +30,7 @@
     "@originjs/vite-plugin-commonjs": "^1.0.3",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "4.3.4",
     "eslint": "^8.52.0",
     "eslint-config-standard-with-typescript": "^39.1.1",
     "eslint-plugin-react": "^7.33.2",

@@ -453,7 +453,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
   static async join(
     providers: VoteGuardianProviders,
     contractAddress: ContractAddress,
-    secretKey: string,
+    // secretKey: string,
     logger?: Logger,
   ): Promise<VoteGuardianAPI> {
     logger?.info({
@@ -461,7 +461,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
         contractAddress,
       },
     });
-    console.log(`inside api ${secretKey}`);
+    // console.log(`inside api ${secretKey}`);
     let pSignedCredentialSubject: SignedCredentialSubject = {
       hashed_credential: new Uint8Array(32),
       signature: {

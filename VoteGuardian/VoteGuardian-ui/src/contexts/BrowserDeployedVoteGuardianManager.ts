@@ -225,7 +225,7 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
     // secretKey: string,
   ): Promise<void> {
     try {
-      console.log(secretKey);
+      // console.log(secretKey);
       const providers = await this.getProviders();
       const api = await VoteGuardianAPI.join(providers, contractAddress, /*, secretKey, */ this.logger);
 

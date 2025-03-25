@@ -28,6 +28,7 @@ import { VOTE_STATE } from '@midnight-ntwrk/vote-guardian-contract';
 import { EmptyCardContent } from './VoteGuardian.EmptyCardContent';
 import { utils } from '@midnight-ntwrk/vote-guardian-api';
 import { useSignedCredentialSubject } from '../contexts/SignedCredentialSubjectContext';
+import { type SignedCredentialSubject } from '@midnight-ntwrk/university-contract';
 
 /** The props required by the {@link VoteGuardian} component. */
 export interface VoteGuardianProps {
@@ -61,7 +62,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   const [optionCounter, setOptionCounter] = useState(0);
   // const [secretKey, setSecretKey] = useState<string>();
 
-  const signedCredentialSubject = useSignedCredentialSubject();
+  const { signedCredentialSubject, setSignedCredentialSubject } = useSignedCredentialSubject();
 
   // Two simple callbacks that call `resolve(...)` to either deploy or join a bulletin voteGuardian
   // contract. Since the `DeployedVoteGuardianContext` will create a new voteGuardian and update the UI, we
@@ -112,22 +113,22 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
 
   // Callback to handle the taking down of a message. Again, we simply invoke the `takeDown` method
   // of the `DeployedVoteGuardianAPI` instance.
-  const onAddVoter = useCallback(async () => {
-    if (!messagePrompt) {
-      return;
-    }
+  // const onAddVoter = useCallback(async () => {
+  //   if (!messagePrompt) {
+  //     return;
+  //   }
 
-    try {
-      if (deployedVoteGuardianAPI) {
-        setIsWorking(true);
-        await deployedVoteGuardianAPI.add_voter(utils.hexToBytes(messagePrompt));
-      }
-    } catch (error: unknown) {
-      setErrorMessage(error instanceof Error ? error.message : String(error));
-    } finally {
-      setIsWorking(false);
-    }
-  }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking, messagePrompt]);
+  //   try {
+  //     if (deployedVoteGuardianAPI) {
+  //       setIsWorking(true);
+  //       await deployedVoteGuardianAPI.add_voter(utils.hexToBytes(messagePrompt));
+  //     }
+  //   } catch (error: unknown) {
+  //     setErrorMessage(error instanceof Error ? error.message : String(error));
+  //   } finally {
+  //     setIsWorking(false);
+  //   }
+  // }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking, messagePrompt]);
 
   const onAddOption = useCallback(async () => {
     if (!messagePrompt) {
@@ -417,27 +418,27 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
           {/* END ADD VOTING OPTION */}
 
           {/* ADD VOTER */}
-          <Box
+          {/* <Box
             sx={{
               display: 'flex',
               alignItems: 'center',
               gap: 2, // Space between the TextField and Button
             }}
-          >
-            {/* η κάρτα του Message post */}
-            <CardContent
+          > */}
+          {/* η κάρτα του Message post */}
+          {/* <CardContent
               sx={{
                 flex: 1, // Allow equal distribution
                 overflowY: 'auto', // Scroll if content overflows
               }}
-            >
-              {/* {/* {boardState ? (
+            > */}
+          {/* {/* {boardState ? (
                 boardState.state === STATE.occupied ? (
                   <Typography data-testid="board-posted-message" minHeight={160} color="primary">
                     {boardState.message}
                   </Typography>
                 ) : ( */}
-              <TextField
+          {/* <TextField
                 id="message-prompt"
                 data-testid="vote-guardian-add-voter-prompt"
                 variant="outlined"
@@ -453,16 +454,16 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                 onChange={(e) => {
                   setMessagePrompt(e.target.value);
                 }}
-              />
-              {/* )
+              /> */}
+          {/* )
               ) : (
                 <Skeleton variant="rectangular" width={245} height={160} />
               )} */}
-            </CardContent>
+          {/* </CardContent>
             <Button variant="contained" color="primary" size="small" onClick={onAddVoter}>
               Add
             </Button>
-          </Box>
+          </Box> */}
           {/* END ADD VOTER */}
 
           {/* CAST VOTE */}
