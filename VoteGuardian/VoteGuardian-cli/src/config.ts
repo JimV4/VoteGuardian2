@@ -33,10 +33,10 @@ export class StandaloneConfig implements Config {
   privateStateStoreName = 'vote-guardian-private-state';
   logDir = path.resolve(currentDir, '..', 'logs', 'standalone', `${new Date().toISOString()}.log`);
   zkConfigPath = path.resolve(currentDir, '..', '..', 'contract', 'dist', 'managed', 'vote-guardian');
-  indexer = 'http://127.0.0.1:32779/api/v1/graphql';
-  indexerWS = 'ws://127.0.0.1:32779/api/v1/graphql/ws';
-  node = 'http://127.0.0.1:32777';
-  proofServer = 'http://127.0.0.1:32778';
+  indexer = 'http://127.0.0.1:8088/api/v1/graphql';
+  indexerWS = 'ws://127.0.0.1:8088/api/v1/graphql/ws';
+  node = 'http://127.0.0.1:9944';
+  proofServer = 'http://127.0.0.1:6300';
 
   setNetworkId() {
     setNetworkId(NetworkId.Undeployed);

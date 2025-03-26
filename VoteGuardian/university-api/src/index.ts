@@ -2,6 +2,7 @@ import { createServer } from 'http';
 import { type CredentialSubject, pureCircuits, type Signature } from '@midnight-ntwrk/university-contract';
 import { fromHex, toHex } from '@midnight-ntwrk/midnight-js-utils';
 import { randomBytes as nodeRandomBytes } from 'crypto';
+import { Request, Response } from 'express';
 
 // Import dependencies
 const express = require('express');
@@ -35,7 +36,7 @@ const generateSignature = (subject: CredentialSubject, sk: Uint8Array): Signatur
 function fromRawSubject(raw: any): CredentialSubject {
   return {
     username: new Uint8Array(fromHex(raw.username)),
-    secrey: new Uint8Array(fromHex(raw.secret)),
+    hashed_secret: new Uint8Array(fromHex(raw.secret)),
   };
 }
 
@@ -66,7 +67,7 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 
 // Endpoint to check if user exists
-app.post('/login', async (req, res) => {
+app.post('/login', async (req: Request, res: Response) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
@@ -114,7 +115,7 @@ app.post('/login', async (req, res) => {
 });
 
 // Endpoint to insert a new user
-app.post('/register', async (req, res) => {
+app.post('/register', async (req: Request, res: Response) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
