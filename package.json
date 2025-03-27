@@ -12,13 +12,13 @@
     "lint": "turbo run lint"
   },
   "resolutions": {
-    "@midnight-ntwrk/compact-runtime/@midnight-ntwrk/onchain-runtime": "^0.2.2",
-    "@midnight-ntwrk/zswap": "^3.0.2"
+    "@midnight-ntwrk/compact-runtime/@midnight-ntwrk/onchain-runtime": "^0.2.6",
+    "@midnight-ntwrk/zswap": "^3.0.6"
   },
   "dependencies": {
     "@midnight-ntwrk/compact-runtime": "^0.7.0",
-    "@midnight-ntwrk/dapp-connector-api": "^1.2.1",
-    "@midnight-ntwrk/ledger": "^3.0.2",
+    "@midnight-ntwrk/dapp-connector-api": "^1.2.3",
+    "@midnight-ntwrk/ledger": "^3.0.6",
     "@midnight-ntwrk/midnight-js-contracts": "0.2.5",
     "@midnight-ntwrk/midnight-js-fetch-zk-config-provider": "0.2.5",
     "@midnight-ntwrk/midnight-js-http-client-proof-provider": "0.2.5",
@@ -28,8 +28,8 @@
     "@midnight-ntwrk/midnight-js-node-zk-config-provider": "0.2.5",
     "@midnight-ntwrk/midnight-js-types": "0.2.5",
     "@midnight-ntwrk/midnight-js-utils": "0.2.5",
-    "@midnight-ntwrk/wallet": "^3.6.3",
-    "@midnight-ntwrk/wallet-api": "^3.4.2",
+    "@midnight-ntwrk/wallet": "^3.7.5",
+    "@midnight-ntwrk/wallet-api": "^3.5.0",
     "axios": "^1.8.3",
     "express": "^4.21.2",
     "fp-ts": "^2.16.1",
