@@ -9,7 +9,8 @@
     "start": "http-server --port 0 ./dist",
     "dev": "vite",
     "prepack": "yarn build",
-    "build": "tsc && vite build --mode undeployed && cp -r ../contract/dist/managed/vote-guardian/keys ./dist/keys && cp -r ../contract/dist/managed/vote-guardian/zkir ./dist/zkir",
+    "copy-vote-guardian-keys": "mkdir -p ./dist/keys && mkdir -p ./dist/zkir && cp -r ../contract/dist/managed/vote-guardian/keys/* ./dist/keys && cp -r ../contract/dist/managed/vote-guardian/zkir/* ./dist/zkir",
+    "build": "tsc && vite build --mode undeployed && yarn copy-vote-guardian-keys",
     "preview": "vite preview",
     "lint": "eslint ./src",
     "test": "jest --passWithNoTests"
@@ -37,6 +38,6 @@
     "http-server": "^14.1.1",
     "jest": "^29.7.0",
     "typescript": "^5.2.2",
-    "vite": "^4.5.1"
+    "vite": "^5.4.11"
   }
 }
