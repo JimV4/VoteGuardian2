@@ -110,7 +110,7 @@ export interface DeployedVoteGuardianAPIProvider {
   /**
    * Retrieves the secret key.
    */
-  // displaySecretKey: () => Promise<string>;
+  displaySecretKey: () => Promise<string>;
 }
 
 /**
@@ -165,22 +165,31 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
     return deployment;
   }
 
-  // async displaySecretKey(): Promise<string> {
-  //   const providers = await this.getProviders();
-  //   if (providers !== undefined) {
-  //     const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+  async displaySecretKey(): Promise<string> {
+    const providers = await this.getProviders();
+    if (providers !== undefined) {
+      const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
 
-  //     if (existingPrivateState) {
-  //       const secretKey = existingPrivateState.secretKey;
+      if (existingPrivateState) {
+        const hashed_credential = existingPrivateState.signedCredentialSubject!.hashed_credential;
+        const signature = existingPrivateState.signedCredentialSubject!.signature;
+        const bigintString = [
+          signature.pk.x,
+          signature.pk.y,
+          signature.R.x,
+          signature.R.y,
+          signature.s,
+          toHex(hashed_credential),
+        ].join(', ');
 
-  //       if (secretKey) {
-  //         return toHex(secretKey);
-  //       }
-  //       return 'no secret key';
-  //     }
-  //   }
-  //   return 'no secret key';
-  // }
+        if (hashed_credential) {
+          return bigintString;
+        }
+        return 'no secret key';
+      }
+    }
+    return 'no secret key';
+  }
 
   private getProviders(): Promise<VoteGuardianProviders> {
     // We use a cached `Promise` to hold the providers. This will:

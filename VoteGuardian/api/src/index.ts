@@ -416,7 +416,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
         initialPrivateState: { signedCredentialSubject: pSignedCredentialSubject },
         // initialPrivateState: createVoteGuardianPrivateState(),
       });
-
+      console.log(`address: ${DeployedVoteGuardianContract.deployTxData.public.contractAddress} `);
       logger?.info('Passed deploy contract');
 
       logger?.trace({

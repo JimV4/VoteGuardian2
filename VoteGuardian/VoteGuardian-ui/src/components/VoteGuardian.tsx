@@ -60,7 +60,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   const [messagePrompt, setMessagePrompt] = useState<string>();
   const [isWorking, setIsWorking] = useState(!!voteGuardianDeployment$);
   const [optionCounter, setOptionCounter] = useState(0);
-  // const [secretKey, setSecretKey] = useState<string>();
+  const [secretKey, setSecretKey] = useState<string>();
 
   const { signedCredentialSubject, setSignedCredentialSubject } = useSignedCredentialSubject();
 
@@ -74,22 +74,22 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
     [voteGuardianApiProvider],
   );
 
-  // const onDisplaySecretKey = useCallback(async () => {
-  //   try {
-  //     console.log('display');
-  //     if (deployedVoteGuardianAPI) {
-  //       setIsWorking(true);
-  //       const secretKey = await voteGuardianApiProvider.displaySecretKey();
-  //       console.log(secretKey);
-  //       setSecretKey(secretKey);
-  //       setMessagePrompt(secretKey);
-  //     }
-  //   } catch (error: unknown) {
-  //     setErrorMessage(error instanceof Error ? error.message : String(error));
-  //   } finally {
-  //     setIsWorking(false);
-  //   }
-  // }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking]);
+  const onDisplaySecretKey = useCallback(async () => {
+    try {
+      console.log('display');
+      if (deployedVoteGuardianAPI) {
+        setIsWorking(true);
+        const secretKey = await voteGuardianApiProvider.displaySecretKey();
+        console.log(secretKey);
+        setSecretKey(secretKey);
+        setMessagePrompt(secretKey);
+      }
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : String(error));
+    } finally {
+      setIsWorking(false);
+    }
+  }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking]);
 
   // Callback to handle the posting of a message. The message text is captured in the `messagePrompt`
   // state, and we just need to forward it to the `post` method of the `DeployedVoteGuardianAPI` instance
@@ -129,6 +129,19 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   //     setIsWorking(false);
   //   }
   // }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking, messagePrompt]);
+  const onCloseVoting = useCallback(async () => {
+    setOptionCounter((prevCounter) => prevCounter + 1);
+    try {
+      if (deployedVoteGuardianAPI) {
+        setIsWorking(true);
+        await deployedVoteGuardianAPI.close_voting();
+      }
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : String(error));
+    } finally {
+      setIsWorking(false);
+    }
+  }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking]);
 
   const onAddOption = useCallback(async () => {
     if (!messagePrompt) {
@@ -285,7 +298,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
           {/* END VOTING QUESTION */}
 
           {/* DISPLAY SECRET KEY */}
-          {/* <Box
+          <Box
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -319,7 +332,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
             <Button variant="contained" color="primary" size="small" onClick={onDisplaySecretKey}>
               Display secret key
             </Button>
-          </Box> */}
+          </Box>
           {/* END DISPLAY SECRET KEY */}
 
           {/* VOTING OPTIONS */}
@@ -539,6 +552,27 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
               <Skeleton variant="rectangular" width={80} height={20} />
             )}
           </CardActions> */}
+
+          {/* CLOSE VOTING */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2, // Space between the TextField and Button
+            }}
+          >
+            {/* η κάρτα του Message post */}
+            <CardContent
+              sx={{
+                flex: 1, // Allow equal distribution
+                overflowY: 'auto', // Scroll if content overflows
+              }}
+            ></CardContent>
+            <Button variant="contained" color="primary" size="small" onClick={onCloseVoting}>
+              Close
+            </Button>
+          </Box>
+          {/* CLOSE VOTING */}
         </React.Fragment>
       )}
     </Card>

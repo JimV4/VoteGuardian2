@@ -60,7 +60,7 @@ export const EmptyCardContent: React.FC<Readonly<EmptyCardContentProps>> = ({
         </IconButton>
       </CardActions>
       {/* Prompt for Contract Address */}
-      <TextPromptDialog
+      {/* <TextPromptDialog
         prompt="Enter contract address"
         isOpen={textPromptOpen}
         onCancel={() => {
@@ -70,23 +70,22 @@ export const EmptyCardContent: React.FC<Readonly<EmptyCardContentProps>> = ({
           setTextPromptOpen(false);
           setContractAddress(text);
           setSecretPromptOpen(true); // Open the second prompt
-        }}
-      />
-
-      {/* Prompt for Secret Key */}
-      {/* <TextPromptDialog
-        prompt="Enter secret key"
-        isOpen={secretPromptOpen}
-        onCancel={() => {
-          setSecretPromptOpen(false);
-        }}
-        onSubmit={(secret) => {
-          setSecretPromptOpen(false);
-          if (contractAddress) {
-            onJoinVoteGuardianCallback(contractAddress, secret);
-          }
+          onJoinVoteGuardianCallback(contractAddress);
         }}
       /> */}
+
+      {/* Prompt for Secret Key */}
+      <TextPromptDialog
+        prompt="Enter contract address"
+        isOpen={textPromptOpen}
+        onCancel={() => {
+          setTextPromptOpen(false);
+        }}
+        onSubmit={(text) => {
+          setTextPromptOpen(false);
+          onJoinVoteGuardianCallback(text);
+        }}
+      />
     </React.Fragment>
   );
 };
