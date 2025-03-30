@@ -5,13 +5,28 @@ import { randomBytes as nodeRandomBytes } from 'crypto';
 import { Request, Response } from 'express';
 
 // Import dependencies
-const express = require('express');
-const mongoose = require('mongoose');
-const bodyParser = require('body-parser');
-const crypto = require('crypto');
+import express from 'express';
+import mongoose from 'mongoose';
+import bodyParser from 'body-parser';
+import crypto from 'crypto';
+
 // Initialize the app
 const app = express();
 const PORT = 3000;
+
+app.use(express.json());
+
+const hexToBytes = (hex: string) => {
+  if (hex.length % 2 !== 0) {
+    throw new Error('Invalid hex string');
+  }
+
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+  }
+  return bytes;
+};
 
 function pad(s: string, n: number): Uint8Array {
   const encoder = new TextEncoder();
@@ -47,8 +62,8 @@ app.use(bodyParser.json());
 const mongoURI = 'mongodb+srv://dhmhtrhsvassiliou:pIzxC9sXgUSHpXWi@cluster0.ai7xh.mongodb.net/';
 
 mongoose.connect(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+  // useNewUrlParser: true,
+  // useUnifiedTopology: true,
 });
 
 const db = mongoose.connection;
@@ -67,11 +82,11 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 
 // Endpoint to check if user exists
-app.post('/login', async (req: Request, res: Response) => {
+app.post('/login', async (req: Request, res: Response): Promise<void> => {
   const { username, password } = req.body;
 
   if (!username || !password) {
-    return res.status(400).json({ message: 'Username and password are required.' });
+    res.status(400).json({ message: 'Username and password are required.' });
   }
 
   try {
@@ -79,8 +94,8 @@ app.post('/login', async (req: Request, res: Response) => {
     const user = await User.findOne({ username, password });
 
     if (user) {
-      const hashed_secret = user.hashed_secret;
-      const subject = { username, hashed_secret };
+      const hashed_secret = user.hashed_secret!;
+      const subject: CredentialSubject = { username, hashed_secret: hexToBytes(hashed_secret) };
       const signature: Signature = generateSignature(fromRawSubject(subject), pad('0x123', 32));
       const msg = Buffer.from(hashSubject(subject), 'hex');
       // const credentialBytes = new Uint8Array(32);
@@ -115,18 +130,18 @@ app.post('/login', async (req: Request, res: Response) => {
 });
 
 // Endpoint to insert a new user
-app.post('/register', async (req: Request, res: Response) => {
+app.post('/register', async (req: Request, res: Response): Promise<void> => {
   const { username, password } = req.body;
 
   if (!username || !password) {
-    return res.status(400).json({ message: 'Username and password are required.' });
+    res.status(400).json({ message: 'Username and password are required.' });
   }
 
   try {
     // Check if the user already exists
     const existingUser = await User.findOne({ username });
     if (existingUser) {
-      return res.status(400).json({ message: 'Username already exists.' });
+      res.status(400).json({ message: 'Username already exists.' });
     }
 
     // Create a new user

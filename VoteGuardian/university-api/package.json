@@ -1,11 +1,12 @@
 {
   "name": "@midnight-ntwrk/university-api",
   "version": "0.1.0",
+  "type": "module",
   "license": "MIT",
   "private": true,
   "scripts": {
     "build": "rm -rf dist && tsc --project tsconfig.build.json",
-    "serve": "node --enable-source-maps dist/bundle.js",
+    "serve": "node dist/index.js",
     "buildAndRestart": "yarn build && yarn serve"
   },
   "dependencies": {
