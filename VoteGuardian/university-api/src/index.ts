@@ -9,12 +9,14 @@ import express from 'express';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import crypto from 'crypto';
+import cors from 'cors';
 
 // Initialize the app
-const app = express();
-const PORT = 3000;
+// const app = express();
+// const PORT = 3000;
 
-app.use(express.json());
+// app.use(express.json());
+// app.use(cors());
 
 const hexToBytes = (hex: string) => {
   if (hex.length % 2 !== 0) {
@@ -50,13 +52,13 @@ const generateSignature = (subject: CredentialSubject, sk: Uint8Array): Signatur
 
 function fromRawSubject(raw: any): CredentialSubject {
   return {
-    username: new Uint8Array(fromHex(raw.username)),
-    hashed_secret: new Uint8Array(fromHex(raw.secret)),
+    username: pad(raw.username, 32),
+    hashed_secret: new Uint8Array(fromHex(raw.hashed_secret)),
   };
 }
 
 // Middleware
-app.use(bodyParser.json());
+// app.use(bodyParser.json());
 
 // MongoDB connection string (replace with your MongoDB URI)
 const mongoURI = 'mongodb+srv://dhmhtrhsvassiliou:pIzxC9sXgUSHpXWi@cluster0.ai7xh.mongodb.net/';
@@ -82,83 +84,189 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 
 // Endpoint to check if user exists
-app.post('/login', async (req: Request, res: Response): Promise<void> => {
-  const { username, password } = req.body;
+// app.post('/login', async (req: Request, res: Response): Promise<void> => {
+//   let body = '';
+//   console.log('aa1');
+//   req.on('data', (chunk) => {
+//     body += chunk.toString();
+//   });
+//   console.log(body);
+//   console.log('aa2');
 
-  if (!username || !password) {
-    res.status(400).json({ message: 'Username and password are required.' });
+//   // const { username, password } = req.body;
+//   req.on('end', async () => {
+//     console.log('aa3');
+//     let raw;
+//     raw = JSON.parse(body);
+//     console.log('aa4');
+//     if (!raw.username || !raw.password) {
+//       res.status(400).json({ message: 'Username and password are required.' });
+//     }
+//     console.log('point0');
+
+//     try {
+//       let username = raw.username;
+//       let password = raw.password;
+//       // Query the database
+//       const user = await User.findOne({ username, password });
+
+//       console.log('point1');
+
+//       if (user) {
+//         const hashed_secret = user.hashed_secret!;
+//         console.log('point2');
+
+//         const subject: CredentialSubject = {
+//           username: pad(username, 32),
+//           hashed_secret: new Uint8Array(fromHex(hashed_secret)),
+//         };
+//         console.log('point3');
+//         console.log(subject);
+
+//         const signature: Signature = generateSignature(fromRawSubject(subject), pad('0x345', 32));
+//         console.log('point4');
+
+//         const msg = Buffer.from(hashSubject(subject), 'hex');
+//         console.log('point5');
+
+//         res
+//           .status(200)
+//           .end(
+//             JSON.stringify({ signature, msg }, (_, value) => (typeof value === 'bigint' ? value.toString() : value)),
+//           );
+//       } else {
+//         res.status(404).json({ message: 'User not found.' });
+//       }
+//     } catch (error) {
+//       console.error(error);
+//       res.status(500).json({ message: 'Internal server error.' });
+//     }
+//   });
+// });
+
+const server = createServer((req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Allow requests from any origin (for development)
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'); // Allowed HTTP methods
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type'); // Allowed headers
+  if (req.method === 'OPTIONS') {
+    // Respond to preflight request
+    res.writeHead(204);
+    res.end();
+    return;
   }
+  if (req.method === 'POST' && req.url === '/login') {
+    let body = '';
 
-  try {
-    // Query the database
-    const user = await User.findOne({ username, password });
+    req.on('data', (chunk) => {
+      body += chunk.toString();
+    });
 
-    if (user) {
-      const hashed_secret = user.hashed_secret!;
-      const subject: CredentialSubject = { username, hashed_secret: hexToBytes(hashed_secret) };
-      const signature: Signature = generateSignature(fromRawSubject(subject), pad('0x123', 32));
-      const msg = Buffer.from(hashSubject(subject), 'hex');
-      // const credentialBytes = new Uint8Array(32);
-      // crypto.getRandomValues(credentialBytes);
-      // const credentialHex = toHex(credentialBytes);
-      res
-        .status(200)
-        .end(JSON.stringify({ signature, msg }, (_, value) => (typeof value === 'bigint' ? value.toString() : value)));
-      // if (!user.publicKey) {
-      //   const secretKeybytes = new Uint8Array(32);
-      //   crypto.getRandomValues(secretKeybytes);
-      //   const toHex = (bytes) => Buffer.from(bytes).toString('hex');
-      //   const secretKeyHex = toHex(secretKeybytes);
-      //   // Hash the secret key using SHA-256 to create the public key
-      //   const hashSHA256 = (data) => {
-      //     return crypto.createHash('sha256').update(data, 'hex').digest('hex');
-      //   };
-      //   const publicKeyHex = hashSHA256(secretKeyHex);
-      //   user.publicKey = publicKeyHex;
-      //   await user.save();
-      //   res.status(200).json({ message: 'User found.', secretKey: secretKeyHex });
-      // } else {
-      //   res.status(200).json({ message: 'User found.' });
-      // }
-    } else {
-      res.status(404).json({ message: 'User not found.' });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error.' });
+    req.on('end', async () => {
+      let raw, subject, userSignature, subjectHash;
+      raw = JSON.parse(body);
+      console.log('aa4');
+      if (!raw.subject.username || !raw.subject.password) {
+        res.writeHead(400, { message: 'Username and password are required.' });
+        res.end('Not Found');
+      }
+      console.log('point0');
+
+      try {
+        // Step 1: Parse input
+        raw = JSON.parse(body);
+        console.log(raw);
+        let username = raw.username;
+        let password = raw.password;
+        const user = await User.findOne({ username, password });
+        // let hashed_secret = user?.hashed_secret;
+        let hashed_secret = '2ea3775ee4f00cce35bc398e5c50bc6bdf3e05b837288fa9ada7227d8451a685';
+        console.log({ username: raw.subject.username, hashed_secret });
+        subject = fromRawSubject({ username: raw.subject.username, hashed_secret });
+        console.log(subject);
+
+        // Query the database
+        // if (user) {
+        try {
+          // Step 4: Generate response on success
+          subjectHash = hashSubject(subject);
+          const hash = subjectHash;
+          const msg = hash;
+          const sk = pad('0x987', 32);
+          const signature = generateSignature(subject, sk);
+          console.log('passedd');
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(
+            JSON.stringify({ signature, msg }, (_, value) => (typeof value === 'bigint' ? value.toString() : value)),
+          );
+        } catch (error) {
+          console.error('Unexpected server error:', error);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Internal server error' }));
+        }
+        // }
+      } catch (error) {
+        console.error('Invalid JSON input:', error);
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid JSON input' }));
+        return;
+      }
+    });
+  } else {
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('Not Found');
   }
 });
+
+const PORT = 3000;
+server.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}/`);
+});
+
+const subject = {
+  username: 'Alice',
+  hashed_secret: toHex(nodeRandomBytes(32)),
+};
+
+const signature: Signature = generateSignature(fromRawSubject(subject), pad('0x123', 32));
+console.log(signature);
 
 // Endpoint to insert a new user
-app.post('/register', async (req: Request, res: Response): Promise<void> => {
-  const { username, password } = req.body;
+// app.post('/register', async (req: Request, res: Response): Promise<void> => {
+//   const { username, password } = req.body;
 
-  if (!username || !password) {
-    res.status(400).json({ message: 'Username and password are required.' });
-  }
+//   if (!username || !password) {
+//     res.status(400).json({ message: 'Username and password are required.' });
+//   }
 
-  try {
-    // Check if the user already exists
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      res.status(400).json({ message: 'Username already exists.' });
-    }
+//   try {
+//     // Check if the user already exists
+//     const existingUser = await User.findOne({ username });
+//     if (existingUser) {
+//       res.status(400).json({ message: 'Username already exists.' });
+//     }
 
-    // Create a new user
-    const newUser = new User({ username, password });
-    await newUser.save();
+//     // Create a new user
+//     const newUser = new User({ username, password });
 
-    res.status(201).json({ message: 'User registered successfully.', user: newUser });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error.' });
-  }
-});
+//     const hashedSecretBytes = new Uint8Array(32);
+//     crypto.getRandomValues(hashedSecretBytes);
+//     const toHex = (hashedSecretBytes: Uint8Array) => Buffer.from(hashedSecretBytes).toString('hex');
+//     const hashedSecretHex = toHex(hashedSecretBytes);
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+//     newUser.hashed_secret = hashedSecretHex;
+//     await newUser.save();
+
+//     res.status(201).json({ message: 'User registered successfully.', user: newUser });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Internal server error.' });
+//   }
+// });
+
+// // Start the server
+// app.listen(PORT, () => {
+//   console.log(`Server is running on http://localhost:${PORT}`);
+// });
 
 // const server = createServer((req, res) => {
 //   res.setHeader('Access-Control-Allow-Origin', '*'); // Allow requests from any origin (for development)
