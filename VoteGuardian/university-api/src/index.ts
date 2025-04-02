@@ -61,27 +61,27 @@ function fromRawSubject(raw: any): CredentialSubject {
 // app.use(bodyParser.json());
 
 // MongoDB connection string (replace with your MongoDB URI)
-const mongoURI = 'mongodb+srv://dhmhtrhsvassiliou:pIzxC9sXgUSHpXWi@cluster0.ai7xh.mongodb.net/';
+// const mongoURI = 'mongodb+srv://dhmhtrhsvassiliou:pIzxC9sXgUSHpXWi@cluster0.ai7xh.mongodb.net/';
 
-mongoose.connect(mongoURI, {
-  // useNewUrlParser: true,
-  // useUnifiedTopology: true,
-});
+// mongoose.connect(mongoURI, {
+//   // useNewUrlParser: true,
+//   // useUnifiedTopology: true,
+// });
 
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', () => {
-  console.log('Connected to MongoDB');
-});
+// const db = mongoose.connection;
+// db.on('error', console.error.bind(console, 'connection error:'));
+// db.once('open', () => {
+//   console.log('Connected to MongoDB');
+// });
 
-// Define a User schema and model
-const userSchema = new mongoose.Schema({
-  username: String,
-  password: String,
-  hashed_secret: String,
-});
+// // Define a User schema and model
+// const userSchema = new mongoose.Schema({
+//   username: String,
+//   password: String,
+//   hashed_secret: String,
+// });
 
-const User = mongoose.model('User', userSchema);
+// const User = mongoose.model('User', userSchema);
 
 // Endpoint to check if user exists
 // app.post('/login', async (req: Request, res: Response): Promise<void> => {
@@ -144,83 +144,83 @@ const User = mongoose.model('User', userSchema);
 //   });
 // });
 
-const server = createServer((req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Allow requests from any origin (for development)
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'); // Allowed HTTP methods
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type'); // Allowed headers
-  if (req.method === 'OPTIONS') {
-    // Respond to preflight request
-    res.writeHead(204);
-    res.end();
-    return;
-  }
-  if (req.method === 'POST' && req.url === '/login') {
-    let body = '';
+// const server = createServer((req, res) => {
+//   res.setHeader('Access-Control-Allow-Origin', '*'); // Allow requests from any origin (for development)
+//   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'); // Allowed HTTP methods
+//   res.setHeader('Access-Control-Allow-Headers', 'Content-Type'); // Allowed headers
+//   if (req.method === 'OPTIONS') {
+//     // Respond to preflight request
+//     res.writeHead(204);
+//     res.end();
+//     return;
+//   }
+//   if (req.method === 'POST' && req.url === '/login') {
+//     let body = '';
 
-    req.on('data', (chunk) => {
-      body += chunk.toString();
-    });
+//     req.on('data', (chunk) => {
+//       body += chunk.toString();
+//     });
 
-    req.on('end', async () => {
-      let raw, subject, userSignature, subjectHash;
-      raw = JSON.parse(body);
-      console.log('aa4');
-      if (!raw.subject.username || !raw.subject.password) {
-        res.writeHead(400, { message: 'Username and password are required.' });
-        res.end('Not Found');
-      }
-      console.log('point0');
+//     req.on('end', async () => {
+//       let raw, subject, userSignature, subjectHash;
+//       raw = JSON.parse(body);
+//       console.log('aa4');
+//       if (!raw.subject.username || !raw.subject.password) {
+//         res.writeHead(400, { message: 'Username and password are required.' });
+//         res.end('Not Found');
+//       }
+//       console.log('point0');
 
-      try {
-        // Step 1: Parse input
-        raw = JSON.parse(body);
-        console.log(raw);
-        let username = raw.username;
-        let password = raw.password;
-        const user = await User.findOne({ username, password });
-        // let hashed_secret = user?.hashed_secret;
-        let hashed_secret = '2ea3775ee4f00cce35bc398e5c50bc6bdf3e05b837288fa9ada7227d8451a685';
-        console.log({ username: raw.subject.username, hashed_secret });
-        subject = fromRawSubject({ username: raw.subject.username, hashed_secret });
-        console.log(subject);
+//       try {
+//         // Step 1: Parse input
+//         raw = JSON.parse(body);
+//         console.log(raw);
+//         let username = raw.username;
+//         let password = raw.password;
+//         const user = await User.findOne({ username, password });
+//         // let hashed_secret = user?.hashed_secret;
+//         let hashed_secret = '2ea3775ee4f00cce35bc398e5c50bc6bdf3e05b837288fa9ada7227d8451a685';
+//         console.log({ username: raw.subject.username, hashed_secret });
+//         subject = fromRawSubject({ username: raw.subject.username, hashed_secret });
+//         console.log(subject);
 
-        // Query the database
-        // if (user) {
-        try {
-          // Step 4: Generate response on success
-          subjectHash = hashSubject(subject);
-          const hash = subjectHash;
-          const msg = hash;
-          const sk = pad('0x987', 32);
-          const signature = generateSignature(subject, sk);
-          console.log('passedd');
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(
-            JSON.stringify({ signature, msg }, (_, value) => (typeof value === 'bigint' ? value.toString() : value)),
-          );
-        } catch (error) {
-          console.error('Unexpected server error:', error);
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Internal server error' }));
-        }
-        // }
-      } catch (error) {
-        console.error('Invalid JSON input:', error);
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Invalid JSON input' }));
-        return;
-      }
-    });
-  } else {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('Not Found');
-  }
-});
+//         // Query the database
+//         // if (user) {
+//         try {
+//           // Step 4: Generate response on success
+//           subjectHash = hashSubject(subject);
+//           const hash = subjectHash;
+//           const msg = hash;
+//           const sk = pad('0x987', 32);
+//           const signature = generateSignature(subject, sk);
+//           console.log('passedd');
+//           res.writeHead(200, { 'Content-Type': 'application/json' });
+//           res.end(
+//             JSON.stringify({ signature, msg }, (_, value) => (typeof value === 'bigint' ? value.toString() : value)),
+//           );
+//         } catch (error) {
+//           console.error('Unexpected server error:', error);
+//           res.writeHead(500, { 'Content-Type': 'application/json' });
+//           res.end(JSON.stringify({ error: 'Internal server error' }));
+//         }
+//         // }
+//       } catch (error) {
+//         console.error('Invalid JSON input:', error);
+//         res.writeHead(400, { 'Content-Type': 'application/json' });
+//         res.end(JSON.stringify({ error: 'Invalid JSON input' }));
+//         return;
+//       }
+//     });
+//   } else {
+//     res.writeHead(404, { 'Content-Type': 'text/plain' });
+//     res.end('Not Found');
+//   }
+// });
 
-const PORT = 3000;
-server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}/`);
-});
+// const PORT = 3000;
+// server.listen(PORT, () => {
+//   console.log(`Server running at http://localhost:${PORT}/`);
+// });
 
 const subject = {
   username: 'Alice',
