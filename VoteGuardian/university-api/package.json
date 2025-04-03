@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "license": "MIT",
   "private": true,
+  "type": "module",
   "scripts": {
-    "build": "webpack --config webpack.config.js",
-    "serve": "node --enable-source-maps dist/bundle.js",
+    "build": "rm -rf dist && tsc --project tsconfig.build.json",
+    "serve": "node dist/index.js",
     "buildAndRestart": "yarn build && yarn serve"
   },
   "dependencies": {
