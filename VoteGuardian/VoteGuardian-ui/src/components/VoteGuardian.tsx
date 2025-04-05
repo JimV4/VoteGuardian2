@@ -94,7 +94,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
       console.log(credentials);
       const input = {
         subject: {
-          username: uint8ArrayToString(pad(credentials.username, 32)),
+          username: credentials.username,
           password: credentials.password,
         },
       };
@@ -107,14 +107,20 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
       });
       // const response = await axios.post('http://localhost:3000/login', { subject: credentials });
       const result = await response.json();
-      const signature: Signature = result.data.signature;
-      const hashed_credential_str: string = result.data.msg;
+      console.log('after');
+      console.log(result);
+      const signature: Signature = result.signature;
+      const hashed_credential_str: string = result.msg.data;
+      // console.log(signature);
+      // console.log(hashed_credential_str);
 
       signedCredentialSubject = { hashed_credential: utils.hexToBytes(hashed_credential_str), signature };
+      console.log(signedCredentialSubject);
       setSignedCredentialSubject(signedCredentialSubject);
 
       alert(`Login successful: ${JSON.stringify(result.data)}`);
     } catch (err) {
+      console.error(err);
       setError('Login failed. Please check your credentials.');
     }
   };
@@ -226,6 +232,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
     try {
       if (deployedVoteGuardianAPI) {
         setIsWorking(true);
+        console.log(signedCredentialSubject);
         await deployedVoteGuardianAPI.cast_vote(messagePrompt, signedCredentialSubject);
       }
     } catch (error: unknown) {

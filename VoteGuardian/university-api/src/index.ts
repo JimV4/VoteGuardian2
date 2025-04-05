@@ -84,30 +84,28 @@ const User = mongoose.model('User', userSchema);
 
 // Endpoint to check if user exists
 app.post('/login', async (req: Request, res: Response): Promise<void> => {
-  const { username, password } = req.body;
+  const { username, password } = req.body.subject;
 
   console.log(req.body);
 
-  if (!username || !password) {
+  if (!req.body.subject.username || !req.body.subject.password) {
     res.status(400).json({ message: 'Username and password are required.' });
   }
 
   try {
     // Query the database
     const user = await User.findOne({ username, password });
-
     if (user) {
       const hashed_secret = user.hashed_secret!;
 
       const subject: CredentialSubject = {
+        // username: pad(username, 32),
         username: pad(username, 32),
         hashed_secret: new Uint8Array(fromHex(hashed_secret)),
       };
 
       const signature: Signature = generateSignature(subject, pad('0x345', 32));
-
       const msg = Buffer.from(hashSubject(subject), 'hex');
-
       res
         .status(200)
         .end(JSON.stringify({ signature, msg }, (_, value) => (typeof value === 'bigint' ? value.toString() : value)));
@@ -198,14 +196,14 @@ app.post('/login', async (req: Request, res: Response): Promise<void> => {
 //   console.log(`Server running at http://localhost:${PORT}/`);
 // });
 
-const subject = {
-  username: 'Alice',
-  hashed_secret: toHex(nodeRandomBytes(32)),
-};
+// const subject = {
+//   username: 'Alice',
+//   hashed_secret: toHex(nodeRandomBytes(32)),
+// };
 
-console.log(subject);
-const signature: Signature = generateSignature(fromRawSubject(subject), pad('0x123', 32));
-console.log(signature);
+// console.log(subject);
+// const signature: Signature = generateSignature(fromRawSubject(subject), pad('0x123', 32));
+// console.log(signature);
 
 // Endpoint to insert a new user
 app.post('/register', async (req: Request, res: Response): Promise<void> => {
@@ -220,20 +218,20 @@ app.post('/register', async (req: Request, res: Response): Promise<void> => {
     const existingUser = await User.findOne({ username });
     if (existingUser) {
       res.status(400).json({ message: 'Username already exists.' });
+    } else {
+      // Create a new user
+      const newUser = new User({ username, password });
+
+      const hashedSecretBytes = new Uint8Array(32);
+      crypto.getRandomValues(hashedSecretBytes);
+      const toHex = (hashedSecretBytes: Uint8Array) => Buffer.from(hashedSecretBytes).toString('hex');
+      const hashedSecretHex = toHex(hashedSecretBytes);
+
+      newUser.hashed_secret = hashedSecretHex;
+      await newUser.save();
+
+      res.status(201).json({ message: 'User registered successfully.', user: newUser });
     }
-
-    // Create a new user
-    const newUser = new User({ username, password });
-
-    const hashedSecretBytes = new Uint8Array(32);
-    crypto.getRandomValues(hashedSecretBytes);
-    const toHex = (hashedSecretBytes: Uint8Array) => Buffer.from(hashedSecretBytes).toString('hex');
-    const hashedSecretHex = toHex(hashedSecretBytes);
-
-    newUser.hashed_secret = hashedSecretHex;
-    await newUser.save();
-
-    res.status(201).json({ message: 'User registered successfully.', user: newUser });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error.' });

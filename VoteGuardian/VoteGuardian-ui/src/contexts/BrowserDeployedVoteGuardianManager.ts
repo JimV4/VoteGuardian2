@@ -174,10 +174,10 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
         const hashed_credential = existingPrivateState.signedCredentialSubject!.hashed_credential;
         const signature = existingPrivateState.signedCredentialSubject!.signature;
         const bigintString = [
-          signature.pk.x,
-          signature.pk.y,
-          signature.R.x,
-          signature.R.y,
+          // signature.pk.x,
+          // signature.pk.y,
+          // signature.R.x,
+          // signature.R.y,
           signature.s,
           toHex(hashed_credential),
         ].join(', ');

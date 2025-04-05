@@ -278,14 +278,22 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
   async cast_vote(encrypted_vote: string, signedCredentialSubject?: SignedCredentialSubject): Promise<void> {
     try {
       this.logger?.info(`casted votee: ${encrypted_vote}`);
+      console.log(signedCredentialSubject);
+      signedCredentialSubject!.signature.s = BigInt(signedCredentialSubject!.signature.s);
 
+      signedCredentialSubject!.signature = {
+        s: signedCredentialSubject!.signature.s,
+      } as Signature;
+      console.log(signedCredentialSubject);
       // const initialState = await VoteGuardianAPI.getOrCreateInitialPrivateState(this.providers.privateStateProvider);
       const newState: VoteGuardianPrivateState = {
-        signedCredentialSubject,
+        signedCredentialSubject: signedCredentialSubject,
       };
+      console.log(newState);
       await this.providers.privateStateProvider.set('voteGuardianPrivateState', newState);
       this.privateStates$.next(newState);
 
+      console.log('effffffffffff');
       const txData = await this.deployedContract.callTx.cast_vote(encrypted_vote);
 
       this.logger?.trace({
@@ -301,6 +309,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       // console.log((error as Error).stack);
       // console.log(error);
       if (err.message.includes('type error')) {
+        console.log(error);
         this.logger?.info('You are not authorized to vote! 2');
       } else {
         console.log((error as Error).message);
@@ -405,8 +414,8 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       let pSignedCredentialSubject: SignedCredentialSubject = {
         hashed_credential: new Uint8Array(32),
         signature: {
-          pk: { x: 0n, y: 0n },
-          R: { x: 0n, y: 0n },
+          // pk: { x: 0n, y: 0n },
+          // R: { x: 0n, y: 0n },
           s: 0n,
         },
       };
@@ -465,8 +474,8 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
     let pSignedCredentialSubject: SignedCredentialSubject = {
       hashed_credential: new Uint8Array(32),
       signature: {
-        pk: { x: 0n, y: 0n },
-        R: { x: 0n, y: 0n },
+        // pk: { x: 0n, y: 0n },
+        // R: { x: 0n, y: 0n },
         s: 0n,
       },
     };
