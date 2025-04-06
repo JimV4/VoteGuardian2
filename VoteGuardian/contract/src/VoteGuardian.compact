@@ -26,7 +26,7 @@ export ledger vote_count: Counter;
 export ledger vote_question: Opaque<"string">;
 
 // Ledger to store options and their id. For example: 1: "yes", 2: "no"
-export ledger vote_option_map: Map<Opaque<"string">, Opaque<"string">>;
+// export ledger vote_option_map: Map<Opaque<"string">, Opaque<"string">>;
 
 
 // Constructor initializes the state
@@ -46,8 +46,8 @@ export circuit cast_vote(vote_option: Opaque<"string">): [] {
     // assert voting_organizer != public_key(local_secret_key())
     //     "As organizer, you are not allowed to vote!";
 
-    assert vote_state == VOTE_STATE.open
-        "Voting is not open";
+    // assert vote_state == VOTE_STATE.open
+    //     "Voting is not open";
 
     const signed_credential_subject = local_signed_credential_subject();
 
@@ -63,14 +63,14 @@ export circuit cast_vote(vote_option: Opaque<"string">): [] {
 
     // voting_nulifiers.insert(voting_nullifier);
 
-    assert vote_option_map.member(vote_option)
-        "Not a valid option!";
+    // assert vote_option_map.member(vote_option)
+    //     "Not a valid option!";
 
     // Record the vote 
-    const vote = vote_option_map.lookup(vote_option);
+    // const vote = vote_option_map.lookup(vote_option);
 
-    votes_list.push_front(vote);
-    vote_count.increment(1);
+    // votes_list.push_front(vote);
+    // vote_count.increment(1);
 }
 
 // Function to close the voting phase
@@ -93,7 +93,8 @@ export circuit add_option(vote_option: Opaque<"string">, i: Opaque<"string">): [
     // assert voting_organizer == public_key(local_secret_key())
     //     "You are not authorized to add a voting option!";
 
-    vote_option_map.insert(i, vote_option);
+    // vote_option_map.insert(i, vote_option);
+    vote_question = vote_option;
 }
 
 // export circuit verify_identity(msg: Bytes<32>, signature: Signature): [] {
