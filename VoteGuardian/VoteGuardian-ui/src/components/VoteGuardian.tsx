@@ -33,7 +33,7 @@ import { utils } from '@midnight-ntwrk/vote-guardian-api';
 import { useSignedCredentialSubject } from '../contexts/SignedCredentialSubjectContext';
 import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 import axios from 'axios';
-import { type Signature, type SignedCredentialSubject } from '@midnight-ntwrk/university-contract';
+import { Signature, type SignedCredentialSubject } from '@midnight-ntwrk/university-contract';
 import { IdentityVerification } from './IdentityVerification';
 
 /** The props required by the {@link VoteGuardian} component. */
@@ -91,7 +91,6 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   const handleSubmit = async (): Promise<void> => {
     setError(null);
     try {
-      console.log(credentials);
       const input = {
         subject: {
           username: credentials.username,
@@ -107,14 +106,26 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
       });
       // const response = await axios.post('http://localhost:3000/login', { subject: credentials });
       const result = await response.json();
-      console.log('after');
-      console.log(result);
-      const signature: Signature = result.signature;
-      const hashed_credential_str: string = result.msg.data;
-      // console.log(signature);
-      // console.log(hashed_credential_str);
+      const signature = result.signature;
+      const hashed_credential_str = result.msg;
+      console.log(signature);
+      console.log(typeof signature);
+      console.log(hashed_credential_str);
+      console.log(typeof hashed_credential_str);
 
-      signedCredentialSubject = { hashed_credential: utils.hexToBytes(hashed_credential_str), signature };
+      signedCredentialSubject = {
+        hashed_credential: new Uint8Array(hashed_credential_str.data),
+        signature: {
+          s: new Uint8Array(signature.s.data),
+        },
+      };
+
+      // const signedCredentialSubject2: SignedCredentialSubject = {
+      //   hashed_credential: signedCredentialSubject.hashed_credential,
+      //   signature: {
+      //     s: signedCredentialSubject.signature.s,
+      //   },
+      // };
       console.log(signedCredentialSubject);
       setSignedCredentialSubject(signedCredentialSubject);
 
@@ -233,6 +244,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
       if (deployedVoteGuardianAPI) {
         setIsWorking(true);
         console.log(signedCredentialSubject);
+        console.log(`Message prompt: ${messagePrompt}`);
         await deployedVoteGuardianAPI.cast_vote(messagePrompt, signedCredentialSubject);
       }
     } catch (error: unknown) {

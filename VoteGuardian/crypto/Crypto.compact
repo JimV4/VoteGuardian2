@@ -21,7 +21,7 @@ module Crypto {
   export struct Signature {
     // pk: CurvePoint;
     // R: CurvePoint;
-    s: Field;
+    s: Bytes<32>;
   }
 
   // Could be used as a credential subject as defined in https://w3c-ccg.github.io/vc-data-model/#credential-subject
@@ -79,7 +79,7 @@ module Crypto {
       //   x: 12345, 
       //   y: 12345
       // },
-      s: 12345 
+      s: msg 
     };
   }
 
@@ -103,6 +103,6 @@ module Crypto {
     // const rhs: CurvePoint = ec_add(R, c_pk);
 
     // Enforce verification equation
-    assert signature.s == 12345 "Signature verification failed";
+    assert signature.s == msg "Signature verification failed";
   }
 }

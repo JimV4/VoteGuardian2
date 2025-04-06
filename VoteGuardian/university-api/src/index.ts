@@ -106,9 +106,7 @@ app.post('/login', async (req: Request, res: Response): Promise<void> => {
 
       const signature: Signature = generateSignature(subject, pad('0x345', 32));
       const msg = Buffer.from(hashSubject(subject), 'hex');
-      res
-        .status(200)
-        .end(JSON.stringify({ signature, msg }, (_, value) => (typeof value === 'bigint' ? value.toString() : value)));
+      res.status(200).json({ signature, msg });
     } else {
       res.status(404).json({ message: 'User not found.' });
     }

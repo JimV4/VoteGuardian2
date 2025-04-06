@@ -243,6 +243,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
   async add_option(vote_option: string, index: string): Promise<void> {
     try {
       this.logger?.info(`added option: ${vote_option}`);
+      console.log(index);
       const txData = await this.deployedContract.callTx.add_option(vote_option, index);
 
       this.logger?.trace({
@@ -279,11 +280,11 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
     try {
       this.logger?.info(`casted votee: ${encrypted_vote}`);
       console.log(signedCredentialSubject);
-      signedCredentialSubject!.signature.s = BigInt(signedCredentialSubject!.signature.s);
+      // signedCredentialSubject!.signature.s = BigInt(signedCredentialSubject!.signature.s);
 
-      signedCredentialSubject!.signature = {
-        s: signedCredentialSubject!.signature.s,
-      } as Signature;
+      // signedCredentialSubject!.signature = {
+      //   s: signedCredentialSubject!.signature.s,
+      // } as Signature;
       console.log(signedCredentialSubject);
       // const initialState = await VoteGuardianAPI.getOrCreateInitialPrivateState(this.providers.privateStateProvider);
       const newState: VoteGuardianPrivateState = {
@@ -411,12 +412,14 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       /* η συνάρτηση deployContract έρχεται από τη βιβλιοθήκη. Πα΄ίρνει ως παράμετρο ένα αντικείμενο τύπου MidnightProviders και ένα αντικείμενο που είναι το
       DeployContractOptions
       */
+      let signature = new Uint8Array(32);
+      signature[31] = 1;
       let pSignedCredentialSubject: SignedCredentialSubject = {
         hashed_credential: new Uint8Array(32),
         signature: {
           // pk: { x: 0n, y: 0n },
           // R: { x: 0n, y: 0n },
-          s: 0n,
+          s: signature,
         },
       };
       const DeployedVoteGuardianContract = await deployContract(providers, {
@@ -471,12 +474,14 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       },
     });
     // console.log(`inside api ${secretKey}`);
+    let signature = new Uint8Array(32);
+    signature[31] = 1;
     let pSignedCredentialSubject: SignedCredentialSubject = {
       hashed_credential: new Uint8Array(32),
       signature: {
         // pk: { x: 0n, y: 0n },
         // R: { x: 0n, y: 0n },
-        s: 0n,
+        s: signature,
       },
     };
     const deployedVoteGuardianContract = await findDeployedContract(providers, {
