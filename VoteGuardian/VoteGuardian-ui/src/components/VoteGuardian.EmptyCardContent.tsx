@@ -15,7 +15,7 @@ export interface EmptyCardContentProps {
   /** A callback that will be called to create a new bulletin voteGuardian. */
   onCreateVoteGuardianCallback: () => void;
   /** A callback that will be called to join an existing bulletin voteGuardian. */
-  onJoinVoteGuardianCallback: (contractAddress: ContractAddress /*, secretKey: string */) => void;
+  onJoinVoteGuardianCallback: (contractAddress: ContractAddress, secretKey: string) => void;
 }
 
 /**
@@ -60,7 +60,7 @@ export const EmptyCardContent: React.FC<Readonly<EmptyCardContentProps>> = ({
         </IconButton>
       </CardActions>
       {/* Prompt for Contract Address */}
-      {/* <TextPromptDialog
+      <TextPromptDialog
         prompt="Enter contract address"
         isOpen={textPromptOpen}
         onCancel={() => {
@@ -70,20 +70,21 @@ export const EmptyCardContent: React.FC<Readonly<EmptyCardContentProps>> = ({
           setTextPromptOpen(false);
           setContractAddress(text);
           setSecretPromptOpen(true); // Open the second prompt
-          onJoinVoteGuardianCallback(contractAddress);
         }}
-      /> */}
+      />
 
       {/* Prompt for Secret Key */}
       <TextPromptDialog
-        prompt="Enter contract address"
-        isOpen={textPromptOpen}
+        prompt="Enter secret key"
+        isOpen={secretPromptOpen}
         onCancel={() => {
-          setTextPromptOpen(false);
+          setSecretPromptOpen(false);
         }}
-        onSubmit={(text) => {
-          setTextPromptOpen(false);
-          onJoinVoteGuardianCallback(text);
+        onSubmit={(secret) => {
+          setSecretPromptOpen(false);
+          if (contractAddress) {
+            onJoinVoteGuardianCallback(contractAddress, secret);
+          }
         }}
       />
     </React.Fragment>

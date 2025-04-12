@@ -16,12 +16,10 @@ import { theme } from './config/theme';
 import '@midnight-ntwrk/dapp-connector-api';
 import * as pino from 'pino';
 import { DeployedVoteGuardianProvider } from './contexts';
-import { SignedCredentialSubjectProvider } from './contexts/SignedCredentialSubjectContext';
 
 const networkId = import.meta.env.VITE_NETWORK_ID as NetworkId;
 // Ensure that the network IDs are set within the Midnight libraries.
 setNetworkId(networkId);
-console.log(networkId);
 
 // Create a default `pino` logger and configure it with the configured logging level.
 export const logger = pino.pino({
@@ -35,9 +33,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <CssBaseline />
     <ThemeProvider theme={theme}>
       <DeployedVoteGuardianProvider logger={logger}>
-        <SignedCredentialSubjectProvider>
-          <App />
-        </SignedCredentialSubjectProvider>
+        <App />
       </DeployedVoteGuardianProvider>
     </ThemeProvider>
   </React.StrictMode>,

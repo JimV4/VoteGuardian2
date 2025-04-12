@@ -153,7 +153,7 @@ const buildWalletFromSeed = async (config: Config, rli: Interface, logger: Logge
  * This seed gives access to tokens minted in the genesis block of a local development node - only
  * used in standalone networks to build a wallet with initial funds.
  */
-const GENESIS_MINT_WALLET_SEED = '0000000000000000000000000000000000000000000000000000000000000001';
+const GENESIS_MINT_WALLET_SEED = '0000000000000000000000000000000000000000000000000000000000000042';
 
 /* **********************************************************************
  * buildWallet: unless running in a standalone (offline) mode,
@@ -235,7 +235,7 @@ export const run = async (config: Config, logger: Logger, dockerEnv?: DockerComp
     }
 
     await sendNativeToken(
-      '13a2623c4350c176237a2dc99727209466b74069b343032ca531467980d79eea|030056fe5b029eb186b63ccdb446a405da82cd67b1a95ef6d12da2b8e44ab04c17cf2c4b2e714b45ec4fb6d30f975ed714bcf1396bdb37f70f17',
+      '343257a332f97ed43d53ed2d9e0785bddb767f45b7b398204a95563e5ccb9de9|0300edec82521e7aaf375f28895084f0a79f640ef2a375263450ee900bf8ad02eae17be28743966afc289670101a5c8f50163a7859f79359fb1e',
       10000000000n,
     );
   }

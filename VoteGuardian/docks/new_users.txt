@@ -1,10 +1,12 @@
-bce09f0809506b45d05d8c67b89f9721c7fff98a3ac584ed045dffca9aececd9
-d0bf680df091fbf025d1918cb7c3841f3e5f12ef4649ba7a5ea0ef89a689d4ee
-130d6c5c8f0651f8c134852a62e8bbee9cb1b0ffc3b734538747ac16bd20062a
-068ba8fd0bc622311a99a187f9526c934ff8033527bd3e98aeb069741a5b14db
-0caf695bd3a5b031ba3fbb95b3d21205e56e93f968eb769ab888ae46bbed964c
-cbc072b9042ada0be7a0940a08b4fea0ba3d65e7bf43a34ad7c91c220bf46eb1
-974ecdc48e46699748bff29637cbd020fb455df5f3b35a91ad1f8dd5a84b9a1d
+docker compose -f standalone.yml up -d
+docker stop $(docker ps -q)
 
+contract address: 02007b94a916b1fbc4b36c92f98abd6cbea3d1c0d39294b099a5140e1d1219f1a3c1
+organizer secret key: 71bd9b1264b6e693c8312ac339e7293174a491e5f44319360a3caf5527757251
 
-local contract address: 020087ce96a86b088a660b2dcc88f76d3088456ca509904d610866803eb0efbfe1fd       
+username: a
+password: test
+secretKey: c999892f8053268a4d4c2c2c44615086c931943457e8f20381f059e4ef5a8612
+publicKey: cf0ad77b9fffc110e245216304f908f1845cbb50a85caced7e7cf8d32d487161
+
+---------------------------------------------------------------------------------------

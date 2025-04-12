@@ -13,11 +13,8 @@ import {
   TextField,
   Button,
   Box,
-  Input,
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
-import { toHex } from '@midnight-ntwrk/midnight-js-utils';
-
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import WriteIcon from '@mui/icons-material/EditNoteOutlined';
@@ -30,11 +27,6 @@ import { type Observable } from 'rxjs';
 import { VOTE_STATE } from '@midnight-ntwrk/vote-guardian-contract';
 import { EmptyCardContent } from './VoteGuardian.EmptyCardContent';
 import { utils } from '@midnight-ntwrk/vote-guardian-api';
-import { useSignedCredentialSubject } from '../contexts/SignedCredentialSubjectContext';
-import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
-import axios from 'axios';
-import { Signature, type SignedCredentialSubject } from '@midnight-ntwrk/university-contract';
-import { IdentityVerification } from './IdentityVerification';
 
 /** The props required by the {@link VoteGuardian} component. */
 export interface VoteGuardianProps {
@@ -67,84 +59,14 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   const [isWorking, setIsWorking] = useState(!!voteGuardianDeployment$);
   const [optionCounter, setOptionCounter] = useState(0);
   const [secretKey, setSecretKey] = useState<string>();
-  const [credentials, setCredentials] = useState({ username: '', password: '' });
-  let { signedCredentialSubject, setSignedCredentialSubject } = useSignedCredentialSubject();
-  const [error, setError] = useState<string | null>(null);
-
-  function pad(s: string, n: number): Uint8Array {
-    const encoder = new TextEncoder();
-    const utf8Bytes = encoder.encode(s);
-    if (n < utf8Bytes.length) {
-      throw new Error(`The padded length n must be at least ${utf8Bytes.length}`);
-    }
-    const paddedArray = new Uint8Array(n);
-    paddedArray.set(utf8Bytes);
-    return paddedArray;
-  }
-  const uint8ArrayToString = (arr: Uint8Array) => new TextDecoder().decode(arr);
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setCredentials({ ...credentials, [e.target.name]: e.target.value });
-  };
-  const customStringify = (obj: any): string => {
-    return JSON.stringify(obj, (_, value) => (typeof value === 'bigint' ? value.toString() : value), 2);
-  };
-  const handleSubmit = async (): Promise<void> => {
-    setError(null);
-    try {
-      const input = {
-        subject: {
-          username: credentials.username,
-          password: credentials.password,
-        },
-      };
-      const response = await fetch('http://localhost:3000/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: customStringify(input),
-      });
-      // const response = await axios.post('http://localhost:3000/login', { subject: credentials });
-      const result = await response.json();
-      const signature = result.signature;
-      const hashed_credential_str = result.msg;
-      console.log(signature);
-      console.log(typeof signature);
-      console.log(hashed_credential_str);
-      console.log(typeof hashed_credential_str);
-
-      signedCredentialSubject = {
-        hashed_credential: new Uint8Array(hashed_credential_str.data),
-        signature: {
-          s: new Uint8Array(signature.s.data),
-        },
-      };
-
-      // const signedCredentialSubject2: SignedCredentialSubject = {
-      //   hashed_credential: signedCredentialSubject.hashed_credential,
-      //   signature: {
-      //     s: signedCredentialSubject.signature.s,
-      //   },
-      // };
-      console.log(signedCredentialSubject);
-      setSignedCredentialSubject(signedCredentialSubject);
-
-      alert(`Login successful: ${JSON.stringify(result.data)}`);
-    } catch (err) {
-      console.error(err);
-      setError('Login failed. Please check your credentials.');
-    }
-  };
-
-  // const { signedCredentialSubject, setSignedCredentialSubject } = useSignedCredentialSubject();
 
   // Two simple callbacks that call `resolve(...)` to either deploy or join a bulletin voteGuardian
   // contract. Since the `DeployedVoteGuardianContext` will create a new voteGuardian and update the UI, we
   // don't have to do anything further once we've called `resolve`.
   const onCreateVoteGuardian = useCallback(() => voteGuardianApiProvider.resolve(), [voteGuardianApiProvider]);
   const onJoinVoteGuardian = useCallback(
-    (contractAddress: ContractAddress /*, secretKey: string */) =>
-      voteGuardianApiProvider.resolve(contractAddress /*, secretKey */),
+    (contractAddress: ContractAddress, secretKey: string) =>
+      voteGuardianApiProvider.resolve(contractAddress, secretKey),
     [voteGuardianApiProvider],
   );
 
@@ -187,35 +109,22 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
 
   // Callback to handle the taking down of a message. Again, we simply invoke the `takeDown` method
   // of the `DeployedVoteGuardianAPI` instance.
-  // const onAddVoter = useCallback(async () => {
-  //   if (!messagePrompt) {
-  //     return;
-  //   }
+  const onAddVoter = useCallback(async () => {
+    if (!messagePrompt) {
+      return;
+    }
 
-  //   try {
-  //     if (deployedVoteGuardianAPI) {
-  //       setIsWorking(true);
-  //       await deployedVoteGuardianAPI.add_voter(utils.hexToBytes(messagePrompt));
-  //     }
-  //   } catch (error: unknown) {
-  //     setErrorMessage(error instanceof Error ? error.message : String(error));
-  //   } finally {
-  //     setIsWorking(false);
-  //   }
-  // }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking, messagePrompt]);
-  const onCloseVoting = useCallback(async () => {
-    setOptionCounter((prevCounter) => prevCounter + 1);
     try {
       if (deployedVoteGuardianAPI) {
         setIsWorking(true);
-        await deployedVoteGuardianAPI.close_voting();
+        await deployedVoteGuardianAPI.add_voter(utils.hexToBytes(messagePrompt));
       }
     } catch (error: unknown) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
     } finally {
       setIsWorking(false);
     }
-  }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking]);
+  }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking, messagePrompt]);
 
   const onAddOption = useCallback(async () => {
     if (!messagePrompt) {
@@ -243,9 +152,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
     try {
       if (deployedVoteGuardianAPI) {
         setIsWorking(true);
-        console.log(signedCredentialSubject);
-        console.log(`Message prompt: ${messagePrompt}`);
-        await deployedVoteGuardianAPI.cast_vote(messagePrompt, signedCredentialSubject);
+        await deployedVoteGuardianAPI.cast_vote(messagePrompt);
       }
     } catch (error: unknown) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
@@ -307,254 +214,227 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   }, [voteGuardianDeployment, setIsWorking, setErrorMessage, setDeployedVoteGuardianAPI]);
 
   return (
-    <div>
-      <Card className="max-w-md mx-auto p-6 mt-10 shadow-lg rounded-2xl">
-        <CardHeader title={'Identity Verification'} />
-        <CardContent className="flex flex-col gap-4">
-          <Input
-            type="text"
-            name="username"
-            placeholder="Username"
-            value={credentials.username}
-            onChange={handleChange}
-            className="p-2 border rounded-lg"
-          />
-          <Input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={credentials.password}
-            onChange={handleChange}
-            className="p-2 border rounded-lg"
-          />
-          {error && <p className="text-red-500">{error}</p>}
-          <Button onClick={handleSubmit} className="w-full bg-blue-600 text-white rounded-lg p-2">
-            Login
-          </Button>
-        </CardContent>
-      </Card>
+    <Card
+      sx={{ position: 'relative', width: 300, height: 325, minWidth: 300, minHeight: 325, overflowY: 'auto' }}
+      color="primary"
+    >
+      {!voteGuardianDeployment$ && (
+        <EmptyCardContent
+          onCreateVoteGuardianCallback={onCreateVoteGuardian}
+          onJoinVoteGuardianCallback={onJoinVoteGuardian}
+        />
+      )}
 
-      <Card
-        sx={{ position: 'relative', width: 300, height: 325, minWidth: 300, minHeight: 325, overflowY: 'auto' }}
-        color="primary"
-      >
-        {!voteGuardianDeployment$ && (
-          <EmptyCardContent
-            onCreateVoteGuardianCallback={onCreateVoteGuardian}
-            onJoinVoteGuardianCallback={onJoinVoteGuardian}
-          />
-        )}
-
-        {voteGuardianDeployment$ && (
-          <React.Fragment>
-            <Backdrop
-              sx={{
-                position: 'absolute',
-                color: '#fff',
-                width: '100%', // Full width of the Card
-                height: '100%',
-                zIndex: (theme) => theme.zIndex.drawer + 1,
-              }}
-              open={isWorking}
-            >
-              <CircularProgress data-testid="vote-guardian-working-indicator" />
-            </Backdrop>
-            <Backdrop
-              sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-              open={!!errorMessage}
-            >
-              <StopIcon fontSize="large" />
-              <Typography component="div" data-testid="vote-guardian-error-message">
-                {errorMessage}
-              </Typography>
-            </Backdrop>
-            <CardHeader
-              avatar={
-                // voteGuardianState ? (
-                //   voteGuardianState.state === STATE.vacant ||
-                //   (voteGuardianState.state === STATE.occupied && voteGuardianState.isOwner) ? (
-                //     <LockOpenIcon data-testid="post-unlocked-icon" />
-                //   ) : (
-                //     <LockIcon data-testid="post-locked-icon" />
-                //   )
-                // ) : (
-                <Skeleton variant="circular" width={20} height={20} />
-                // )
-              }
-              titleTypographyProps={{ color: 'primary' }}
-              // title={toShortFormatContractAddress(deployedVoteGuardianAPI?.deployedContractAddress) ?? 'Loading...'}
-              title={deployedVoteGuardianAPI?.deployedContractAddress ?? 'Loading...'}
-              action={
-                deployedVoteGuardianAPI?.deployedContractAddress ? (
-                  <IconButton title="Copy contract address" onClick={onCopyContractAddress}>
-                    <CopyIcon fontSize="small" />
-                  </IconButton>
-                ) : (
-                  <Skeleton variant="circular" width={20} height={20} />
-                )
-              }
-            />
-            {/* // VOTING QUESTION */}
-            <Typography data-testid="vote-guardian-question" minHeight={50} color="primary">
-              {voteGuardianState?.voteQuestion || 'No question yet'}
+      {voteGuardianDeployment$ && (
+        <React.Fragment>
+          <Backdrop
+            sx={{
+              position: 'absolute',
+              color: '#fff',
+              width: '100%', // Full width of the Card
+              height: '100%',
+              zIndex: (theme) => theme.zIndex.drawer + 1,
+            }}
+            open={isWorking}
+          >
+            <CircularProgress data-testid="vote-guardian-working-indicator" />
+          </Backdrop>
+          <Backdrop
+            sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+            open={!!errorMessage}
+          >
+            <StopIcon fontSize="large" />
+            <Typography component="div" data-testid="vote-guardian-error-message">
+              {errorMessage}
             </Typography>
-            {/* END VOTING QUESTION */}
-
-            {/* DISPLAY SECRET KEY */}
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2, // Space between the TextField and Button
-              }}
-            >
-              <CardContent
-                sx={{
-                  flex: 1, // Allow equal distribution
-                  overflowY: 'auto', // Scroll if content overflows
-                }}
-              >
-                <TextField
-                  id="message-prompt2"
-                  data-testid="vote-guardian-add-question-prompt"
-                  variant="outlined"
-                  focused
-                  // fullWidth
-                  // multiline
-                  minRows={6}
-                  maxRows={6}
-                  placeholder=""
-                  size="small"
-                  color="primary"
-                  inputProps={{ style: { color: 'black' } }}
-                  onChange={(e) => {
-                    setMessagePrompt(e.target.value);
-                  }}
-                />
-              </CardContent>
-              <Button variant="contained" color="primary" size="small" onClick={onDisplaySecretKey}>
-                Display secret key
-              </Button>
-            </Box>
-            {/* END DISPLAY SECRET KEY */}
-
-            {/* VOTING OPTIONS */}
-            {/* Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
-            <Typography key={key} data-testid="vote-guardian-option" minHeight={160} color="primary">
-              {key}, {value}
-            </Typography>
-          )) */}
-            {/* END VOTING OPTIONS */}
-
-            {/* ADD VOTING QUESTION */}
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2, // Space between the TextField and Button
-              }}
-            >
-              <CardContent
-                sx={{
-                  flex: 1, // Allow equal distribution
-                  overflowY: 'auto', // Scroll if content overflows
-                }}
-              >
-                <TextField
-                  id="message-prompt2"
-                  data-testid="vote-guardian-add-question-prompt"
-                  variant="outlined"
-                  focused
-                  // fullWidth
-                  // multiline
-                  minRows={6}
-                  maxRows={6}
-                  placeholder="Add voting question"
-                  size="small"
-                  color="primary"
-                  inputProps={{ style: { color: 'black' } }}
-                  onChange={(e) => {
-                    setMessagePrompt(e.target.value);
-                  }}
-                />
-              </CardContent>
-              <Button variant="contained" color="primary" size="small" onClick={onCreateVoting}>
-                Add
-              </Button>
-            </Box>
-            {/* END ADD VOTING QUESTION */}
-
-            {/* ADD VOTING OPTION */}
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2, // Space between the TextField and Button
-              }}
-            >
-              {/* η κάρτα του Message post */}
-              <CardContent
-                sx={{
-                  flex: 1, // Allow equal distribution
-                  overflowY: 'auto', // Scroll if content overflows
-                }}
-              >
-                {/* {/* {boardState ? (
-                boardState.state === STATE.occupied ? (
-                  <Typography data-testid="board-posted-message" minHeight={160} color="primary">
-                    {boardState.message}
-                  </Typography>
-                ) : ( */}
-                <TextField
-                  id="message-prompt"
-                  data-testid="vote-guardian-add-option-prompt"
-                  variant="outlined"
-                  focused
-                  // fullWidth
-                  // multiline
-                  minRows={6}
-                  maxRows={6}
-                  placeholder="Add option"
-                  size="small"
-                  color="primary"
-                  inputProps={{ style: { color: 'black' } }}
-                  onChange={(e) => {
-                    setMessagePrompt(e.target.value);
-                  }}
-                />
-                {/* )
+          </Backdrop>
+          <CardHeader
+            avatar={
+              // voteGuardianState ? (
+              //   voteGuardianState.state === STATE.vacant ||
+              //   (voteGuardianState.state === STATE.occupied && voteGuardianState.isOwner) ? (
+              //     <LockOpenIcon data-testid="post-unlocked-icon" />
+              //   ) : (
+              //     <LockIcon data-testid="post-locked-icon" />
+              //   )
+              // ) : (
+              <Skeleton variant="circular" width={20} height={20} />
+              // )
+            }
+            titleTypographyProps={{ color: 'primary' }}
+            // title={toShortFormatContractAddress(deployedVoteGuardianAPI?.deployedContractAddress) ?? 'Loading...'}
+            title={deployedVoteGuardianAPI?.deployedContractAddress ?? 'Loading...'}
+            action={
+              deployedVoteGuardianAPI?.deployedContractAddress ? (
+                <IconButton title="Copy contract address" onClick={onCopyContractAddress}>
+                  <CopyIcon fontSize="small" />
+                </IconButton>
               ) : (
-                <Skeleton variant="rectangular" width={245} height={160} />
-              )} */}
-              </CardContent>
-              <Button variant="contained" color="primary" size="small" onClick={onAddOption}>
-                Add
-              </Button>
-            </Box>
-            {/* END ADD VOTING OPTION */}
+                <Skeleton variant="circular" width={20} height={20} />
+              )
+            }
+          />
+          {/* // VOTING QUESTION */}
+          <Typography data-testid="vote-guardian-question" minHeight={50} color="primary">
+            {voteGuardianState?.voteQuestion || 'No question yet'}
+          </Typography>
+          {/* END VOTING QUESTION */}
 
-            {/* ADD VOTER */}
-            {/* <Box
+          {/* DISPLAY SECRET KEY */}
+          <Box
             sx={{
               display: 'flex',
               alignItems: 'center',
               gap: 2, // Space between the TextField and Button
             }}
-          > */}
-            {/* η κάρτα του Message post */}
-            {/* <CardContent
+          >
+            <CardContent
               sx={{
                 flex: 1, // Allow equal distribution
                 overflowY: 'auto', // Scroll if content overflows
               }}
-            > */}
-            {/* {/* {boardState ? (
+            >
+              <TextField
+                id="message-prompt2"
+                data-testid="vote-guardian-add-question-prompt"
+                variant="outlined"
+                focused
+                // fullWidth
+                // multiline
+                minRows={6}
+                maxRows={6}
+                placeholder=""
+                size="small"
+                color="primary"
+                inputProps={{ style: { color: 'black' } }}
+                onChange={(e) => {
+                  setMessagePrompt(e.target.value);
+                }}
+              />
+            </CardContent>
+            <Button variant="contained" color="primary" size="small" onClick={onDisplaySecretKey}>
+              Display secret key
+            </Button>
+          </Box>
+          {/* END DISPLAY SECRET KEY */}
+
+          {/* VOTING OPTIONS */}
+          {/* Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
+            <Typography key={key} data-testid="vote-guardian-option" minHeight={160} color="primary">
+              {key}, {value}
+            </Typography>
+          )) */}
+          {/* END VOTING OPTIONS */}
+
+          {/* ADD VOTING QUESTION */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2, // Space between the TextField and Button
+            }}
+          >
+            <CardContent
+              sx={{
+                flex: 1, // Allow equal distribution
+                overflowY: 'auto', // Scroll if content overflows
+              }}
+            >
+              <TextField
+                id="message-prompt2"
+                data-testid="vote-guardian-add-question-prompt"
+                variant="outlined"
+                focused
+                // fullWidth
+                // multiline
+                minRows={6}
+                maxRows={6}
+                placeholder="Add voting question"
+                size="small"
+                color="primary"
+                inputProps={{ style: { color: 'black' } }}
+                onChange={(e) => {
+                  setMessagePrompt(e.target.value);
+                }}
+              />
+            </CardContent>
+            <Button variant="contained" color="primary" size="small" onClick={onCreateVoting}>
+              Add
+            </Button>
+          </Box>
+          {/* END ADD VOTING QUESTION */}
+
+          {/* ADD VOTING OPTION */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2, // Space between the TextField and Button
+            }}
+          >
+            {/* η κάρτα του Message post */}
+            <CardContent
+              sx={{
+                flex: 1, // Allow equal distribution
+                overflowY: 'auto', // Scroll if content overflows
+              }}
+            >
+              {/* {/* {boardState ? (
                 boardState.state === STATE.occupied ? (
                   <Typography data-testid="board-posted-message" minHeight={160} color="primary">
                     {boardState.message}
                   </Typography>
                 ) : ( */}
-            {/* <TextField
+              <TextField
+                id="message-prompt"
+                data-testid="vote-guardian-add-option-prompt"
+                variant="outlined"
+                focused
+                // fullWidth
+                // multiline
+                minRows={6}
+                maxRows={6}
+                placeholder="Add option"
+                size="small"
+                color="primary"
+                inputProps={{ style: { color: 'black' } }}
+                onChange={(e) => {
+                  setMessagePrompt(e.target.value);
+                }}
+              />
+              {/* )
+              ) : (
+                <Skeleton variant="rectangular" width={245} height={160} />
+              )} */}
+            </CardContent>
+            <Button variant="contained" color="primary" size="small" onClick={onAddOption}>
+              Add
+            </Button>
+          </Box>
+          {/* END ADD VOTING OPTION */}
+
+          {/* ADD VOTER */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2, // Space between the TextField and Button
+            }}
+          >
+            {/* η κάρτα του Message post */}
+            <CardContent
+              sx={{
+                flex: 1, // Allow equal distribution
+                overflowY: 'auto', // Scroll if content overflows
+              }}
+            >
+              {/* {/* {boardState ? (
+                boardState.state === STATE.occupied ? (
+                  <Typography data-testid="board-posted-message" minHeight={160} color="primary">
+                    {boardState.message}
+                  </Typography>
+                ) : ( */}
+              <TextField
                 id="message-prompt"
                 data-testid="vote-guardian-add-voter-prompt"
                 variant="outlined"
@@ -570,65 +450,65 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                 onChange={(e) => {
                   setMessagePrompt(e.target.value);
                 }}
-              /> */}
-            {/* )
+              />
+              {/* )
               ) : (
                 <Skeleton variant="rectangular" width={245} height={160} />
               )} */}
-            {/* </CardContent>
+            </CardContent>
             <Button variant="contained" color="primary" size="small" onClick={onAddVoter}>
               Add
             </Button>
-          </Box> */}
-            {/* END ADD VOTER */}
+          </Box>
+          {/* END ADD VOTER */}
 
-            {/* CAST VOTE */}
-            <Box
+          {/* CAST VOTE */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2, // Space between the TextField and Button
+            }}
+          >
+            {/* η κάρτα του CAST A VOTE */}
+            <CardContent
               sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2, // Space between the TextField and Button
+                flex: 1, // Allow equal distribution
+                overflowY: 'auto', // Scroll if content overflows
               }}
             >
-              {/* η κάρτα του CAST A VOTE */}
-              <CardContent
-                sx={{
-                  flex: 1, // Allow equal distribution
-                  overflowY: 'auto', // Scroll if content overflows
-                }}
-              >
-                {/* {/* {boardState ? (
+              {/* {/* {boardState ? (
                 boardState.state === STATE.occupied ? (
                   <Typography data-testid="board-posted-message" minHeight={160} color="primary">
                     {boardState.message}
                   </Typography>
                 ) : ( */}
-                <TextField
-                  id="message-prompt"
-                  data-testid="vote-guardian-cast-vote-prompt"
-                  variant="outlined"
-                  focused
-                  minRows={6}
-                  maxRows={6}
-                  placeholder="Cast a vote"
-                  size="small"
-                  color="primary"
-                  inputProps={{ style: { color: 'black' } }}
-                  onChange={(e) => {
-                    setMessagePrompt(e.target.value);
-                  }}
-                />
-                {/* )
+              <TextField
+                id="message-prompt"
+                data-testid="vote-guardian-cast-vote-prompt"
+                variant="outlined"
+                focused
+                minRows={6}
+                maxRows={6}
+                placeholder="Cast a vote"
+                size="small"
+                color="primary"
+                inputProps={{ style: { color: 'black' } }}
+                onChange={(e) => {
+                  setMessagePrompt(e.target.value);
+                }}
+              />
+              {/* )
               ) : (
                 <Skeleton variant="rectangular" width={245} height={160} />
               )} */}
-              </CardContent>
-              <Button variant="contained" color="primary" size="small" onClick={onCastVote}>
-                Add
-              </Button>
-            </Box>
-            {/* END CAST VOTE */}
-            {/* <CardActions>
+            </CardContent>
+            <Button variant="contained" color="primary" size="small" onClick={onCastVote}>
+              Add
+            </Button>
+          </Box>
+          {/* END CAST VOTE */}
+          {/* <CardActions>
             {deployedVoteGuardianAPI ? (
               <React.Fragment>
                 <IconButton
@@ -655,40 +535,17 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
               <Skeleton variant="rectangular" width={80} height={20} />
             )}
           </CardActions> */}
-
-            {/* CLOSE VOTING */}
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2, // Space between the TextField and Button
-              }}
-            >
-              {/* η κάρτα του Message post */}
-              <CardContent
-                sx={{
-                  flex: 1, // Allow equal distribution
-                  overflowY: 'auto', // Scroll if content overflows
-                }}
-              ></CardContent>
-              <Button variant="contained" color="primary" size="small" onClick={onCloseVoting}>
-                Close
-              </Button>
-            </Box>
-            {/* CLOSE VOTING */}
-          </React.Fragment>
-        )}
-      </Card>
-    </div>
+        </React.Fragment>
+      )}
+    </Card>
   );
-  // };
-
-  /** @internal */
-  const toShortFormatContractAddress = (contractAddress: ContractAddress | undefined): JSX.Element | undefined =>
-    // Returns a new string made up of the first, and last, 8 characters of a given contract address.
-    contractAddress ? (
-      <span data-testid="vote-guardian-address">
-        0x{contractAddress?.replace(/^[A-Fa-f0-9]{6}([A-Fa-f0-9]{8}).*([A-Fa-f0-9]{8})$/g, '$1...$2')}
-      </span>
-    ) : undefined;
 };
+
+/** @internal */
+const toShortFormatContractAddress = (contractAddress: ContractAddress | undefined): JSX.Element | undefined =>
+  // Returns a new string made up of the first, and last, 8 characters of a given contract address.
+  contractAddress ? (
+    <span data-testid="vote-guardian-address">
+      0x{contractAddress?.replace(/^[A-Fa-f0-9]{6}([A-Fa-f0-9]{8}).*([A-Fa-f0-9]{8})$/g, '$1...$2')}
+    </span>
+  ) : undefined;

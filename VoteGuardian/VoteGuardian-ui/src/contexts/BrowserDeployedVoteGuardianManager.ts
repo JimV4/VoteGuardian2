@@ -41,7 +41,6 @@ import semver from 'semver';
 import { getLedgerNetworkId, getZswapNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { error } from 'console';
 import { toHex } from '@midnight-ntwrk/midnight-js-utils';
-import { NetworkId, setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 /**
  * An in-progress bulletin voteGuardian deployment.
  */
@@ -105,7 +104,7 @@ export interface DeployedVoteGuardianAPIProvider {
    * For a given `contractAddress`, the method will attempt to find and join the identified bulletin voteGuardian
    * contract; otherwise it will attempt to deploy a new one.
    */
-  readonly resolve: (contractAddress?: ContractAddress /*, secretKey?: string */) => Observable<VoteGuardianDeployment>;
+  readonly resolve: (contractAddress?: ContractAddress, secretKey?: string) => Observable<VoteGuardianDeployment>;
 
   /**
    * Retrieves the secret key.
@@ -138,8 +137,8 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
   readonly voteGuardianDeployments$: Observable<Array<Observable<VoteGuardianDeployment>>>;
 
   /** @inheritdoc */
-  resolve(contractAddress?: ContractAddress /*, secretKey?: string */): Observable<VoteGuardianDeployment> {
-    // console.log(secretKey);
+  resolve(contractAddress?: ContractAddress, secretKey?: string): Observable<VoteGuardianDeployment> {
+    console.log(secretKey);
     const deployments = this.#voteGuardianDeploymentsSubject.value;
     let deployment = deployments.find(
       (deployment) =>
@@ -155,7 +154,7 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
     });
 
     if (contractAddress) {
-      void this.joinDeployment(deployment, contractAddress /*, secretKey! */);
+      void this.joinDeployment(deployment, contractAddress, secretKey!);
     } else {
       void this.deployDeployment(deployment);
     }
@@ -171,19 +170,10 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
       const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
 
       if (existingPrivateState) {
-        const hashed_credential = existingPrivateState.signedCredentialSubject!.hashed_credential;
-        const signature = existingPrivateState.signedCredentialSubject!.signature;
-        const bigintString = [
-          // signature.pk.x,
-          // signature.pk.y,
-          // signature.R.x,
-          // signature.R.y,
-          signature.s,
-          toHex(hashed_credential),
-        ].join(', ');
+        const secretKey = existingPrivateState.secretKey;
 
-        if (hashed_credential) {
-          return bigintString;
+        if (secretKey) {
+          return toHex(secretKey);
         }
         return 'no secret key';
       }
@@ -199,11 +189,6 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
     //    Concurrent calls to `getProviders()` will receive, and ultimately await, the same
     //    `Promise`.
     return this.#initializedProviders ?? (this.#initializedProviders = initializeProviders(this.logger));
-  }
-
-  async getWalletPublicKey(): Promise<string> {
-    const providers = await this.getProviders(); // Wait for the promise to resolve
-    return providers.walletProvider.coinPublicKey;
   }
 
   private async deployDeployment(deployment: BehaviorSubject<VoteGuardianDeployment>): Promise<void> {
@@ -231,12 +216,12 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
   private async joinDeployment(
     deployment: BehaviorSubject<VoteGuardianDeployment>,
     contractAddress: ContractAddress,
-    // secretKey: string,
+    secretKey: string,
   ): Promise<void> {
     try {
-      // console.log(secretKey);
+      console.log(secretKey);
       const providers = await this.getProviders();
-      const api = await VoteGuardianAPI.join(providers, contractAddress, /*, secretKey, */ this.logger);
+      const api = await VoteGuardianAPI.join(providers, contractAddress, secretKey, this.logger);
 
       deployment.next({
         status: 'deployed',
@@ -255,7 +240,7 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
 const initializeProviders = async (logger: Logger): Promise<VoteGuardianProviders> => {
   const { wallet, uris } = await connectToWallet(logger);
   const walletState = await wallet.state();
-  // setNetworkId(NetworkId.Undeployed);
+
   return {
     privateStateProvider: levelPrivateStateProvider({
       privateStateStoreName: 'voteGuardian-private-state',

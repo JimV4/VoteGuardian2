@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Box } from '@mui/material';
-import { MainLayout, VoteGuardian, IdentityVerification } from './components';
+import { MainLayout, VoteGuardian } from './components';
 import { useDeployedVoteGuardianContext } from './hooks';
 import { type VoteGuardianDeployment } from './contexts';
 import { type Observable } from 'rxjs';
-import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 
 /**
  * The root bulletin VoteGuardian application component.
@@ -29,31 +28,16 @@ const App: React.FC = () => {
 
   return (
     <Box sx={{ background: '#000', minHeight: '100vh' }}>
-      <Router>
-        <MainLayout>
-          <Routes>
-            {/* Home Route */}
-            <Route
-              path="/"
-              element={
-                <>
-                  {VoteGuardianDeployments.map((VoteGuardianDeployment, idx) => (
-                    <div data-testid={`VoteGuardian-${idx}`} key={`VoteGuardian-${idx}`}>
-                      <VoteGuardian voteGuardianDeployment$={VoteGuardianDeployment} />
-                    </div>
-                  ))}
-                  <div data-testid="VoteGuardian-start">
-                    <VoteGuardian />
-                  </div>
-                </>
-              }
-            />
-
-            {/* Another Route */}
-            <Route path="/verify" element={<IdentityVerification />} />
-          </Routes>
-        </MainLayout>
-      </Router>
+      <MainLayout>
+        {VoteGuardianDeployments.map((VoteGuardianDeployment, idx) => (
+          <div data-testid={`VoteGuardian-${idx}`} key={`VoteGuardian-${idx}`}>
+            <VoteGuardian voteGuardianDeployment$={VoteGuardianDeployment} />
+          </div>
+        ))}
+        <div data-testid="VoteGuardian-start">
+          <VoteGuardian />
+        </div>
+      </MainLayout>
     </Box>
   );
 };
