@@ -77,39 +77,71 @@ db.once('open', () => {
 const userSchema = new mongoose.Schema({
   username: String,
   password: String,
-  hashed_secret: String,
+  publicKey: String,
 });
 
 const User = mongoose.model('User', userSchema);
 
 // Endpoint to check if user exists
 app.post('/login', async (req: Request, res: Response): Promise<void> => {
-  const { username, password } = req.body.subject;
+  const { username, password } = req.body;
 
-  console.log(req.body);
-
-  if (!req.body.subject.username || !req.body.subject.password) {
+  if (!username || !password) {
     res.status(400).json({ message: 'Username and password are required.' });
   }
 
   try {
     // Query the database
     const user = await User.findOne({ username, password });
+
     if (user) {
-      const hashed_secret = user.hashed_secret!;
+      if (!user.publicKey) {
+        const secretKeybytes = new Uint8Array(32);
+        crypto.getRandomValues(secretKeybytes);
+        const toHex = (bytes) => Buffer.from(bytes).toString('hex');
+        const secretKeyHex = toHex(secretKeybytes);
 
-      const subject: CredentialSubject = {
-        // username: pad(username, 32),
-        username: pad(username, 32),
-        hashed_secret: new Uint8Array(fromHex(hashed_secret)),
-      };
+        // Hash the secret key using SHA-256 to create the public key
+        const hashSHA256 = (data) => {
+          return crypto.createHash('sha256').update(data, 'hex').digest('hex');
+        };
+        const publicKeyHex = hashSHA256(secretKeyHex);
 
-      const signature: Signature = generateSignature(subject, pad('0x345', 32));
-      const msg = Buffer.from(hashSubject(subject), 'hex');
-      res.status(200).json({ signature, msg });
+        user.publicKey = publicKeyHex;
+        await user.save();
+        res.status(200).json({ message: 'User found.', secretKey: secretKeyHex });
+      } else {
+        res.status(200).json({ message: 'User found.' });
+      }
     } else {
       res.status(404).json({ message: 'User not found.' });
     }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+});
+
+// Endpoint to insert a new user
+app.post('/register', async (req: Request, res: Response): Promise<void> => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    res.status(400).json({ message: 'Username and password are required.' });
+  }
+
+  try {
+    // Check if the user already exists
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      res.status(400).json({ message: 'Username already exists.' });
+    }
+
+    // Create a new user
+    const newUser = new User({ username, password });
+    await newUser.save();
+
+    res.status(201).json({ message: 'User registered successfully.', user: newUser });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error.' });

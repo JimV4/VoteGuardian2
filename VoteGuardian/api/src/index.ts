@@ -48,6 +48,7 @@ export interface DeployedVoteGuardianAPI {
   close_voting: () => Promise<void>;
   create_voting: (vote_question: string) => Promise<void>;
   add_option: (vote_option: string, index: string) => Promise<void>;
+  record_payment_key: (voter_public_key: Uint8Array, voter_public_payment_key: Uint8Array) => Promise<void>;
   // count_votes: () => Promise<void>;
 }
 
@@ -122,6 +123,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
           votesList: ledgerState.votesList,
           voteCount: ledgerState.voteCount,
           voteQuestion: ledgerState.voteQuestion,
+          mapPublicPayment: ledgerState.mapPublicPayment,
           isOrganizer: toHex(ledgerState.votingOrganizer) === toHex(hashedSecretKey),
         };
       },

@@ -25,8 +25,11 @@ export ledger vote_count: Counter;
 // List with the questions of the voting. At first it will be only one question
 export ledger vote_question: Cell<Opaque<"string">>;
 
+// Map voter public key with public payment key
+export ledger map_public_payment: Map<Bytes<32>, Bytes<32>>;
+
 // Ledger to store options and their id. For example: 1: "yes", 2: "no"
-// export ledger vote_option_map: Map<Opaque<"string">, Opaque<"string">>;
+export ledger vote_option_map: Map<Opaque<"string">, Opaque<"string">>;
 
 
 // Constructor initializes the state
@@ -56,6 +59,10 @@ export circuit add_voter(voter_public_key: Bytes<32>): Void {
     eligible_voters.insert(voter_public_key);
 }
 
+export circuit record_payment_key(voter_public_key: Bytes<32>, voter_public_payment_key: Bytes<32>): Void {
+    map_public_payment.insert(voter_public_payment_key, voter_public_key);
+}
+
 
 // Function to cast a vote, only accessible when voting is open and the voter hasn’t already voted
 export circuit cast_vote(vote_option: Opaque<"string">): Void {
@@ -66,6 +73,13 @@ export circuit cast_vote(vote_option: Opaque<"string">): Void {
         "Voting is not open";
 
     const voter_public_key = public_key(local_secret_key());
+
+    const voter_public_payment_key_struct = own_public_key();
+    const voter_public_payment_key_bytes = voter_public_payment_key_struct.bytes;
+
+    const voter_public_key_from_map = map_public_payment.lookup(voter_public_payment_key_bytes);
+    assert voter_public_key_from_map == voter_public_key
+        "Voter public key does not match with voter public payment key";
 
     // voter must be in the eligible voters
     const path = find_voter_public_key(voter_public_key);
@@ -82,11 +96,11 @@ export circuit cast_vote(vote_option: Opaque<"string">): Void {
 
     voting_nulifiers.insert(voting_nullifier);
 
-    // assert vote_option_map.member(vote_option)
-    //     "Not a valid option!";
+    assert vote_option_map.member(vote_option)
+        "Not a valid option!";
 
     // Record the vote 
-    // const vote = vote_option_map.lookup(vote_option);
+    const vote = vote_option_map.lookup(vote_option);
 
     votes_list.push_front(vote_option);
     vote_count.increment(1);
@@ -112,7 +126,7 @@ export circuit add_option(vote_option: Opaque<"string">, i: Opaque<"string">): V
     assert voting_organizer == public_key(local_secret_key())
         "You are not authorized to add a voting option!";
 
-    // vote_option_map.insert(i, vote_option);
+    vote_option_map.insert(i, vote_option);
 }
 
 
