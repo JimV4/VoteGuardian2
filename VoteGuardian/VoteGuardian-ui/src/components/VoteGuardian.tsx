@@ -60,6 +60,8 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   const [isWorking, setIsWorking] = useState(!!voteGuardianDeployment$);
   const [optionCounter, setOptionCounter] = useState(0);
   const [secretKey, setSecretKey] = useState<string>();
+  const [walletPublicKey, setWalletPublicKey] = useState<string>();
+
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState<string | null>(null);
 
@@ -114,6 +116,23 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
         console.log(secretKey);
         setSecretKey(secretKey);
         setMessagePrompt(secretKey);
+      }
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : String(error));
+    } finally {
+      setIsWorking(false);
+    }
+  }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking]);
+
+  const onDisplayWalletPublicKey = useCallback(async () => {
+    try {
+      console.log('display');
+      if (deployedVoteGuardianAPI) {
+        setIsWorking(true);
+        const walletPublicKey = await voteGuardianApiProvider.getWalletPublicKey();
+        console.log(walletPublicKey);
+        setWalletPublicKey(walletPublicKey);
+        setMessagePrompt(walletPublicKey);
       }
     } catch (error: unknown) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
@@ -379,6 +398,44 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
               </Button>
             </Box>
             {/* END DISPLAY SECRET KEY */}
+
+            {/* DISPLAY WALLET PUBLIC KEY */}
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2, // Space between the TextField and Button
+              }}
+            >
+              <CardContent
+                sx={{
+                  flex: 1, // Allow equal distribution
+                  overflowY: 'auto', // Scroll if content overflows
+                }}
+              >
+                <TextField
+                  id="message-prompt2"
+                  data-testid="vote-guardian-add-question-prompt"
+                  variant="outlined"
+                  focused
+                  // fullWidth
+                  // multiline
+                  minRows={6}
+                  maxRows={6}
+                  placeholder=""
+                  size="small"
+                  color="primary"
+                  inputProps={{ style: { color: 'black' } }}
+                  onChange={(e) => {
+                    setMessagePrompt(e.target.value);
+                  }}
+                />
+              </CardContent>
+              <Button variant="contained" color="primary" size="small" onClick={onDisplayWalletPublicKey}>
+                Display WALLET PUBLIC key
+              </Button>
+            </Box>
+            {/* END DISPLAY WALLET PUBLIC KEY */}
 
             {/* VOTING OPTIONS */}
             {/* Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (

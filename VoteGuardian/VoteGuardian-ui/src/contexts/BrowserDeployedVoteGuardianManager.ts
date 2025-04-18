@@ -110,6 +110,8 @@ export interface DeployedVoteGuardianAPIProvider {
    * Retrieves the secret key.
    */
   displaySecretKey: () => Promise<string>;
+
+  getWalletPublicKey: () => Promise<string>;
 }
 
 /**
@@ -162,6 +164,14 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
     this.#voteGuardianDeploymentsSubject.next([...deployments, deployment]);
 
     return deployment;
+  }
+
+  async getWalletPublicKey(): Promise<string> {
+    const providers = await this.getProviders();
+    if (providers !== undefined) {
+      return providers.walletProvider.coinPublicKey;
+    }
+    return 'no wallet public key';
   }
 
   async displaySecretKey(): Promise<string> {

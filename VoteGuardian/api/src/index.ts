@@ -149,6 +149,32 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
    * @remarks
    * This method can fail during local circuit execution if the voting is not open.
    */
+  async record_payment_key(voter_public_key: Uint8Array, voter_public_payment_key: Uint8Array): Promise<void> {
+    try {
+      this.logger?.info('record payment key');
+
+      const txData = await this.deployedContract.callTx.record_payment_key(voter_public_key, voter_public_payment_key);
+
+      this.logger?.trace({
+        transactionAdded: {
+          circuit: 'record_payment_key',
+          txHash: txData.public.txHash,
+          blockHeight: txData.public.blockHeight,
+        },
+      });
+    } catch (error) {
+      console.log('asdasdasad');
+      console.log((error as Error).message);
+      console.log((error as Error).stack);
+      console.log(error);
+      // Log the full exception, including stack trace if available.
+      this.logger?.error('Error record_payment_key...', {
+        message: (error as Error).message,
+        stack: (error as Error).stack,
+        details: error, // Capture additional details if the error is a custom object.
+      });
+    }
+  }
 
   async add_voter(voter_public_key: Uint8Array): Promise<void> {
     try {
