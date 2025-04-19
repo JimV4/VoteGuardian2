@@ -84,25 +84,28 @@ const User = mongoose.model('User', userSchema);
 
 // Endpoint to check if user exists
 app.post('/login', async (req: Request, res: Response): Promise<void> => {
-  const { username, password } = req.body;
+  const { username, password, walletPubKey } = req.body.subject;
+  console.log(req.body.subject);
 
   if (!username || !password) {
     res.status(400).json({ message: 'Username and password are required.' });
   }
 
   try {
+    console.log(`from server wallet pub key ${walletPubKey}`);
     // Query the database
     const user = await User.findOne({ username, password });
+    console.log(user);
 
     if (user) {
       if (!user.publicKey) {
         const secretKeybytes = new Uint8Array(32);
         crypto.getRandomValues(secretKeybytes);
-        const toHex = (bytes) => Buffer.from(bytes).toString('hex');
+        const toHex = (bytes: Uint8Array) => Buffer.from(bytes).toString('hex');
         const secretKeyHex = toHex(secretKeybytes);
 
         // Hash the secret key using SHA-256 to create the public key
-        const hashSHA256 = (data) => {
+        const hashSHA256 = (data: string) => {
           return crypto.createHash('sha256').update(data, 'hex').digest('hex');
         };
         const publicKeyHex = hashSHA256(secretKeyHex);
@@ -111,6 +114,7 @@ app.post('/login', async (req: Request, res: Response): Promise<void> => {
         await user.save();
         res.status(200).json({ message: 'User found.', secretKey: secretKeyHex });
       } else {
+        console.log('here');
         res.status(200).json({ message: 'User found.' });
       }
     } else {
@@ -236,37 +240,37 @@ app.post('/register', async (req: Request, res: Response): Promise<void> => {
 // console.log(signature);
 
 // Endpoint to insert a new user
-app.post('/register', async (req: Request, res: Response): Promise<void> => {
-  const { username, password } = req.body;
+// app.post('/register', async (req: Request, res: Response): Promise<void> => {
+//   const { username, password } = req.body;
 
-  if (!username || !password) {
-    res.status(400).json({ message: 'Username and password are required.' });
-  }
+//   if (!username || !password) {
+//     res.status(400).json({ message: 'Username and password are required.' });
+//   }
 
-  try {
-    // Check if the user already exists
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      res.status(400).json({ message: 'Username already exists.' });
-    } else {
-      // Create a new user
-      const newUser = new User({ username, password });
+//   try {
+//     // Check if the user already exists
+//     const existingUser = await User.findOne({ username });
+//     if (existingUser) {
+//       res.status(400).json({ message: 'Username already exists.' });
+//     } else {
+//       // Create a new user
+//       const newUser = new User({ username, password });
 
-      const hashedSecretBytes = new Uint8Array(32);
-      crypto.getRandomValues(hashedSecretBytes);
-      const toHex = (hashedSecretBytes: Uint8Array) => Buffer.from(hashedSecretBytes).toString('hex');
-      const hashedSecretHex = toHex(hashedSecretBytes);
+//       const hashedSecretBytes = new Uint8Array(32);
+//       crypto.getRandomValues(hashedSecretBytes);
+//       const toHex = (hashedSecretBytes: Uint8Array) => Buffer.from(hashedSecretBytes).toString('hex');
+//       const hashedSecretHex = toHex(hashedSecretBytes);
 
-      newUser.hashed_secret = hashedSecretHex;
-      await newUser.save();
+//       newUser.hashed_secret = hashedSecretHex;
+//       await newUser.save();
 
-      res.status(201).json({ message: 'User registered successfully.', user: newUser });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error.' });
-  }
-});
+//       res.status(201).json({ message: 'User registered successfully.', user: newUser });
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Internal server error.' });
+//   }
+// });
 
 // Start the server
 app.listen(PORT, () => {

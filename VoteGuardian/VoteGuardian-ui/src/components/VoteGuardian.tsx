@@ -72,12 +72,15 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   const handleSubmit = async (): Promise<void> => {
     setError(null);
     try {
+      const walletPublicKey = await voteGuardianApiProvider.getWalletPublicKey();
       const input = {
         subject: {
           username: credentials.username,
           password: credentials.password,
+          walletPubKey: walletPublicKey,
         },
       };
+      console.log(input);
       const response = await fetch('http://localhost:3000/login', {
         method: 'POST',
         headers: {
