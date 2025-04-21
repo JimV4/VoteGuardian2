@@ -78,6 +78,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
           username: credentials.username,
           password: credentials.password,
           walletPubKey: walletPublicKey,
+          contractAddress: deployedVoteGuardianAPI.deployedContractAddress,
         },
       };
       console.log(input);
