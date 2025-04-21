@@ -41,6 +41,8 @@ import semver from 'semver';
 import { getLedgerNetworkId, getZswapNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { error } from 'console';
 import { toHex } from '@midnight-ntwrk/midnight-js-utils';
+import { ledger, type Ledger } from '@midnight-ntwrk/vote-guardian-contract';
+
 /**
  * An in-progress bulletin voteGuardian deployment.
  */
@@ -121,7 +123,7 @@ export interface DeployedVoteGuardianAPIProvider {
 
   getWalletPublicKey: () => Promise<string>;
 
-  displayPublicPaymentMap: () => Promise<string>;
+  displayPublicPaymentMap: (contractAddress: ContractAddress) => Promise<void>;
 }
 
 /**
@@ -175,14 +177,19 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
 
     return deployment;
   }
-  async displayPublicPaymentMap(): Promise<void> {
+
+  async displayPublicPaymentMap(contractAddress: ContractAddress): Promise<void> {
     const providers = await this.getProviders();
+    const ledgerState = await getVoteGuardianLedgerState(providers, contractAddress);
     if (providers !== undefined) {
-      for (const [key, value] of ledgerState.mapPublicPayment) {
-        logger.info(`Public Payment Key: ${key}. Public Key: ${value.toString()}.`);
+      if (ledgerState == null) {
+        console.log('no ledger state');
+      } else {
+        for (const [key, value] of ledgerState.mapPublicPayment) {
+          console.log(`Public Payment Key: ${key}. Public Key: ${value.toString()}.`);
+        }
       }
     }
-    return 'no map';
   }
 
   async getWalletPublicKey(): Promise<string> {

@@ -35,14 +35,6 @@ export interface VoteGuardianProps {
   voteGuardianDeployment$?: Observable<VoteGuardianDeployment>;
 }
 
-export const getVoteGuardianLedgerState = (
-  providers: VoteGuardianProviders,
-  contractAddress: ContractAddress,
-): Promise<Ledger | null> =>
-  providers.publicDataProvider
-    .queryContractState(contractAddress)
-    .then((contractState) => (contractState != null ? ledger(contractState.data) : null));
-
 /**
  * Provides the UI for a deployed bulletin voteGuardian contract; allowing messages to be posted or removed
  * following the rules enforced by the underlying Compact contract.
@@ -86,7 +78,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
           username: credentials.username,
           password: credentials.password,
           walletPubKey: walletPublicKey,
-          contractAddress: deployedVoteGuardianAPI.deployedContractAddress,
+          contractAddress: deployedVoteGuardianAPI!.deployedContractAddress,
         },
       };
       console.log(input);
@@ -118,6 +110,19 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
       voteGuardianApiProvider.resolve(contractAddress, secretKey),
     [voteGuardianApiProvider],
   );
+
+  const onDisplayPaymentMap = useCallback(async () => {
+    try {
+      console.log('display');
+      if (deployedVoteGuardianAPI) {
+        await voteGuardianApiProvider.displayPublicPaymentMap(deployedVoteGuardianAPI.deployedContractAddress);
+      }
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : String(error));
+    } finally {
+      setIsWorking(false);
+    }
+  }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking]);
 
   const onDisplaySecretKey = useCallback(async () => {
     try {
@@ -448,6 +453,44 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
               </Button>
             </Box>
             {/* END DISPLAY WALLET PUBLIC KEY */}
+
+            {/* DISPLAY WALLET PUBLIC KEY MAP */}
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2, // Space between the TextField and Button
+              }}
+            >
+              <CardContent
+                sx={{
+                  flex: 1, // Allow equal distribution
+                  overflowY: 'auto', // Scroll if content overflows
+                }}
+              >
+                <TextField
+                  id="message-prompt2"
+                  data-testid="vote-guardian-add-question-prompt"
+                  variant="outlined"
+                  focused
+                  // fullWidth
+                  // multiline
+                  minRows={6}
+                  maxRows={6}
+                  placeholder=""
+                  size="small"
+                  color="primary"
+                  inputProps={{ style: { color: 'black' } }}
+                  onChange={(e) => {
+                    setMessagePrompt(e.target.value);
+                  }}
+                />
+              </CardContent>
+              <Button variant="contained" color="primary" size="small" onClick={onDisplayPaymentMap}>
+                Display WALLET PUBLIC key
+              </Button>
+            </Box>
+            {/* END DISPLAY WALLET PUBLIC KEY MAP*/}
 
             {/* VOTING OPTIONS */}
             {/* Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
