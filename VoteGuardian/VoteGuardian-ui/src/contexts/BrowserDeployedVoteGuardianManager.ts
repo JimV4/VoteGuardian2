@@ -80,6 +80,14 @@ export type VoteGuardianDeployment =
   | DeployedVoteGuardianDeployment
   | FailedVoteGuardianDeployment;
 
+export const getVoteGuardianLedgerState = (
+  providers: VoteGuardianProviders,
+  contractAddress: ContractAddress,
+): Promise<Ledger | null> =>
+  providers.publicDataProvider
+    .queryContractState(contractAddress)
+    .then((contractState) => (contractState != null ? ledger(contractState.data) : null));
+
 /**
  * Provides access to bulletin voteGuardian deployments.
  */
@@ -112,6 +120,8 @@ export interface DeployedVoteGuardianAPIProvider {
   displaySecretKey: () => Promise<string>;
 
   getWalletPublicKey: () => Promise<string>;
+
+  displayPublicPaymentMap: () => Promise<string>;
 }
 
 /**
@@ -164,6 +174,15 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
     this.#voteGuardianDeploymentsSubject.next([...deployments, deployment]);
 
     return deployment;
+  }
+  async displayPublicPaymentMap(): Promise<void> {
+    const providers = await this.getProviders();
+    if (providers !== undefined) {
+      for (const [key, value] of ledgerState.mapPublicPayment) {
+        logger.info(`Public Payment Key: ${key}. Public Key: ${value.toString()}.`);
+      }
+    }
+    return 'no map';
   }
 
   async getWalletPublicKey(): Promise<string> {

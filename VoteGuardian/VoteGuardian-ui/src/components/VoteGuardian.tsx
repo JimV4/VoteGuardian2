@@ -35,6 +35,14 @@ export interface VoteGuardianProps {
   voteGuardianDeployment$?: Observable<VoteGuardianDeployment>;
 }
 
+export const getVoteGuardianLedgerState = (
+  providers: VoteGuardianProviders,
+  contractAddress: ContractAddress,
+): Promise<Ledger | null> =>
+  providers.publicDataProvider
+    .queryContractState(contractAddress)
+    .then((contractState) => (contractState != null ? ledger(contractState.data) : null));
+
 /**
  * Provides the UI for a deployed bulletin voteGuardian contract; allowing messages to be posted or removed
  * following the rules enforced by the underlying Compact contract.
