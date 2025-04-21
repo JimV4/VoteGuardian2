@@ -102,7 +102,7 @@ export interface Config {
 }
 
 export class StandaloneConfig implements Config {
-  privateStateStoreName = 'vote-guardian-private-state';
+  privateStateStoreName = 'voteGuardian-private-state';
   logDir = path.resolve(currentDir, '..', 'logs', 'standalone', `${new Date().toISOString()}.log`);
   zkConfigPath = path.resolve(currentDir, '..', '..', 'contract', 'dist', 'managed', 'vote-guardian');
   indexer = 'http://127.0.0.1:8088/api/v1/graphql';
@@ -152,7 +152,7 @@ const mainLoop = async (
   if (VoteGuardianApi === null) {
     return;
   }
-
+  console.log('4 at main loop');
   let currentState: VoteGuardianDerivedState | undefined;
   const stateObserver = {
     next: (state: VoteGuardianDerivedState) => (currentState = state),
@@ -160,7 +160,9 @@ const mainLoop = async (
   const subscription = VoteGuardianApi.state$.subscribe(stateObserver);
 
   try {
+    console.log('5 before record_payment_key');
     await VoteGuardianApi.record_payment_key(voter_public_key, voter_public_payment_key);
+    console.log('6 after record_payment_key');
   } finally {
     // While we allow errors to bubble up to the 'run' function, we will always need to dispose of the state
     // subscription when we exit.
@@ -320,6 +322,7 @@ export const run = async (
   }
   const wallet = await buildWallet(config, rli, logger);
 
+  console.log('2 after wallet');
   try {
     if (wallet !== null) {
       const walletAndMidnightProvider = await createWalletAndMidnightProvider(wallet);
@@ -339,6 +342,7 @@ export const run = async (
         walletProvider: walletAndMidnightProvider,
         midnightProvider: walletAndMidnightProvider,
       };
+      console.log('3 before main loop');
       await mainLoop(providers, rli, logger, address, voter_public_key, voter_public_payment_key);
     }
   } catch (e) {
@@ -456,10 +460,8 @@ app.post('/login', async (req: Request, res: Response): Promise<void> => {
   }
 
   try {
-    console.log(`from server wallet pub key ${walletPubKey}`);
     // Query the database
     const user = await User.findOne({ username, password });
-    console.log(user);
 
     if (user) {
       if (!user.publicKey) {
@@ -479,8 +481,9 @@ app.post('/login', async (req: Request, res: Response): Promise<void> => {
         const config = new StandaloneConfig();
         config.setNetworkId();
         const logger = await createLogger(config.logDir);
+        console.log('1 before run');
         await run(config, logger, contractAddress, hexToBytes(publicKeyHex), hexToBytes(walletPubKey));
-
+        console.log('2 after run');
         await res.status(200).json({ message: 'User found.', secretKey: secretKeyHex });
       } else {
         console.log('here');
