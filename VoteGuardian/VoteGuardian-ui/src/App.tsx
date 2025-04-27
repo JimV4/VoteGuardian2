@@ -4,7 +4,7 @@ import { MainLayout, VoteGuardian } from './components';
 import { useDeployedVoteGuardianContext } from './hooks';
 import { type VoteGuardianDeployment } from './contexts';
 import { type Observable } from 'rxjs';
-
+import { useLocation } from 'react-router-dom';
 /**
  * The root bulletin VoteGuardian application component.
  *
@@ -26,6 +26,9 @@ const App: React.FC = () => {
     };
   }, [VoteGuardianApiProvider]);
 
+  const location = useLocation();
+  const isOrganizer = location.state?.isOrganizer;
+  console.log(isOrganizer);
   return (
     <Box sx={{ background: '#000', minHeight: '100vh' }}>
       <MainLayout>
