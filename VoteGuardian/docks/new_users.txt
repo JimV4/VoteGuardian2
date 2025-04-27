@@ -1,12 +1,13 @@
 docker compose -f standalone.yml up -d
 docker stop $(docker ps -q)
 
-contract address: 02007b94a916b1fbc4b36c92f98abd6cbea3d1c0d39294b099a5140e1d1219f1a3c1
-organizer secret key: 71bd9b1264b6e693c8312ac339e7293174a491e5f44319360a3caf5527757251
+contract address: 0200d458d5552ae001824408ce5e86e3abc80fba3549f952c86d36547c1da49afdaf
+organizer secret key: d9c0170c2ec3aac392369c5dd0948f1de21f2e41da2d7da627623ddd186fac7f
 
 username: a
 password: test
-secretKey: c999892f8053268a4d4c2c2c44615086c931943457e8f20381f059e4ef5a8612
-publicKey: cf0ad77b9fffc110e245216304f908f1845cbb50a85caced7e7cf8d32d487161
+secretKey: d95b48399efb5c0da4246facbbb0aae5a17bde3d57fef4006533492eb0da7253
+publicKey: cd7631fc031c6dd2d8b91d195869ade84279fffa4d94e4e4d152b90ba4988af3
+wallet:    343257a332f97ed43d53ed2d9e0785bddb767f45b7b398204a95563e5ccb9de9
 
 ---------------------------------------------------------------------------------------

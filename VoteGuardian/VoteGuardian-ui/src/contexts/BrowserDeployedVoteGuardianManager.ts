@@ -41,7 +41,7 @@ import semver from 'semver';
 import { getLedgerNetworkId, getZswapNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { error } from 'console';
 import { toHex } from '@midnight-ntwrk/midnight-js-utils';
-import { ledger, type Ledger } from '@midnight-ntwrk/vote-guardian-contract';
+import { ledger, type Ledger, type VoteGuardianPrivateState } from '@midnight-ntwrk/vote-guardian-contract';
 
 /**
  * An in-progress bulletin voteGuardian deployment.
@@ -124,6 +124,8 @@ export interface DeployedVoteGuardianAPIProvider {
   getWalletPublicKey: () => Promise<string>;
 
   displayPublicPaymentMap: (contractAddress: ContractAddress) => Promise<void>;
+
+  setPrivateStateSecretKey: (newSecretKey: string) => Promise<void>;
 }
 
 /**
@@ -178,6 +180,32 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
     return deployment;
   }
 
+  async setPrivateStateSecretKey(newSecretKey: string): Promise<void> {
+    const hexToBytes = (hex: string): Uint8Array => {
+      if (hex.length % 2 !== 0) {
+        throw new Error('Invalid hex string');
+      }
+
+      const bytes = new Uint8Array(hex.length / 2);
+      for (let i = 0; i < hex.length; i += 2) {
+        bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+      }
+      return bytes;
+    };
+    const providers = await this.getProviders();
+    if (providers !== undefined) {
+      const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+      const newPrivateState: VoteGuardianPrivateState = {
+        secretKey: hexToBytes(newSecretKey),
+        voterPublicKeyPath: existingPrivateState!.voterPublicKeyPath,
+      };
+
+      if (existingPrivateState) {
+        await providers.privateStateProvider.set('voteGuardianPrivateState', newPrivateState);
+      }
+    }
+  }
+
   async displayPublicPaymentMap(contractAddress: ContractAddress): Promise<void> {
     const providers = await this.getProviders();
     const ledgerState = await getVoteGuardianLedgerState(providers, contractAddress);
@@ -186,7 +214,7 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
         console.log('no ledger state');
       } else {
         for (const [key, value] of ledgerState.mapPublicPayment) {
-          console.log(`Public Payment Key: ${key}. Public Key: ${value.toString()}.`);
+          console.log(`Public Payment Key: ${toHex(key)}. Public Key: ${toHex(value)}.`);
         }
       }
     }

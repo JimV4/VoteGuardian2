@@ -92,6 +92,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
       // const response = await axios.post('http://localhost:3000/login', { subject: credentials });
       const result = await response.json();
       const secret_key = result.secretKey;
+      await voteGuardianApiProvider.setPrivateStateSecretKey(secret_key);
       console.log(secretKey);
 
       alert(`Login successful: ${JSON.stringify(result.secretKey)}`);
