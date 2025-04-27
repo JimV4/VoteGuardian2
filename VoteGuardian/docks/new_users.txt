@@ -6,8 +6,24 @@ organizer secret key: d9c0170c2ec3aac392369c5dd0948f1de21f2e41da2d7da627623ddd18
 
 username: a
 password: test
-secretKey: d95b48399efb5c0da4246facbbb0aae5a17bde3d57fef4006533492eb0da7253
+secretKey: d95b48399efb5c0da4246facbbb0aae5a17bde3d57fef4006533492eb0da7253 κωνστ
 publicKey: cd7631fc031c6dd2d8b91d195869ade84279fffa4d94e4e4d152b90ba4988af3
 wallet:    343257a332f97ed43d53ed2d9e0785bddb767f45b7b398204a95563e5ccb9de9
 
 ---------------------------------------------------------------------------------------
+0000000000000000000000000000000000000000000000000000000000000000
+d95b48399efb5c0da4246facbbb0aae5a17bde3d57fef4006533492eb0da7253
+
+---------------------------------------------------------------------------------------
+username: b
+password: test
+secretKey: 9b25d745656b7c542556079a6a9a19beecd5ffef0df6be20c6fb01b3a82b32a6 δημητρ
+publicKey: 37e3f5dcf89ef5b6c85e906c20fa65fa7dd3c10fab4e87ea4ae0fe5b9d96a3e6
+wallet:    a5a4af997429e8e904259d1e14b58156e03554b31341b704d6bf682851b6036c
+
+---------------------------------------------------------------------------------------
+username: c
+password: test
+secretKey: b787a96a7e5aa6f6528c5a295f9ea139151dcc5a24664e78b07e14c42b7e8336 mam
+publicKey: 8be38e7a5f88a5923d094298d714120402ed3d7ee9204ce63b59057f85ef53d2
+wallet:    4074b65b5edcbde62ec1af9020db22e2cd712902fb5ff8403edc3125d2d72adb
