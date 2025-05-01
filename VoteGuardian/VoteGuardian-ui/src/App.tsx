@@ -34,11 +34,11 @@ const App: React.FC = () => {
       <MainLayout>
         {VoteGuardianDeployments.map((VoteGuardianDeployment, idx) => (
           <div data-testid={`VoteGuardian-${idx}`} key={`VoteGuardian-${idx}`}>
-            <VoteGuardian voteGuardianDeployment$={VoteGuardianDeployment} />
+            <VoteGuardian voteGuardianDeployment$={VoteGuardianDeployment} isOrganizer={isOrganizer} />
           </div>
         ))}
         <div data-testid="VoteGuardian-start">
-          <VoteGuardian />
+          <VoteGuardian isOrganizer={isOrganizer} />
         </div>
       </MainLayout>
     </Box>

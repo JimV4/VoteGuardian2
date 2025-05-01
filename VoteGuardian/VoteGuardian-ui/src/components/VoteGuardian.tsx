@@ -28,11 +28,13 @@ import { type Observable } from 'rxjs';
 import { VOTE_STATE } from '@midnight-ntwrk/vote-guardian-contract';
 import { EmptyCardContent } from './VoteGuardian.EmptyCardContent';
 import { utils } from '@midnight-ntwrk/vote-guardian-api';
+import { DeployOrJoin } from './DeployOrJoin';
 
 /** The props required by the {@link VoteGuardian} component. */
 export interface VoteGuardianProps {
   /** The observable bulletin voteGuardian deployment. */
   voteGuardianDeployment$?: Observable<VoteGuardianDeployment>;
+  isOrganizer: string;
 }
 
 /**
@@ -50,7 +52,7 @@ export interface VoteGuardianProps {
  * `DeployedVoteGuardianAPI` instance, upon which it will then subscribe to its `state$` observable in order
  * to start receiving the changes in the bulletin voteGuardian state (i.e., when a user posts a new message).
  */
-export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardianDeployment$ }) => {
+export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardianDeployment$, isOrganizer }) => {
   const voteGuardianApiProvider = useDeployedVoteGuardianContext();
   const [voteGuardianDeployment, setVoteGuardianDeployment] = useState<VoteGuardianDeployment>();
   const [deployedVoteGuardianAPI, setDeployedVoteGuardianAPI] = useState<DeployedVoteGuardianAPI>();
@@ -64,9 +66,16 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
 
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [whatIsEditing, setWhatIsEditing] = useState<'question' | 'option' | 'voters' | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
+  };
+
+  const handleEditClick = (type: 'question' | 'option' | 'voters'): void => {
+    setIsEditing(true);
+    setWhatIsEditing(type);
   };
 
   const handleSubmit = async (): Promise<void> => {
@@ -287,44 +296,72 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
 
   return (
     <div>
-      <Card className="max-w-md mx-auto p-6 mt-10 shadow-lg rounded-2xl">
-        <CardHeader title={'Identity Verification'} />
-        <CardContent className="flex flex-col gap-4">
-          <Input
-            type="text"
-            name="username"
-            placeholder="Username"
-            value={credentials.username}
-            onChange={handleChange}
-            className="p-2 border rounded-lg"
-          />
-          <Input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={credentials.password}
-            onChange={handleChange}
-            className="p-2 border rounded-lg"
-          />
-          {error && <p className="text-red-500">{error}</p>}
-          <Button onClick={handleSubmit} className="w-full bg-blue-600 text-white rounded-lg p-2">
-            Login
-          </Button>
-        </CardContent>
-      </Card>
+      {isEditing && (
+        <Card
+          sx={{ position: 'relative', width: 300, height: 325, minWidth: 300, minHeight: 325, overflowY: 'auto' }}
+          color="primary"
+        >
+          {/* {whatIsEditing === 'question' && (
+            <>
+              <Typography color="black"> Question:{voteGuardianState?.voteQuestion || 'No question yet'}</Typography>
+              <Button variant="contained" color="primary" size="small" onClick={handleQuestionClick}>
+                Edit
+              </Button>
+            </>
+          )} */}
+          {whatIsEditing === 'option' && <EditComponent {deployedVoteGuardianAPI}>}
+          {whatIsEditing === 'option' && <Typography>Editing an option</Typography>}
+          {whatIsEditing === 'voters' && <Typography>Editing voter</Typography>}
+        </Card>
+      )}
+
+      {voteGuardianDeployment$ && (
+        <Card className="max-w-md mx-auto p-6 mt-10 shadow-lg rounded-2xl">
+          <CardHeader title={'Identity Verification'} />
+          <CardContent className="flex flex-col gap-4">
+            <Input
+              type="text"
+              name="username"
+              placeholder="Username"
+              value={credentials.username}
+              onChange={handleChange}
+              className="p-2 border rounded-lg"
+            />
+            <Input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={credentials.password}
+              onChange={handleChange}
+              className="p-2 border rounded-lg"
+            />
+            {error && <p className="text-red-500">{error}</p>}
+            <Button onClick={handleSubmit} className="w-full bg-blue-600 text-white rounded-lg p-2">
+              Login
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Card
         sx={{ position: 'relative', width: 300, height: 325, minWidth: 300, minHeight: 325, overflowY: 'auto' }}
         color="primary"
       >
-        {!voteGuardianDeployment$ && (
+        {/* {!voteGuardianDeployment$ && (
           <EmptyCardContent
             onCreateVoteGuardianCallback={onCreateVoteGuardian}
             onJoinVoteGuardianCallback={onJoinVoteGuardian}
           />
+        )} */}
+        {!voteGuardianDeployment$ && (
+          <DeployOrJoin
+            onCreateVoteGuardianCallback={onCreateVoteGuardian}
+            onJoinVoteGuardianCallback={onJoinVoteGuardian}
+            isOrganizer={isOrganizer}
+          />
         )}
 
-        {voteGuardianDeployment$ && (
+        {voteGuardianDeployment$ && !isEditing && (
           <React.Fragment>
             <Backdrop
               sx={{
@@ -374,6 +411,16 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
               }
             />
             {/* // VOTING QUESTION */}
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              onClick={() => {
+                handleEditClick('question');
+              }}
+            >
+              Edit question
+            </Button>
             <Typography data-testid="vote-guardian-question" minHeight={50} color="primary">
               {voteGuardianState?.voteQuestion || 'No question yet'}
             </Typography>
@@ -491,7 +538,8 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                 Display WALLET PUBLIC key
               </Button>
             </Box>
-            {/* END DISPLAY WALLET PUBLIC KEY MAP*/}
+
+            {/* END DISPLAY WALLET PUBLIC KEY MAP */}
 
             {/* VOTING OPTIONS */}
             {/* Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
@@ -502,186 +550,231 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
             {/* END VOTING OPTIONS */}
 
             {/* ADD VOTING QUESTION */}
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2, // Space between the TextField and Button
-              }}
-            >
-              <CardContent
-                sx={{
-                  flex: 1, // Allow equal distribution
-                  overflowY: 'auto', // Scroll if content overflows
-                }}
-              >
-                <TextField
-                  id="message-prompt2"
-                  data-testid="vote-guardian-add-question-prompt"
-                  variant="outlined"
-                  focused
-                  // fullWidth
-                  // multiline
-                  minRows={6}
-                  maxRows={6}
-                  placeholder="Add voting question"
-                  size="small"
+            {isOrganizer === 'yes' && (
+              <>
+                <Button
+                  variant="contained"
                   color="primary"
-                  inputProps={{ style: { color: 'black' } }}
-                  onChange={(e) => {
-                    setMessagePrompt(e.target.value);
+                  size="small"
+                  onClick={() => {
+                    handleEditClick('question');
                   }}
-                />
-              </CardContent>
-              <Button variant="contained" color="primary" size="small" onClick={onCreateVoting}>
-                Add
-              </Button>
-            </Box>
+                >
+                  Edit question
+                </Button>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 2, // Space between the TextField and Button
+                  }}
+                >
+                  <CardContent
+                    sx={{
+                      flex: 1, // Allow equal distribution
+                      overflowY: 'auto', // Scroll if content overflows
+                    }}
+                  >
+                    <TextField
+                      id="message-prompt2"
+                      data-testid="vote-guardian-add-question-prompt"
+                      variant="outlined"
+                      focused
+                      // fullWidth
+                      // multiline
+                      minRows={6}
+                      maxRows={6}
+                      placeholder="Add voting question"
+                      size="small"
+                      color="primary"
+                      inputProps={{ style: { color: 'black' } }}
+                      onChange={(e) => {
+                        setMessagePrompt(e.target.value);
+                      }}
+                    />
+                  </CardContent>
+
+                  <Button variant="contained" color="primary" size="small" onClick={onCreateVoting}>
+                    Add
+                  </Button>
+                </Box>
+              </>
+            )}
             {/* END ADD VOTING QUESTION */}
 
             {/* ADD VOTING OPTION */}
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2, // Space between the TextField and Button
-              }}
-            >
-              {/* η κάρτα του Message post */}
-              <CardContent
-                sx={{
-                  flex: 1, // Allow equal distribution
-                  overflowY: 'auto', // Scroll if content overflows
-                }}
-              >
-                {/* {/* {boardState ? (
+            {isOrganizer === 'yes' && (
+              <>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  onClick={() => {
+                    handleEditClick('option');
+                  }}
+                >
+                  Edit options
+                </Button>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 2, // Space between the TextField and Button
+                  }}
+                >
+                  {/* η κάρτα του Message post */}
+                  <CardContent
+                    sx={{
+                      flex: 1, // Allow equal distribution
+                      overflowY: 'auto', // Scroll if content overflows
+                    }}
+                  >
+                    {/* {/* {boardState ? (
                 boardState.state === STATE.occupied ? (
                   <Typography data-testid="board-posted-message" minHeight={160} color="primary">
                     {boardState.message}
                   </Typography>
                 ) : ( */}
-                <TextField
-                  id="message-prompt"
-                  data-testid="vote-guardian-add-option-prompt"
-                  variant="outlined"
-                  focused
-                  // fullWidth
-                  // multiline
-                  minRows={6}
-                  maxRows={6}
-                  placeholder="Add option"
-                  size="small"
-                  color="primary"
-                  inputProps={{ style: { color: 'black' } }}
-                  onChange={(e) => {
-                    setMessagePrompt(e.target.value);
-                  }}
-                />
-                {/* )
+                    <TextField
+                      id="message-prompt"
+                      data-testid="vote-guardian-add-option-prompt"
+                      variant="outlined"
+                      focused
+                      // fullWidth
+                      // multiline
+                      minRows={6}
+                      maxRows={6}
+                      placeholder="Add option"
+                      size="small"
+                      color="primary"
+                      inputProps={{ style: { color: 'black' } }}
+                      onChange={(e) => {
+                        setMessagePrompt(e.target.value);
+                      }}
+                    />
+                    {/* )
               ) : (
                 <Skeleton variant="rectangular" width={245} height={160} />
               )} */}
-              </CardContent>
-              <Button variant="contained" color="primary" size="small" onClick={onAddOption}>
-                Add
-              </Button>
-            </Box>
+                  </CardContent>
+                  <Button variant="contained" color="primary" size="small" onClick={onAddOption}>
+                    Add
+                  </Button>
+                </Box>
+              </>
+            )}
             {/* END ADD VOTING OPTION */}
 
             {/* ADD VOTER */}
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2, // Space between the TextField and Button
-              }}
-            >
-              {/* η κάρτα του Message post */}
-              <CardContent
-                sx={{
-                  flex: 1, // Allow equal distribution
-                  overflowY: 'auto', // Scroll if content overflows
-                }}
-              >
-                {/* {/* {boardState ? (
+            {isOrganizer === 'yes' && (
+              <>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  onClick={() => {
+                    handleEditClick('option');
+                  }}
+                >
+                  Edit voters
+                </Button>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 2, // Space between the TextField and Button
+                  }}
+                >
+                  {/* η κάρτα του Message post */}
+                  <CardContent
+                    sx={{
+                      flex: 1, // Allow equal distribution
+                      overflowY: 'auto', // Scroll if content overflows
+                    }}
+                  >
+                    {/* {/* {boardState ? (
                 boardState.state === STATE.occupied ? (
                   <Typography data-testid="board-posted-message" minHeight={160} color="primary">
                     {boardState.message}
                   </Typography>
                 ) : ( */}
-                <TextField
-                  id="message-prompt"
-                  data-testid="vote-guardian-add-voter-prompt"
-                  variant="outlined"
-                  focused
-                  // fullWidth
-                  // multiline
-                  minRows={6}
-                  maxRows={6}
-                  placeholder="Add voter's public key"
-                  size="small"
-                  color="primary"
-                  inputProps={{ style: { color: 'black' } }}
-                  onChange={(e) => {
-                    setMessagePrompt(e.target.value);
-                  }}
-                />
-                {/* )
+                    <TextField
+                      id="message-prompt"
+                      data-testid="vote-guardian-add-voter-prompt"
+                      variant="outlined"
+                      focused
+                      // fullWidth
+                      // multiline
+                      minRows={6}
+                      maxRows={6}
+                      placeholder="Add voter's public key"
+                      size="small"
+                      color="primary"
+                      inputProps={{ style: { color: 'black' } }}
+                      onChange={(e) => {
+                        setMessagePrompt(e.target.value);
+                      }}
+                    />
+                    {/* )
               ) : (
                 <Skeleton variant="rectangular" width={245} height={160} />
               )} */}
-              </CardContent>
-              <Button variant="contained" color="primary" size="small" onClick={onAddVoter}>
-                Add
-              </Button>
-            </Box>
+                  </CardContent>
+                  <Button variant="contained" color="primary" size="small" onClick={onAddVoter}>
+                    Add
+                  </Button>
+                </Box>
+              </>
+            )}
             {/* END ADD VOTER */}
 
             {/* CAST VOTE */}
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2, // Space between the TextField and Button
-              }}
-            >
-              {/* η κάρτα του CAST A VOTE */}
-              <CardContent
+            {isOrganizer === 'no' && (
+              <Box
                 sx={{
-                  flex: 1, // Allow equal distribution
-                  overflowY: 'auto', // Scroll if content overflows
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2, // Space between the TextField and Button
                 }}
               >
-                {/* {/* {boardState ? (
+                {/* η κάρτα του CAST A VOTE */}
+                <CardContent
+                  sx={{
+                    flex: 1, // Allow equal distribution
+                    overflowY: 'auto', // Scroll if content overflows
+                  }}
+                >
+                  {/* {/* {boardState ? (
                 boardState.state === STATE.occupied ? (
                   <Typography data-testid="board-posted-message" minHeight={160} color="primary">
                     {boardState.message}
                   </Typography>
                 ) : ( */}
-                <TextField
-                  id="message-prompt"
-                  data-testid="vote-guardian-cast-vote-prompt"
-                  variant="outlined"
-                  focused
-                  minRows={6}
-                  maxRows={6}
-                  placeholder="Cast a vote"
-                  size="small"
-                  color="primary"
-                  inputProps={{ style: { color: 'black' } }}
-                  onChange={(e) => {
-                    setMessagePrompt(e.target.value);
-                  }}
-                />
-                {/* )
+                  <TextField
+                    id="message-prompt"
+                    data-testid="vote-guardian-cast-vote-prompt"
+                    variant="outlined"
+                    focused
+                    minRows={6}
+                    maxRows={6}
+                    placeholder="Cast a vote"
+                    size="small"
+                    color="primary"
+                    inputProps={{ style: { color: 'black' } }}
+                    onChange={(e) => {
+                      setMessagePrompt(e.target.value);
+                    }}
+                  />
+                  {/* )
               ) : (
                 <Skeleton variant="rectangular" width={245} height={160} />
               )} */}
-              </CardContent>
-              <Button variant="contained" color="primary" size="small" onClick={onCastVote}>
-                Add
-              </Button>
-            </Box>
+                </CardContent>
+                <Button variant="contained" color="primary" size="small" onClick={onCastVote}>
+                  Add
+                </Button>
+              </Box>
+            )}
             {/* END CAST VOTE */}
             {/* <CardActions>
             {deployedVoteGuardianAPI ? (
