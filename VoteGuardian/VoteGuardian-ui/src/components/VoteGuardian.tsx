@@ -14,6 +14,7 @@ import {
   Button,
   Box,
   Input,
+  Stack,
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
@@ -21,7 +22,8 @@ import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import WriteIcon from '@mui/icons-material/EditNoteOutlined';
 import CopyIcon from '@mui/icons-material/ContentPasteOutlined';
 import StopIcon from '@mui/icons-material/HighlightOffOutlined';
-import { type VoteGuardianDerivedState, type DeployedVoteGuardianAPI } from '@midnight-ntwrk/vote-guardian-api';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { VoteGuardianDerivedState, type DeployedVoteGuardianAPI } from '@midnight-ntwrk/vote-guardian-api';
 import { useDeployedVoteGuardianContext } from '../hooks';
 import { type VoteGuardianDeployment } from '../contexts';
 import { type Observable } from 'rxjs';
@@ -29,6 +31,7 @@ import { VOTE_STATE } from '@midnight-ntwrk/vote-guardian-contract';
 import { EmptyCardContent } from './VoteGuardian.EmptyCardContent';
 import { utils } from '@midnight-ntwrk/vote-guardian-api';
 import { DeployOrJoin } from './DeployOrJoin';
+import { EditComponent } from './EditComponent';
 
 /** The props required by the {@link VoteGuardian} component. */
 export interface VoteGuardianProps {
@@ -64,10 +67,51 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   const [secretKey, setSecretKey] = useState<string>();
   const [walletPublicKey, setWalletPublicKey] = useState<string>();
 
+  // const [onHome, setOnHome] = useState(true);
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [whatIsEditing, setWhatIsEditing] = useState<'question' | 'option' | 'voters' | null>(null);
+
+  const [showPrompt, setShowPrompt] = useState(false);
+
+  const handleClickBackArrow = (): void => {
+    setIsEditing((prev) => !prev);
+  };
+
+  const onAdd = useCallback(
+    async (whatIsEditing: 'question' | 'option' | 'voters') => {
+      if (!messagePrompt) {
+        return;
+      }
+
+      if (whatIsEditing === 'option') {
+        setOptionCounter((prevCounter) => prevCounter + 1);
+      }
+      try {
+        if (deployedVoteGuardianAPI) {
+          setIsWorking(true);
+
+          if (whatIsEditing === 'option') {
+            await deployedVoteGuardianAPI.add_option(messagePrompt, optionCounter.toString());
+          } else if (whatIsEditing === 'question') {
+            await deployedVoteGuardianAPI.create_voting(messagePrompt);
+          } else if (whatIsEditing === 'voters') {
+            await deployedVoteGuardianAPI.add_voter(utils.hexToBytes(messagePrompt));
+          }
+        }
+      } catch (error: unknown) {
+        setErrorMessage(error instanceof Error ? error.message : String(error));
+      } finally {
+        setIsWorking(false);
+      }
+    },
+    [deployedVoteGuardianAPI, setErrorMessage, setIsWorking, messagePrompt],
+  );
+
+  const handleEditClickInside = (): void => {
+    setShowPrompt((prev) => !prev);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -295,27 +339,83 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   }, [voteGuardianDeployment, setIsWorking, setErrorMessage, setDeployedVoteGuardianAPI]);
 
   return (
-    <div>
-      {isEditing && (
-        <Card
-          sx={{ position: 'relative', width: 300, height: 325, minWidth: 300, minHeight: 325, overflowY: 'auto' }}
-          color="primary"
-        >
-          {/* {whatIsEditing === 'question' && (
-            <>
-              <Typography color="black"> Question:{voteGuardianState?.voteQuestion || 'No question yet'}</Typography>
-              <Button variant="contained" color="primary" size="small" onClick={handleQuestionClick}>
-                Edit
-              </Button>
-            </>
-          )} */}
-          {whatIsEditing === 'option' && <EditComponent {deployedVoteGuardianAPI}>}
-          {whatIsEditing === 'option' && <Typography>Editing an option</Typography>}
-          {whatIsEditing === 'voters' && <Typography>Editing voter</Typography>}
-        </Card>
+    <Card
+      sx={{ position: 'relative', width: 300, height: 325, minWidth: 300, minHeight: 325, overflowY: 'auto' }}
+      color="primary"
+    >
+      {isEditing && whatIsEditing != null && (
+        // <EditComponent
+        //   deployedVoteGuardianAPI={deployedVoteGuardianAPI}
+        //   whatIsEditing={whatIsEditing}
+        //   voteGuardianDeployment$={voteGuardianDeployment$}
+        //   voteGuardianState={voteGuardianState}
+        // />
+        <div className="w-full" style={{ position: 'relative', padding: 16 }}>
+          <Stack spacing={2} alignItems="flex-start">
+            <IconButton sx={{ position: 'absolute', top: 8, left: 8 }} aria-label="back" onClick={handleClickBackArrow}>
+              <ArrowBackIcon />
+            </IconButton>
+            <Typography color="black">Question: {voteGuardianState?.voteQuestion || 'No question yet'}</Typography>
+            <Button variant="contained" color="primary" size="small" onClick={handleEditClickInside}>
+              Edit
+            </Button>
+            <Backdrop
+              sx={{
+                position: 'absolute',
+                color: '#fff',
+                width: '100%', // Full width of the Card
+                height: '100%',
+                zIndex: (theme) => theme.zIndex.drawer + 1,
+              }}
+              open={isWorking}
+            >
+              <CircularProgress data-testid="vote-guardian-working-indicator" />
+            </Backdrop>
+            <Backdrop
+              sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+              open={!!errorMessage}
+            >
+              <StopIcon fontSize="large" />
+              <Typography component="div" data-testid="vote-guardian-error-message">
+                {errorMessage}
+              </Typography>
+            </Backdrop>
+            {showPrompt && (
+              <>
+                <TextField
+                  id="message-prompt2"
+                  data-testid="vote-guardian-add-question-prompt"
+                  variant="outlined"
+                  focused
+                  // fullWidth
+                  // multiline
+                  minRows={6}
+                  maxRows={6}
+                  placeholder=""
+                  size="small"
+                  color="primary"
+                  inputProps={{ style: { color: 'black' } }}
+                  onChange={(e) => {
+                    setMessagePrompt(e.target.value);
+                  }}
+                />
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  onClick={() => {
+                    onAdd(whatIsEditing);
+                  }}
+                >
+                  Add
+                </Button>
+              </>
+            )}
+          </Stack>
+        </div>
       )}
 
-      {voteGuardianDeployment$ && (
+      {!isEditing && voteGuardianDeployment$ && (
         <Card className="max-w-md mx-auto p-6 mt-10 shadow-lg rounded-2xl">
           <CardHeader title={'Identity Verification'} />
           <CardContent className="flex flex-col gap-4">
@@ -343,215 +443,73 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
         </Card>
       )}
 
-      <Card
-        sx={{ position: 'relative', width: 300, height: 325, minWidth: 300, minHeight: 325, overflowY: 'auto' }}
-        color="primary"
-      >
-        {/* {!voteGuardianDeployment$ && (
+      {!isEditing && (
+        <>
+          {/* {!voteGuardianDeployment$ && (
           <EmptyCardContent
             onCreateVoteGuardianCallback={onCreateVoteGuardian}
             onJoinVoteGuardianCallback={onJoinVoteGuardian}
           />
         )} */}
-        {!voteGuardianDeployment$ && (
-          <DeployOrJoin
-            onCreateVoteGuardianCallback={onCreateVoteGuardian}
-            onJoinVoteGuardianCallback={onJoinVoteGuardian}
-            isOrganizer={isOrganizer}
-          />
-        )}
-
-        {voteGuardianDeployment$ && !isEditing && (
-          <React.Fragment>
-            <Backdrop
-              sx={{
-                position: 'absolute',
-                color: '#fff',
-                width: '100%', // Full width of the Card
-                height: '100%',
-                zIndex: (theme) => theme.zIndex.drawer + 1,
-              }}
-              open={isWorking}
-            >
-              <CircularProgress data-testid="vote-guardian-working-indicator" />
-            </Backdrop>
-            <Backdrop
-              sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-              open={!!errorMessage}
-            >
-              <StopIcon fontSize="large" />
-              <Typography component="div" data-testid="vote-guardian-error-message">
-                {errorMessage}
-              </Typography>
-            </Backdrop>
-            <CardHeader
-              avatar={
-                // voteGuardianState ? (
-                //   voteGuardianState.state === STATE.vacant ||
-                //   (voteGuardianState.state === STATE.occupied && voteGuardianState.isOwner) ? (
-                //     <LockOpenIcon data-testid="post-unlocked-icon" />
-                //   ) : (
-                //     <LockIcon data-testid="post-locked-icon" />
-                //   )
-                // ) : (
-                <Skeleton variant="circular" width={20} height={20} />
-                // )
-              }
-              titleTypographyProps={{ color: 'primary' }}
-              // title={toShortFormatContractAddress(deployedVoteGuardianAPI?.deployedContractAddress) ?? 'Loading...'}
-              title={deployedVoteGuardianAPI?.deployedContractAddress ?? 'Loading...'}
-              action={
-                deployedVoteGuardianAPI?.deployedContractAddress ? (
-                  <IconButton title="Copy contract address" onClick={onCopyContractAddress}>
-                    <CopyIcon fontSize="small" />
-                  </IconButton>
-                ) : (
-                  <Skeleton variant="circular" width={20} height={20} />
-                )
-              }
+          {!voteGuardianDeployment$ && (
+            <DeployOrJoin
+              onCreateVoteGuardianCallback={onCreateVoteGuardian}
+              onJoinVoteGuardianCallback={onJoinVoteGuardian}
+              isOrganizer={isOrganizer}
             />
-            {/* // VOTING QUESTION */}
-            <Button
-              variant="contained"
-              color="primary"
-              size="small"
-              onClick={() => {
-                handleEditClick('question');
-              }}
-            >
-              Edit question
-            </Button>
-            <Typography data-testid="vote-guardian-question" minHeight={50} color="primary">
-              {voteGuardianState?.voteQuestion || 'No question yet'}
-            </Typography>
-            {/* END VOTING QUESTION */}
+          )}
 
-            {/* DISPLAY SECRET KEY */}
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2, // Space between the TextField and Button
-              }}
-            >
-              <CardContent
+          {voteGuardianDeployment$ && !isEditing && isOrganizer === 'yes' && (
+            <React.Fragment>
+              <Backdrop
                 sx={{
-                  flex: 1, // Allow equal distribution
-                  overflowY: 'auto', // Scroll if content overflows
+                  position: 'absolute',
+                  color: '#fff',
+                  width: '100%', // Full width of the Card
+                  height: '100%',
+                  zIndex: (theme) => theme.zIndex.drawer + 1,
                 }}
+                open={isWorking}
               >
-                <TextField
-                  id="message-prompt2"
-                  data-testid="vote-guardian-add-question-prompt"
-                  variant="outlined"
-                  focused
-                  // fullWidth
-                  // multiline
-                  minRows={6}
-                  maxRows={6}
-                  placeholder=""
-                  size="small"
-                  color="primary"
-                  inputProps={{ style: { color: 'black' } }}
-                  onChange={(e) => {
-                    setMessagePrompt(e.target.value);
-                  }}
-                />
-              </CardContent>
-              <Button variant="contained" color="primary" size="small" onClick={onDisplaySecretKey}>
-                Display secret key
-              </Button>
-            </Box>
-            {/* END DISPLAY SECRET KEY */}
-
-            {/* DISPLAY WALLET PUBLIC KEY */}
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2, // Space between the TextField and Button
-              }}
-            >
-              <CardContent
-                sx={{
-                  flex: 1, // Allow equal distribution
-                  overflowY: 'auto', // Scroll if content overflows
-                }}
+                <CircularProgress data-testid="vote-guardian-working-indicator" />
+              </Backdrop>
+              <Backdrop
+                sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                open={!!errorMessage}
               >
-                <TextField
-                  id="message-prompt2"
-                  data-testid="vote-guardian-add-question-prompt"
-                  variant="outlined"
-                  focused
-                  // fullWidth
-                  // multiline
-                  minRows={6}
-                  maxRows={6}
-                  placeholder=""
-                  size="small"
-                  color="primary"
-                  inputProps={{ style: { color: 'black' } }}
-                  onChange={(e) => {
-                    setMessagePrompt(e.target.value);
-                  }}
-                />
-              </CardContent>
-              <Button variant="contained" color="primary" size="small" onClick={onDisplayWalletPublicKey}>
-                Display WALLET PUBLIC key
-              </Button>
-            </Box>
-            {/* END DISPLAY WALLET PUBLIC KEY */}
-
-            {/* DISPLAY WALLET PUBLIC KEY MAP */}
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2, // Space between the TextField and Button
-              }}
-            >
-              <CardContent
-                sx={{
-                  flex: 1, // Allow equal distribution
-                  overflowY: 'auto', // Scroll if content overflows
-                }}
-              >
-                <TextField
-                  id="message-prompt2"
-                  data-testid="vote-guardian-add-question-prompt"
-                  variant="outlined"
-                  focused
-                  // fullWidth
-                  // multiline
-                  minRows={6}
-                  maxRows={6}
-                  placeholder=""
-                  size="small"
-                  color="primary"
-                  inputProps={{ style: { color: 'black' } }}
-                  onChange={(e) => {
-                    setMessagePrompt(e.target.value);
-                  }}
-                />
-              </CardContent>
-              <Button variant="contained" color="primary" size="small" onClick={onDisplayPaymentMap}>
-                Display WALLET PUBLIC key
-              </Button>
-            </Box>
-
-            {/* END DISPLAY WALLET PUBLIC KEY MAP */}
-
-            {/* VOTING OPTIONS */}
-            {/* Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
-            <Typography key={key} data-testid="vote-guardian-option" minHeight={160} color="primary">
-              {key}, {value}
-            </Typography>
-          )) */}
-            {/* END VOTING OPTIONS */}
-
-            {/* ADD VOTING QUESTION */}
-            {isOrganizer === 'yes' && (
-              <>
+                <StopIcon fontSize="large" />
+                <Typography component="div" data-testid="vote-guardian-error-message">
+                  {errorMessage}
+                </Typography>
+              </Backdrop>
+              <CardHeader
+                avatar={
+                  // voteGuardianState ? (
+                  //   voteGuardianState.state === STATE.vacant ||
+                  //   (voteGuardianState.state === STATE.occupied && voteGuardianState.isOwner) ? (
+                  //     <LockOpenIcon data-testid="post-unlocked-icon" />
+                  //   ) : (
+                  //     <LockIcon data-testid="post-locked-icon" />
+                  //   )
+                  // ) : (
+                  <Skeleton variant="circular" width={20} height={20} />
+                  // )
+                }
+                titleTypographyProps={{ color: 'primary' }}
+                // title={toShortFormatContractAddress(deployedVoteGuardianAPI?.deployedContractAddress) ?? 'Loading...'}
+                title={deployedVoteGuardianAPI?.deployedContractAddress ?? 'Loading...'}
+                action={
+                  deployedVoteGuardianAPI?.deployedContractAddress ? (
+                    <IconButton title="Copy contract address" onClick={onCopyContractAddress}>
+                      <CopyIcon fontSize="small" />
+                    </IconButton>
+                  ) : (
+                    <Skeleton variant="circular" width={20} height={20} />
+                  )
+                }
+              />
+              {/* // VOTING QUESTION */}
+              <Stack spacing={2} alignItems="center">
                 <Button
                   variant="contained"
                   color="primary"
@@ -560,51 +518,11 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                     handleEditClick('question');
                   }}
                 >
-                  Edit question
+                  Question
                 </Button>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2, // Space between the TextField and Button
-                  }}
-                >
-                  <CardContent
-                    sx={{
-                      flex: 1, // Allow equal distribution
-                      overflowY: 'auto', // Scroll if content overflows
-                    }}
-                  >
-                    <TextField
-                      id="message-prompt2"
-                      data-testid="vote-guardian-add-question-prompt"
-                      variant="outlined"
-                      focused
-                      // fullWidth
-                      // multiline
-                      minRows={6}
-                      maxRows={6}
-                      placeholder="Add voting question"
-                      size="small"
-                      color="primary"
-                      inputProps={{ style: { color: 'black' } }}
-                      onChange={(e) => {
-                        setMessagePrompt(e.target.value);
-                      }}
-                    />
-                  </CardContent>
 
-                  <Button variant="contained" color="primary" size="small" onClick={onCreateVoting}>
-                    Add
-                  </Button>
-                </Box>
-              </>
-            )}
-            {/* END ADD VOTING QUESTION */}
+                {/* END VOTING QUESTION */}
 
-            {/* ADD VOTING OPTION */}
-            {isOrganizer === 'yes' && (
-              <>
                 <Button
                   variant="contained"
                   color="primary"
@@ -613,170 +531,49 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                     handleEditClick('option');
                   }}
                 >
-                  Edit options
+                  Options
                 </Button>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2, // Space between the TextField and Button
-                  }}
-                >
-                  {/* η κάρτα του Message post */}
-                  <CardContent
-                    sx={{
-                      flex: 1, // Allow equal distribution
-                      overflowY: 'auto', // Scroll if content overflows
-                    }}
-                  >
-                    {/* {/* {boardState ? (
-                boardState.state === STATE.occupied ? (
-                  <Typography data-testid="board-posted-message" minHeight={160} color="primary">
-                    {boardState.message}
-                  </Typography>
-                ) : ( */}
-                    <TextField
-                      id="message-prompt"
-                      data-testid="vote-guardian-add-option-prompt"
-                      variant="outlined"
-                      focused
-                      // fullWidth
-                      // multiline
-                      minRows={6}
-                      maxRows={6}
-                      placeholder="Add option"
-                      size="small"
-                      color="primary"
-                      inputProps={{ style: { color: 'black' } }}
-                      onChange={(e) => {
-                        setMessagePrompt(e.target.value);
-                      }}
-                    />
-                    {/* )
-              ) : (
-                <Skeleton variant="rectangular" width={245} height={160} />
-              )} */}
-                  </CardContent>
-                  <Button variant="contained" color="primary" size="small" onClick={onAddOption}>
-                    Add
-                  </Button>
-                </Box>
-              </>
-            )}
-            {/* END ADD VOTING OPTION */}
 
-            {/* ADD VOTER */}
-            {isOrganizer === 'yes' && (
-              <>
                 <Button
                   variant="contained"
                   color="primary"
                   size="small"
                   onClick={() => {
-                    handleEditClick('option');
+                    handleEditClick('voters');
                   }}
                 >
-                  Edit voters
+                  Voters
                 </Button>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2, // Space between the TextField and Button
-                  }}
-                >
-                  {/* η κάρτα του Message post */}
-                  <CardContent
-                    sx={{
-                      flex: 1, // Allow equal distribution
-                      overflowY: 'auto', // Scroll if content overflows
-                    }}
-                  >
-                    {/* {/* {boardState ? (
-                boardState.state === STATE.occupied ? (
-                  <Typography data-testid="board-posted-message" minHeight={160} color="primary">
-                    {boardState.message}
-                  </Typography>
-                ) : ( */}
-                    <TextField
-                      id="message-prompt"
-                      data-testid="vote-guardian-add-voter-prompt"
-                      variant="outlined"
-                      focused
-                      // fullWidth
-                      // multiline
-                      minRows={6}
-                      maxRows={6}
-                      placeholder="Add voter's public key"
-                      size="small"
-                      color="primary"
-                      inputProps={{ style: { color: 'black' } }}
-                      onChange={(e) => {
-                        setMessagePrompt(e.target.value);
-                      }}
-                    />
-                    {/* )
-              ) : (
-                <Skeleton variant="rectangular" width={245} height={160} />
-              )} */}
-                  </CardContent>
-                  <Button variant="contained" color="primary" size="small" onClick={onAddVoter}>
-                    Add
-                  </Button>
-                </Box>
-              </>
-            )}
-            {/* END ADD VOTER */}
 
-            {/* CAST VOTE */}
-            {isOrganizer === 'no' && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 2, // Space between the TextField and Button
-                }}
-              >
-                {/* η κάρτα του CAST A VOTE */}
-                <CardContent
-                  sx={{
-                    flex: 1, // Allow equal distribution
-                    overflowY: 'auto', // Scroll if content overflows
-                  }}
-                >
-                  {/* {/* {boardState ? (
-                boardState.state === STATE.occupied ? (
-                  <Typography data-testid="board-posted-message" minHeight={160} color="primary">
-                    {boardState.message}
-                  </Typography>
-                ) : ( */}
-                  <TextField
-                    id="message-prompt"
-                    data-testid="vote-guardian-cast-vote-prompt"
-                    variant="outlined"
-                    focused
-                    minRows={6}
-                    maxRows={6}
-                    placeholder="Cast a vote"
-                    size="small"
-                    color="primary"
-                    inputProps={{ style: { color: 'black' } }}
-                    onChange={(e) => {
-                      setMessagePrompt(e.target.value);
-                    }}
-                  />
-                  {/* )
-              ) : (
-                <Skeleton variant="rectangular" width={245} height={160} />
-              )} */}
-                </CardContent>
-                <Button variant="contained" color="primary" size="small" onClick={onCastVote}>
-                  Add
+                {/* DISPLAY SECRET KEY */}
+
+                <Button variant="contained" color="primary" size="small" onClick={onDisplaySecretKey}>
+                  Display secret key
                 </Button>
-              </Box>
-            )}
-            {/* END CAST VOTE */}
-            {/* <CardActions>
+                {/* END DISPLAY SECRET KEY */}
+
+                {/* DISPLAY WALLET PUBLIC KEY */}
+
+                <Button variant="contained" color="primary" size="small" onClick={onDisplayWalletPublicKey}>
+                  Display WALLET PUBLIC key
+                </Button>
+                {/* END DISPLAY WALLET PUBLIC KEY */}
+
+                <Button variant="contained" color="primary" size="small" onClick={onDisplayPaymentMap}>
+                  Display WALLET PUBLIC key
+                </Button>
+
+                {/* END DISPLAY WALLET PUBLIC KEY MAP */}
+
+                {/* VOTING OPTIONS */}
+                {/* Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
+            <Typography key={key} data-testid="vote-guardian-option" minHeight={160} color="primary">
+              {key}, {value}
+            </Typography>
+          )) */}
+                {/* END VOTING OPTIONS */}
+
+                {/* <CardActions>
             {deployedVoteGuardianAPI ? (
               <React.Fragment>
                 <IconButton
@@ -803,10 +600,12 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
               <Skeleton variant="rectangular" width={80} height={20} />
             )}
           </CardActions> */}
-          </React.Fragment>
-        )}
-      </Card>
-    </div>
+              </Stack>
+            </React.Fragment>
+          )}
+        </>
+      )}
+    </Card>
   );
 };
 

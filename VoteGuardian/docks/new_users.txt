@@ -1,3 +1,7 @@
+
+0200492d68dee0dc09e6c06dc812484fd95e8e6f85466c5b273e5ae01eb79428093c
+d94a1c43910d9c56af4f835bdcc89b43a7c5e345c39d27bcb4fd25d370955d3c
+
 docker compose -f standalone.yml up -d
 docker stop $(docker ps -q)
 

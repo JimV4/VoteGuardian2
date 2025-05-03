@@ -81,10 +81,10 @@ export type VoteGuardianDerivedState = {
   // στο contract/index.d.cts και γίνεται import εδώ πέρα
   // readonly votersMap: Ledger['votersMap'];
   readonly votesList: Ledger['votesList'];
-  // readonly voteCountForEachOption: Ledger['voteCountForEachOption'];
   readonly voteCount: bigint;
   readonly voteQuestion: string;
   readonly mapPublicPayment: Ledger['mapPublicPayment'];
+  readonly voteOptionMap: Ledger['voteOptionMap'];
 
   /**
    * A readonly flag that determines if the current message was posted by the current user.

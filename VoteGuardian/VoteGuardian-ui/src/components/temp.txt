@@ -1,0 +1,241 @@
+{
+  /* ADD VOTING QUESTION */
+}
+{
+  isOrganizer === 'yes' && (
+    <>
+      <Button
+        variant="contained"
+        color="primary"
+        size="small"
+        onClick={() => {
+          handleEditClick('question');
+        }}
+      >
+        Edit question
+      </Button>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2, // Space between the TextField and Button
+        }}
+      >
+        <CardContent
+          sx={{
+            flex: 1, // Allow equal distribution
+            overflowY: 'auto', // Scroll if content overflows
+          }}
+        >
+          <TextField
+            id="message-prompt2"
+            data-testid="vote-guardian-add-question-prompt"
+            variant="outlined"
+            focused
+            // fullWidth
+            // multiline
+            minRows={6}
+            maxRows={6}
+            placeholder="Add voting question"
+            size="small"
+            color="primary"
+            inputProps={{ style: { color: 'black' } }}
+            onChange={(e) => {
+              setMessagePrompt(e.target.value);
+            }}
+          />
+        </CardContent>
+
+        <Button variant="contained" color="primary" size="small" onClick={onCreateVoting}>
+          Add
+        </Button>
+      </Box>
+    </>
+  );
+}
+{
+  /* END ADD VOTING QUESTION */
+}
+
+{
+  /* ADD VOTING OPTION */
+}
+{
+  isOrganizer === 'yes' && (
+    <>
+      <Button
+        variant="contained"
+        color="primary"
+        size="small"
+        onClick={() => {
+          handleEditClick('option');
+        }}
+      >
+        Edit options
+      </Button>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2, // Space between the TextField and Button
+        }}
+      >
+        {/* η κάρτα του Message post */}
+        <CardContent
+          sx={{
+            flex: 1, // Allow equal distribution
+            overflowY: 'auto', // Scroll if content overflows
+          }}
+        >
+          <TextField
+            id="message-prompt"
+            data-testid="vote-guardian-add-option-prompt"
+            variant="outlined"
+            focused
+            // fullWidth
+            // multiline
+            minRows={6}
+            maxRows={6}
+            placeholder="Add option"
+            size="small"
+            color="primary"
+            inputProps={{ style: { color: 'black' } }}
+            onChange={(e) => {
+              setMessagePrompt(e.target.value);
+            }}
+          />
+        </CardContent>
+        <Button variant="contained" color="primary" size="small" onClick={onAddOption}>
+          Add
+        </Button>
+      </Box>
+    </>
+  );
+}
+{
+  /* END ADD VOTING OPTION */
+}
+
+{
+  /* ADD VOTER */
+}
+{
+  isOrganizer === 'yes' && (
+    <>
+      <Button
+        variant="contained"
+        color="primary"
+        size="small"
+        onClick={() => {
+          handleEditClick('option');
+        }}
+      >
+        Edit voters
+      </Button>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2, // Space between the TextField and Button
+        }}
+      >
+        {/* η κάρτα του Message post */}
+        <CardContent
+          sx={{
+            flex: 1, // Allow equal distribution
+            overflowY: 'auto', // Scroll if content overflows
+          }}
+        >
+          {/* {/* {boardState ? (
+                boardState.state === STATE.occupied ? (
+                  <Typography data-testid="board-posted-message" minHeight={160} color="primary">
+                    {boardState.message}
+                  </Typography>
+                ) : ( */}
+          <TextField
+            id="message-prompt"
+            data-testid="vote-guardian-add-voter-prompt"
+            variant="outlined"
+            focused
+            // fullWidth
+            // multiline
+            minRows={6}
+            maxRows={6}
+            placeholder="Add voter's public key"
+            size="small"
+            color="primary"
+            inputProps={{ style: { color: 'black' } }}
+            onChange={(e) => {
+              setMessagePrompt(e.target.value);
+            }}
+          />
+          {/* )
+              ) : (
+                <Skeleton variant="rectangular" width={245} height={160} />
+              )} */}
+        </CardContent>
+        <Button variant="contained" color="primary" size="small" onClick={onAddVoter}>
+          Add
+        </Button>
+      </Box>
+    </>
+  );
+}
+{
+  /* END ADD VOTER */
+}
+
+{
+  /* CAST VOTE */
+}
+{
+  isOrganizer === 'no' && (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 2, // Space between the TextField and Button
+      }}
+    >
+      {/* η κάρτα του CAST A VOTE */}
+      <CardContent
+        sx={{
+          flex: 1, // Allow equal distribution
+          overflowY: 'auto', // Scroll if content overflows
+        }}
+      >
+        {/* {/* {boardState ? (
+                boardState.state === STATE.occupied ? (
+                  <Typography data-testid="board-posted-message" minHeight={160} color="primary">
+                    {boardState.message}
+                  </Typography>
+                ) : ( */}
+        <TextField
+          id="message-prompt"
+          data-testid="vote-guardian-cast-vote-prompt"
+          variant="outlined"
+          focused
+          minRows={6}
+          maxRows={6}
+          placeholder="Cast a vote"
+          size="small"
+          color="primary"
+          inputProps={{ style: { color: 'black' } }}
+          onChange={(e) => {
+            setMessagePrompt(e.target.value);
+          }}
+        />
+        {/* )
+              ) : (
+                <Skeleton variant="rectangular" width={245} height={160} />
+              )} */}
+      </CardContent>
+      <Button variant="contained" color="primary" size="small" onClick={onCastVote}>
+        Add
+      </Button>
+    </Box>
+  );
+}
+{
+  /* END CAST VOTE */
+}
