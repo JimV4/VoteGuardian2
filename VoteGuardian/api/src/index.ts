@@ -124,6 +124,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
           voteCount: ledgerState.voteCount,
           voteQuestion: ledgerState.voteQuestion,
           mapPublicPayment: ledgerState.mapPublicPayment,
+          voteOptionMap: ledgerState.voteOptionMap,
           isOrganizer: toHex(ledgerState.votingOrganizer) === toHex(hashedSecretKey),
         };
       },

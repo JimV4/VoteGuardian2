@@ -85,6 +85,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
         return;
       }
 
+      const optionMapLength = voteGuardianState?.voteOptionMap ? Array.from(voteGuardianState.voteOptionMap).length : 0;
       if (whatIsEditing === 'option') {
         setOptionCounter((prevCounter) => prevCounter + 1);
       }
@@ -93,7 +94,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
           setIsWorking(true);
 
           if (whatIsEditing === 'option') {
-            await deployedVoteGuardianAPI.add_option(messagePrompt, optionCounter.toString());
+            await deployedVoteGuardianAPI.add_option(messagePrompt, optionMapLength.toString());
           } else if (whatIsEditing === 'question') {
             await deployedVoteGuardianAPI.create_voting(messagePrompt);
           } else if (whatIsEditing === 'voters') {
@@ -178,39 +179,49 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
     }
   }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking]);
 
-  const onDisplaySecretKey = useCallback(async () => {
+  const onDisplaySecretKey = async (): Promise<void> => {
+    // useCallback(async () => {
     try {
       console.log('display');
-      if (deployedVoteGuardianAPI) {
-        setIsWorking(true);
-        const secretKey = await voteGuardianApiProvider.displaySecretKey();
-        console.log(secretKey);
-        setSecretKey(secretKey);
-        setMessagePrompt(secretKey);
+      if (secretKey !== undefined) {
+        setSecretKey(undefined);
+      } else {
+        if (deployedVoteGuardianAPI) {
+          setIsWorking(true);
+          const key = await voteGuardianApiProvider.displaySecretKey();
+          console.log(key);
+          setSecretKey(key);
+          setMessagePrompt(key);
+        }
       }
     } catch (error: unknown) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
     } finally {
       setIsWorking(false);
     }
-  }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking]);
+  }; //, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking, setSecretKey]);
 
-  const onDisplayWalletPublicKey = useCallback(async () => {
+  const onDisplayWalletPublicKey = async (): Promise<void> => {
+    // useCallback(async () => {
     try {
       console.log('display');
-      if (deployedVoteGuardianAPI) {
-        setIsWorking(true);
-        const walletPublicKey = await voteGuardianApiProvider.getWalletPublicKey();
-        console.log(walletPublicKey);
-        setWalletPublicKey(walletPublicKey);
-        setMessagePrompt(walletPublicKey);
+      if (walletPublicKey !== undefined) {
+        setWalletPublicKey(undefined);
+      } else {
+        if (deployedVoteGuardianAPI) {
+          setIsWorking(true);
+          const walletPubKey = await voteGuardianApiProvider.getWalletPublicKey();
+          console.log(walletPubKey);
+          setWalletPublicKey(walletPubKey);
+          setMessagePrompt(walletPubKey);
+        }
       }
     } catch (error: unknown) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
     } finally {
       setIsWorking(false);
     }
-  }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking]);
+  }; /*, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking, setWalletPublicKey]); */
 
   // Callback to handle the posting of a message. The message text is captured in the `messagePrompt`
   // state, and we just need to forward it to the `post` method of the `DeployedVoteGuardianAPI` instance
@@ -340,7 +351,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
 
   return (
     <Card
-      sx={{ position: 'relative', width: 300, height: 325, minWidth: 300, minHeight: 325, overflowY: 'auto' }}
+      sx={{ position: 'relative', width: 460, height: 495, minWidth: 460, minHeight: 495, overflowY: 'auto' }}
       color="primary"
     >
       {isEditing && whatIsEditing != null && (
@@ -352,10 +363,28 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
         // />
         <div className="w-full" style={{ position: 'relative', padding: 16 }}>
           <Stack spacing={2} alignItems="flex-start">
-            <IconButton sx={{ position: 'absolute', top: 8, left: 8 }} aria-label="back" onClick={handleClickBackArrow}>
+            <IconButton
+              sx={{ position: 'absolute', top: 8, left: 8, mb: 2 }}
+              aria-label="back"
+              onClick={handleClickBackArrow}
+            >
               <ArrowBackIcon />
             </IconButton>
-            <Typography color="black">Question: {voteGuardianState?.voteQuestion || 'No question yet'}</Typography>
+            {whatIsEditing === 'question' && (
+              <Typography color="black">Question: {voteGuardianState?.voteQuestion || 'No question yet'}</Typography>
+            )}
+            {whatIsEditing === 'option' &&
+              (voteGuardianState?.voteOptionMap ? (
+                Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
+                  <Typography key={key} data-testid="vote-guardian-option" minHeight={20} color="black">
+                    {key}. {value}
+                  </Typography>
+                ))
+              ) : (
+                <Typography data-testid="vote-guardian-option" color="black">
+                  No options yet.
+                </Typography>
+              ))}
             <Button variant="contained" color="primary" size="small" onClick={handleEditClickInside}>
               Edit
             </Button>
@@ -548,15 +577,17 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                 {/* DISPLAY SECRET KEY */}
 
                 <Button variant="contained" color="primary" size="small" onClick={onDisplaySecretKey}>
-                  Display secret key
+                  {secretKey !== undefined ? 'Hide secret key' : 'Display secret key'}
                 </Button>
+                {secretKey !== undefined && <Typography color="black">{secretKey}</Typography>}
                 {/* END DISPLAY SECRET KEY */}
 
                 {/* DISPLAY WALLET PUBLIC KEY */}
 
                 <Button variant="contained" color="primary" size="small" onClick={onDisplayWalletPublicKey}>
-                  Display WALLET PUBLIC key
+                  {walletPublicKey !== undefined ? 'Hide wallet public key' : 'Display wallet public key'}
                 </Button>
+                {walletPublicKey !== undefined && <Typography color="black">{walletPublicKey}</Typography>}
                 {/* END DISPLAY WALLET PUBLIC KEY */}
 
                 <Button variant="contained" color="primary" size="small" onClick={onDisplayPaymentMap}>
