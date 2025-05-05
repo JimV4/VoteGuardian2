@@ -5,6 +5,7 @@ import { useDeployedVoteGuardianContext } from './hooks';
 import { type VoteGuardianDeployment } from './contexts';
 import { type Observable } from 'rxjs';
 import { useLocation } from 'react-router-dom';
+import { VoteGuardianVoter } from './components/VoteGuardianVoter';
 /**
  * The root bulletin VoteGuardian application component.
  *
@@ -34,11 +35,13 @@ const App: React.FC = () => {
       <MainLayout>
         {VoteGuardianDeployments.map((VoteGuardianDeployment, idx) => (
           <div data-testid={`VoteGuardian-${idx}`} key={`VoteGuardian-${idx}`}>
-            <VoteGuardian voteGuardianDeployment$={VoteGuardianDeployment} isOrganizer={isOrganizer} />
+            {isOrganizer === 'yes' && <VoteGuardian voteGuardianDeployment$={VoteGuardianDeployment} />}
+            {isOrganizer === 'no' && <VoteGuardianVoter voteGuardianDeployment$={VoteGuardianDeployment} />}
           </div>
         ))}
         <div data-testid="VoteGuardian-start">
-          <VoteGuardian isOrganizer={isOrganizer} />
+          {isOrganizer === 'yes' && <VoteGuardian />}
+          {isOrganizer === 'no' && <VoteGuardianVoter />}
         </div>
       </MainLayout>
     </Box>

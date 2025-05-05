@@ -15,6 +15,9 @@ import {
   Box,
   Input,
   Stack,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
@@ -31,7 +34,6 @@ import { VOTE_STATE } from '@midnight-ntwrk/vote-guardian-contract';
 import { EmptyCardContent } from './VoteGuardian.EmptyCardContent';
 import { utils } from '@midnight-ntwrk/vote-guardian-api';
 import { DeployOrJoin } from './DeployOrJoin';
-import { EditComponent } from './EditComponent';
 
 /** The props required by the {@link VoteGuardian} component. */
 export interface VoteGuardianProps {
@@ -54,7 +56,7 @@ export interface VoteGuardianProps {
  * `DeployedVoteGuardianAPI` instance, upon which it will then subscribe to its `state$` observable in order
  * to start receiving the changes in the bulletin voteGuardian state (i.e., when a user posts a new message).
  */
-export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardianDeployment$, isOrganizer }) => {
+export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardianDeployment$, isOrganizer }) => {
   const voteGuardianApiProvider = useDeployedVoteGuardianContext();
   const [voteGuardianDeployment, setVoteGuardianDeployment] = useState<VoteGuardianDeployment>();
   const [deployedVoteGuardianAPI, setDeployedVoteGuardianAPI] = useState<DeployedVoteGuardianAPI>();
@@ -70,7 +72,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [whatIsEditing, setWhatIsEditing] = useState<'question' | 'option' | 'voters' | null>(null);
+  const [whatIsEditing, setWhatIsEditing] = useState<'cast' | 'results' | null>(null);
 
   const [showPrompt, setShowPrompt] = useState(false);
 
@@ -79,7 +81,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   };
 
   const onAdd = useCallback(
-    async (whatIsEditing: 'question' | 'option' | 'voters') => {
+    async (whatIsEditing: 'cast' | 'results') => {
       if (!messagePrompt) {
         return;
       }
@@ -117,7 +119,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
   };
 
-  const handleEditClick = (type: 'question' | 'option' | 'voters'): void => {
+  const handleEditClick = (type: 'cast' | 'results'): void => {
     setIsEditing(true);
     setWhatIsEditing(type);
   };
@@ -222,63 +224,6 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
     }
   }; /*, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking, setWalletPublicKey]); */
 
-  // Callback to handle the posting of a message. The message text is captured in the `messagePrompt`
-  // state, and we just need to forward it to the `post` method of the `DeployedVoteGuardianAPI` instance
-  // that we received in the `deployedVoteGuardianAPI` state.
-  const onCreateVoting = useCallback(async () => {
-    if (!messagePrompt) {
-      return;
-    }
-
-    try {
-      if (deployedVoteGuardianAPI) {
-        setIsWorking(true);
-        await deployedVoteGuardianAPI.create_voting(messagePrompt);
-      }
-    } catch (error: unknown) {
-      setErrorMessage(error instanceof Error ? error.message : String(error));
-    } finally {
-      setIsWorking(false);
-    }
-  }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking, messagePrompt]);
-
-  // Callback to handle the taking down of a message. Again, we simply invoke the `takeDown` method
-  // of the `DeployedVoteGuardianAPI` instance.
-  const onAddVoter = useCallback(async () => {
-    if (!messagePrompt) {
-      return;
-    }
-
-    try {
-      if (deployedVoteGuardianAPI) {
-        setIsWorking(true);
-        await deployedVoteGuardianAPI.add_voter(utils.hexToBytes(messagePrompt));
-      }
-    } catch (error: unknown) {
-      setErrorMessage(error instanceof Error ? error.message : String(error));
-    } finally {
-      setIsWorking(false);
-    }
-  }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking, messagePrompt]);
-
-  const onAddOption = useCallback(async () => {
-    if (!messagePrompt) {
-      return;
-    }
-
-    setOptionCounter((prevCounter) => prevCounter + 1);
-    try {
-      if (deployedVoteGuardianAPI) {
-        setIsWorking(true);
-        await deployedVoteGuardianAPI.add_option(messagePrompt, optionCounter.toString());
-      }
-    } catch (error: unknown) {
-      setErrorMessage(error instanceof Error ? error.message : String(error));
-    } finally {
-      setIsWorking(false);
-    }
-  }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking, messagePrompt]);
-
   const onCastVote = useCallback(async () => {
     if (!messagePrompt) {
       return;
@@ -353,7 +298,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
       sx={{ position: 'relative', width: 460, height: 495, minWidth: 460, minHeight: 495, overflowY: 'auto' }}
       color="primary"
     >
-      {isEditing && whatIsEditing != null && (
+      {isEditing && whatIsEditing != null && isOrganizer === 'no' && (
         // <EditComponent
         //   deployedVoteGuardianAPI={deployedVoteGuardianAPI}
         //   whatIsEditing={whatIsEditing}
@@ -369,10 +314,10 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
             >
               <ArrowBackIcon />
             </IconButton>
-            {whatIsEditing === 'question' && (
+            {whatIsEditing === 'cast' && (
               <Typography color="black">Question: {voteGuardianState?.voteQuestion || 'No question yet'}</Typography>
             )}
-            {whatIsEditing === 'option' &&
+            {/* {whatIsEditing === 'cast' &&
               (voteGuardianState?.voteOptionMap ? (
                 Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
                   <Typography key={key} data-testid="vote-guardian-option" minHeight={20} color="black">
@@ -384,8 +329,33 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                   No options yet.
                 </Typography>
               ))}
+
             <Button variant="contained" color="primary" size="small" onClick={handleEditClickInside}>
-              Edit
+              Vote
+            </Button> */}
+            {whatIsEditing === 'cast' &&
+              (voteGuardianState?.voteOptionMap ? (
+                <RadioGroup>
+                  {Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
+                    <FormControlLabel
+                      key={key}
+                      value={key}
+                      control={<Radio onClick={() => handleEditClickInside(key)} />}
+                      label={
+                        <Typography data-testid="vote-guardian-option" minHeight={20} color="black">
+                          {key}. {value}
+                        </Typography>
+                      }
+                    />
+                  ))}
+                </RadioGroup>
+              ) : (
+                <Typography data-testid="vote-guardian-option" color="black">
+                  No options yet.
+                </Typography>
+              ))}
+            <Button variant="contained" color="primary" size="small" onClick={handleEditClickInside}>
+              Vote
             </Button>
             <Backdrop
               sx={{
@@ -408,35 +378,40 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                 {errorMessage}
               </Typography>
             </Backdrop>
-            {showPrompt && (
+          </Stack>
+        </div>
+      )}
+
+      {isEditing && whatIsEditing != null && isOrganizer === 'no' && (
+        // <EditComponent
+        //   deployedVoteGuardianAPI={deployedVoteGuardianAPI}
+        //   whatIsEditing={whatIsEditing}
+        //   voteGuardianDeployment$={voteGuardianDeployment$}
+        //   voteGuardianState={voteGuardianState}
+        // />
+        <div className="w-full" style={{ position: 'relative', padding: 16 }}>
+          <Stack spacing={2} alignItems="flex-start">
+            <IconButton
+              sx={{ position: 'absolute', top: 8, left: 8, mb: 2 }}
+              aria-label="back"
+              onClick={handleClickBackArrow}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            {whatIsEditing === 'option' && (
               <>
-                <TextField
-                  id="message-prompt2"
-                  data-testid="vote-guardian-add-question-prompt"
-                  variant="outlined"
-                  focused
-                  // fullWidth
-                  // multiline
-                  minRows={6}
-                  maxRows={6}
-                  placeholder=""
-                  size="small"
-                  color="primary"
-                  inputProps={{ style: { color: 'black' } }}
-                  onChange={(e) => {
-                    setMessagePrompt(e.target.value);
-                  }}
-                />
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  onClick={() => {
-                    onAdd(whatIsEditing);
-                  }}
-                >
-                  Add
-                </Button>
+                <Typography color="black">Question: {voteGuardianState?.voteQuestion || 'No question yet'}</Typography>
+                {voteGuardianState?.voteOptionMap ? (
+                  Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
+                    <Typography key={key} data-testid="vote-guardian-option" minHeight={20} color="black">
+                      {key}. {value}
+                    </Typography>
+                  ))
+                ) : (
+                  <Typography data-testid="vote-guardian-option" color="black">
+                    No options yet.
+                  </Typography>
+                )}
               </>
             )}
           </Stack>
@@ -487,7 +462,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
             />
           )}
 
-          {voteGuardianDeployment$ && !isEditing && isOrganizer === 'yes' && (
+          {voteGuardianDeployment$ && !isEditing && isOrganizer === 'no' && (
             <React.Fragment>
               <Backdrop
                 sx={{
@@ -536,41 +511,18 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                   )
                 }
               />
-              {/* // VOTING QUESTION */}
+
+              {/* CAST A VOTE */}
               <Stack spacing={2} alignItems="center">
                 <Button
                   variant="contained"
                   color="primary"
                   size="small"
                   onClick={() => {
-                    handleEditClick('question');
+                    handleEditClick('cast');
                   }}
                 >
-                  Question
-                </Button>
-
-                {/* END VOTING QUESTION */}
-
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  onClick={() => {
-                    handleEditClick('option');
-                  }}
-                >
-                  Options
-                </Button>
-
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  onClick={() => {
-                    handleEditClick('voters');
-                  }}
-                >
-                  Voters
+                  Cast a vote
                 </Button>
 
                 {/* DISPLAY SECRET KEY */}
@@ -594,42 +546,6 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                 </Button>
 
                 {/* END DISPLAY WALLET PUBLIC KEY MAP */}
-
-                {/* VOTING OPTIONS */}
-                {/* Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
-            <Typography key={key} data-testid="vote-guardian-option" minHeight={160} color="primary">
-              {key}, {value}
-            </Typography>
-          )) */}
-                {/* END VOTING OPTIONS */}
-
-                {/* <CardActions>
-            {deployedVoteGuardianAPI ? (
-              <React.Fragment>
-                <IconButton
-                  title="Post message"
-                  data-testid="vote-guardian-post-message-btn"
-                  disabled={voteGuardianState?.state === STATE.occupied || !messagePrompt?.length}
-                  onClick={onPostMessage}
-                >
-                  <WriteIcon />
-                </IconButton>
-                <IconButton
-                  title="Take down message"
-                  data-testid="vote-guardian-take-down-message-btn"
-                  disabled={
-                    voteGuardianState?.state === STATE.vacant ||
-                    (voteGuardianState?.state === STATE.occupied && !voteGuardianState.isOwner)
-                  }
-                  onClick={onDeleteMessage}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </React.Fragment>
-            ) : (
-              <Skeleton variant="rectangular" width={80} height={20} />
-            )}
-          </CardActions> */}
               </Stack>
             </React.Fragment>
           )}
