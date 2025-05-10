@@ -102,7 +102,7 @@ export circuit cast_vote(vote_option: Opaque<"string">): Void {
     // Record the vote 
     const vote = vote_option_map.lookup(vote_option);
 
-    votes_list.push_front(vote_option);
+    votes_list.push_front(vote); // must run the contract again
     vote_count.increment(1);
 }
 

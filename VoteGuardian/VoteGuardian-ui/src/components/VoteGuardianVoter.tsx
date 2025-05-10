@@ -39,6 +39,7 @@ import { DeployOrJoin } from './DeployOrJoin';
 export interface VoteGuardianProps {
   /** The observable bulletin voteGuardian deployment. */
   voteGuardianDeployment$?: Observable<VoteGuardianDeployment>;
+  isOrganizer: string;
 }
 
 /**
@@ -67,12 +68,14 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
   const [optionCounter, setOptionCounter] = useState(0);
   const [secretKey, setSecretKey] = useState<string>();
   const [walletPublicKey, setWalletPublicKey] = useState<string>();
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
   // const [onHome, setOnHome] = useState(true);
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [whatIsEditing, setWhatIsEditing] = useState<'cast' | 'results' | null>(null);
+  const [requestIsLoading, setRequestIsLoading] = useState(false);
 
   const [showPrompt, setShowPrompt] = useState(false);
 
@@ -81,25 +84,17 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
   };
 
   const onAdd = useCallback(
-    async (whatIsEditing: 'cast' | 'results') => {
+    async (whatIsEditing: 'cast' | 'results', voteOption?: string) => {
       if (!messagePrompt) {
         return;
       }
 
-      const optionMapLength = voteGuardianState?.voteOptionMap ? Array.from(voteGuardianState.voteOptionMap).length : 0;
-      if (whatIsEditing === 'option') {
-        setOptionCounter((prevCounter) => prevCounter + 1);
-      }
       try {
         if (deployedVoteGuardianAPI) {
           setIsWorking(true);
 
-          if (whatIsEditing === 'option') {
-            await deployedVoteGuardianAPI.add_option(messagePrompt, optionMapLength.toString());
-          } else if (whatIsEditing === 'question') {
-            await deployedVoteGuardianAPI.create_voting(messagePrompt);
-          } else if (whatIsEditing === 'voters') {
-            await deployedVoteGuardianAPI.add_voter(utils.hexToBytes(messagePrompt));
+          if (whatIsEditing === 'cast') {
+            await deployedVoteGuardianAPI.cast_vote(voteOption!);
           }
         }
       } catch (error: unknown) {
@@ -126,6 +121,8 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
 
   const handleSubmit = async (): Promise<void> => {
     setError(null);
+    setRequestIsLoading(true); // Show loader
+
     try {
       const walletPublicKey = await voteGuardianApiProvider.getWalletPublicKey();
       const input = {
@@ -137,23 +134,27 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
         },
       };
       console.log(input);
-      const response = await fetch('http://localhost:3000/login', {
+
+      const response = await fetch('http://localhost:3000/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(input),
       });
-      // const response = await axios.post('http://localhost:3000/login', { subject: credentials });
+
       const result = await response.json();
       const secret_key = result.secretKey;
-      await voteGuardianApiProvider.setPrivateStateSecretKey(secret_key);
-      console.log(secretKey);
 
-      alert(`Login successful: ${JSON.stringify(result.secretKey)}`);
+      await voteGuardianApiProvider.setPrivateStateSecretKey(secret_key);
+      console.log(secret_key);
+
+      alert(`Login successful: ${JSON.stringify(secret_key)}`);
     } catch (err) {
       console.error(err);
       setError('Login failed. Please check your credentials.');
+    } finally {
+      setRequestIsLoading(false); // Hide loader
     }
   };
 
@@ -305,8 +306,18 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
         //   voteGuardianDeployment$={voteGuardianDeployment$}
         //   voteGuardianState={voteGuardianState}
         // />
-        <div className="w-full" style={{ position: 'relative', padding: 16 }}>
-          <Stack spacing={2} alignItems="flex-start">
+        <div
+          className="w-full"
+          style={{
+            position: 'relative',
+            padding: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '100vh', // ensures vertical centering even on tall screens
+          }}
+        >
+          <Stack spacing={2} alignItems="center">
             <IconButton
               sx={{ position: 'absolute', top: 8, left: 8, mb: 2 }}
               aria-label="back"
@@ -335,15 +346,15 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
             </Button> */}
             {whatIsEditing === 'cast' &&
               (voteGuardianState?.voteOptionMap ? (
-                <RadioGroup>
+                <RadioGroup value={selectedOption} onChange={(e) => setSelectedOption(e.target.value)}>
                   {Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
                     <FormControlLabel
                       key={key}
                       value={key}
-                      control={<Radio onClick={() => handleEditClickInside(key)} />}
+                      control={<Radio />}
                       label={
                         <Typography data-testid="vote-guardian-option" minHeight={20} color="black">
-                          {key}. {value}
+                          Option {key}. {value}
                         </Typography>
                       }
                     />
@@ -354,7 +365,14 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
                   No options yet.
                 </Typography>
               ))}
-            <Button variant="contained" color="primary" size="small" onClick={handleEditClickInside}>
+
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              onClick={() => selectedOption && onAdd('cast', selectedOption)}
+              disabled={!selectedOption}
+            >
               Vote
             </Button>
             <Backdrop
@@ -382,42 +400,6 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
         </div>
       )}
 
-      {isEditing && whatIsEditing != null && isOrganizer === 'no' && (
-        // <EditComponent
-        //   deployedVoteGuardianAPI={deployedVoteGuardianAPI}
-        //   whatIsEditing={whatIsEditing}
-        //   voteGuardianDeployment$={voteGuardianDeployment$}
-        //   voteGuardianState={voteGuardianState}
-        // />
-        <div className="w-full" style={{ position: 'relative', padding: 16 }}>
-          <Stack spacing={2} alignItems="flex-start">
-            <IconButton
-              sx={{ position: 'absolute', top: 8, left: 8, mb: 2 }}
-              aria-label="back"
-              onClick={handleClickBackArrow}
-            >
-              <ArrowBackIcon />
-            </IconButton>
-            {whatIsEditing === 'option' && (
-              <>
-                <Typography color="black">Question: {voteGuardianState?.voteQuestion || 'No question yet'}</Typography>
-                {voteGuardianState?.voteOptionMap ? (
-                  Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
-                    <Typography key={key} data-testid="vote-guardian-option" minHeight={20} color="black">
-                      {key}. {value}
-                    </Typography>
-                  ))
-                ) : (
-                  <Typography data-testid="vote-guardian-option" color="black">
-                    No options yet.
-                  </Typography>
-                )}
-              </>
-            )}
-          </Stack>
-        </div>
-      )}
-
       {!isEditing && voteGuardianDeployment$ && (
         <Card className="max-w-md mx-auto p-6 mt-10 shadow-lg rounded-2xl">
           <CardHeader title={'Identity Verification'} />
@@ -440,8 +422,29 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
             />
             {error && <p className="text-red-500">{error}</p>}
             <Button onClick={handleSubmit} className="w-full bg-blue-600 text-white rounded-lg p-2">
-              Login
+              Verify
             </Button>
+            <Backdrop
+              sx={{
+                position: 'absolute',
+                color: '#fff',
+                width: '100%', // Full width of the Card
+                height: '100%',
+                zIndex: (theme) => theme.zIndex.drawer + 1,
+              }}
+              open={requestIsLoading}
+            >
+              <CircularProgress data-testid="vote-guardian-working-indicator" />
+            </Backdrop>
+            <Backdrop
+              sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+              open={!!errorMessage}
+            >
+              <StopIcon fontSize="large" />
+              <Typography component="div" data-testid="vote-guardian-error-message">
+                {errorMessage}
+              </Typography>
+            </Backdrop>
           </CardContent>
         </Card>
       )}

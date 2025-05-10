@@ -35,13 +35,17 @@ const App: React.FC = () => {
       <MainLayout>
         {VoteGuardianDeployments.map((VoteGuardianDeployment, idx) => (
           <div data-testid={`VoteGuardian-${idx}`} key={`VoteGuardian-${idx}`}>
-            {isOrganizer === 'yes' && <VoteGuardian voteGuardianDeployment$={VoteGuardianDeployment} />}
-            {isOrganizer === 'no' && <VoteGuardianVoter voteGuardianDeployment$={VoteGuardianDeployment} />}
+            {isOrganizer === 'yes' && (
+              <VoteGuardian voteGuardianDeployment$={VoteGuardianDeployment} isOrganizer={isOrganizer} />
+            )}
+            {isOrganizer === 'no' && (
+              <VoteGuardianVoter voteGuardianDeployment$={VoteGuardianDeployment} isOrganizer={isOrganizer} />
+            )}
           </div>
         ))}
         <div data-testid="VoteGuardian-start">
-          {isOrganizer === 'yes' && <VoteGuardian />}
-          {isOrganizer === 'no' && <VoteGuardianVoter />}
+          {isOrganizer === 'yes' && <VoteGuardian isOrganizer={isOrganizer} />}
+          {isOrganizer === 'no' && <VoteGuardianVoter isOrganizer={isOrganizer} />}
         </div>
       </MainLayout>
     </Box>

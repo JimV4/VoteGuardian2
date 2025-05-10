@@ -235,7 +235,7 @@ export const run = async (config: Config, logger: Logger, dockerEnv?: DockerComp
     }
 
     await sendNativeToken(
-      '4074b65b5edcbde62ec1af9020db22e2cd712902fb5ff8403edc3125d2d72adb|03004d9b539a4704d839fb2188125a1a8bb0cb258b36a1aee6315ca4574dc910ccb4047575fc260bfa93b7457288edd8cf86543e7fa9c510f71a',
+      '343257a332f97ed43d53ed2d9e0785bddb767f45b7b398204a95563e5ccb9de9|0300edec82521e7aaf375f28895084f0a79f640ef2a375263450ee900bf8ad02eae17be28743966afc289670101a5c8f50163a7859f79359fb1e',
       10000000000n,
     );
   }

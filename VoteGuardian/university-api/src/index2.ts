@@ -1,0 +1,604 @@
+import { type CredentialSubject, pureCircuits, type Signature } from '@midnight-ntwrk/university-contract';
+import { fromHex, toHex } from '@midnight-ntwrk/midnight-js-utils';
+import { randomBytes as nodeRandomBytes } from 'crypto';
+import { Request, Response } from 'express';
+
+// Import dependencies
+import express from 'express';
+import mongoose from 'mongoose';
+import bodyParser from 'body-parser';
+import crypto from 'crypto';
+import cors from 'cors';
+
+/*
+ * This file is the main driver for the Midnight bulletin board example.
+ * The entry point is the run function, at the end of the file.
+ * We expect the startup files (testnet-remote.ts, standalone.ts, etc.) to
+ * call run with some specific configuration that sets the network addresses
+ * of the servers this file relies on.
+ */
+
+import { createInterface, type Interface } from 'node:readline/promises';
+import { stdin as input, stdout as output } from 'node:process';
+import { WebSocket } from 'ws';
+import { webcrypto } from 'crypto';
+import {
+  type VoteGuardianProviders,
+  type PrivateStates,
+  VoteGuardianAPI,
+  utils,
+  type VoteGuardianDerivedState,
+  type DeployedVoteGuardianContract,
+} from '@midnight-ntwrk/vote-guardian-api';
+import { ledger, type Ledger, VOTE_STATE } from '@midnight-ntwrk/vote-guardian-contract';
+import {
+  type BalancedTransaction,
+  createBalancedTx,
+  type MidnightProvider,
+  MidnightProviders,
+  PrivateStateKey,
+  PrivateStateProvider,
+  PrivateStateSchema,
+  type UnbalancedTransaction,
+  type WalletProvider,
+} from '@midnight-ntwrk/midnight-js-types';
+import { type Wallet } from '@midnight-ntwrk/wallet-api';
+import * as Rx from 'rxjs';
+import { type CoinInfo, nativeToken, Transaction, type TransactionId } from '@midnight-ntwrk/ledger';
+import { Transaction as ZswapTransaction } from '@midnight-ntwrk/zswap';
+import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
+import { type Resource, WalletBuilder } from '@midnight-ntwrk/wallet';
+import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
+import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
+import { type Logger } from 'pino';
+// import { type Config, StandaloneConfig } from '../config.js';
+import type { StartedDockerComposeEnvironment, DockerComposeEnvironment } from 'testcontainers';
+import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
+import { SigningKey, type ContractAddress } from '@midnight-ntwrk/compact-runtime';
+import { getLedgerNetworkId, getZswapNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
+import path from 'node:path';
+import { NetworkId, setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
+import { inMemoryPrivateStateProvider } from '@midnight-ntwrk/vote-guardian-api';
+import * as fs from 'node:fs/promises';
+import pinoPretty from 'pino-pretty';
+import pino from 'pino';
+import { createWriteStream } from 'node:fs';
+
+export const createLogger = async (logPath: string): Promise<pino.Logger> => {
+  await fs.mkdir(path.dirname(logPath), { recursive: true });
+  const pretty: pinoPretty.PrettyStream = pinoPretty({
+    colorize: true,
+    sync: true,
+  });
+  const level =
+    process.env.DEBUG_LEVEL !== undefined && process.env.DEBUG_LEVEL !== null && process.env.DEBUG_LEVEL !== ''
+      ? process.env.DEBUG_LEVEL
+      : 'info';
+  return pino(
+    {
+      level,
+      depthLimit: 20,
+    },
+    pino.multistream([
+      { stream: pretty, level },
+      { stream: createWriteStream(logPath), level },
+    ]),
+  );
+};
+
+// @ts-expect-error: It's needed to make Scala.js and WASM code able to use cryptography
+globalThis.crypto = webcrypto;
+
+// @ts-expect-error: It's needed to enable WebSocket usage through apollo
+globalThis.WebSocket = WebSocket;
+export const currentDir = path.resolve(new URL(import.meta.url).pathname, '..');
+
+export interface Config {
+  readonly privateStateStoreName: string;
+  readonly logDir: string;
+  readonly zkConfigPath: string;
+  readonly indexer: string;
+  readonly indexerWS: string;
+  readonly node: string;
+  readonly proofServer: string;
+
+  setNetworkId: () => void;
+}
+
+export class StandaloneConfig implements Config {
+  privateStateStoreName = 'voteGuardian-private-state';
+  logDir = path.resolve(currentDir, '..', 'logs', 'standalone', `${new Date().toISOString()}.log`);
+  zkConfigPath = path.resolve(currentDir, '..', '..', 'contract', 'dist', 'managed', 'vote-guardian');
+  indexer = 'http://127.0.0.1:8088/api/v1/graphql';
+  indexerWS = 'ws://127.0.0.1:8088/api/v1/graphql/ws';
+  node = 'http://127.0.0.1:9944';
+  proofServer = 'http://127.0.0.1:6300';
+
+  setNetworkId() {
+    setNetworkId(NetworkId.Undeployed);
+  }
+}
+
+// export const inMemoryPrivateStateProvider = <PSS extends PrivateStateSchema>(): PrivateStateProvider<PSS> => {
+//   const record: PSS = {} as PSS;
+//   const signingKeys = {} as Record<ContractAddress, SigningKey>;
+//   return {
+//     set<PSK extends PrivateStateKey<PSS>>(key: PSK, state: PSS[PSK]): Promise<void> {
+//       record[key] = state;
+//       return Promise.resolve();
+//     },
+//     get<PSK extends PrivateStateKey<PSS>>(key: PSK): Promise<PSS[PSK] | null> {
+//       const value = record[key] ?? null;
+//       return Promise.resolve(value);
+//     },
+//     remove<PSK extends PrivateStateKey<PSS>>(key: PSK): Promise<void> {
+//       delete record[key];
+//       return Promise.resolve();
+//     },
+//     clear(): Promise<void> {
+//       Object.keys(record).forEach((key) => {
+//         delete record[key];
+//       });
+//       return Promise.resolve();
+//     },
+//     setSigningKey(contractAddress: ContractAddress, signingKey: SigningKey): Promise<void> {
+//       signingKeys[contractAddress] = signingKey;
+//       return Promise.resolve();
+//     },
+//     getSigningKey(contractAddress: ContractAddress): Promise<SigningKey | null> {
+//       const value = signingKeys[contractAddress] ?? null;
+//       return Promise.resolve(value);
+//     },
+//     removeSigningKey(contractAddress: ContractAddress): Promise<void> {
+//       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+//       delete signingKeys[contractAddress];
+//       return Promise.resolve();
+//     },
+//     clearSigningKeys(): Promise<void> {
+//       Object.keys(signingKeys).forEach((contractAddress) => {
+//         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+//         delete signingKeys[contractAddress];
+//       });
+//       return Promise.resolve();
+//     },
+//   };
+// };
+
+/* **********************************************************************
+ * getVoteGuardianLedgerState: a helper that queries the current state of
+ * the data on the ledger, for a specific VoteGuardian contract.
+ * Note that the Ledger type returned here is not some generic,
+ * abstract ledger object, but specifically the type generated by
+ * the Compact compiler to correspond to the ledger declaration
+ * in the bulletin board contract.
+ */
+
+export const getVoteGuardianLedgerState = (
+  providers: VoteGuardianProviders,
+  contractAddress: ContractAddress,
+): Promise<Ledger | null> =>
+  providers.publicDataProvider
+    .queryContractState(contractAddress)
+    .then((contractState) => (contractState != null ? ledger(contractState.data) : null));
+
+function uint8ArrayToString(uint8Array: Uint8Array): string {
+  const decoder = new TextDecoder();
+  return decoder.decode(uint8Array);
+}
+
+const mainLoop = async (
+  providers: VoteGuardianProviders,
+  rli: Interface,
+  logger: Logger,
+  address: ContractAddress,
+  voter_public_key: Uint8Array,
+  voter_public_payment_key: Uint8Array,
+): Promise<void> => {
+  let api: VoteGuardianAPI | null = null;
+  const secretKeyBytes = new Uint8Array(32);
+  const secretKey = toHex(secretKeyBytes);
+  const VoteGuardianApi = await await VoteGuardianAPI.join(providers, address, secretKey, logger);
+  if (VoteGuardianApi === null) {
+    return;
+  }
+  console.log('4 at main loop');
+  let currentState: VoteGuardianDerivedState | undefined;
+  const stateObserver = {
+    next: (state: VoteGuardianDerivedState) => (currentState = state),
+  };
+  const subscription = VoteGuardianApi.state$.subscribe(stateObserver);
+
+  try {
+    console.log('5 before record_payment_key');
+    await VoteGuardianApi.record_payment_key(voter_public_key, voter_public_payment_key);
+    console.log('6 after record_payment_key');
+  } finally {
+    // While we allow errors to bubble up to the 'run' function, we will always need to dispose of the state
+    // subscription when we exit.
+    subscription.unsubscribe();
+  }
+};
+
+/* **********************************************************************
+ * createWalletAndMidnightProvider: returns an object that
+ * satifies both the WalletProvider and MidnightProvider
+ * interfaces, both implemented in terms of the given wallet.
+ */
+
+const createWalletAndMidnightProvider = async (wallet: Wallet): Promise<WalletProvider & MidnightProvider> => {
+  const state = await Rx.firstValueFrom(wallet.state());
+  return {
+    coinPublicKey: state.coinPublicKey,
+    balanceTx(tx: UnbalancedTransaction, newCoins: CoinInfo[]): Promise<BalancedTransaction> {
+      return wallet
+        .balanceTransaction(
+          ZswapTransaction.deserialize(tx.serialize(getLedgerNetworkId()), getZswapNetworkId()),
+          newCoins,
+        )
+        .then((tx) => wallet.proveTransaction(tx))
+        .then((zswapTx) => Transaction.deserialize(zswapTx.serialize(getZswapNetworkId()), getLedgerNetworkId()))
+        .then(createBalancedTx);
+    },
+    submitTx(tx: BalancedTransaction): Promise<TransactionId> {
+      return wallet.submitTransaction(tx);
+    },
+  };
+};
+
+/* **********************************************************************
+ * waitForFunds: wait for tokens to appear in a wallet.
+ *
+ * This is an interesting example of watching the stream of states
+ * coming from the pub-sub indexer.  It watches both
+ *  1. how close the state is to present reality and
+ *  2. the balance held by the wallet.
+ */
+
+const waitForFunds = (wallet: Wallet, logger: Logger) =>
+  Rx.firstValueFrom(
+    wallet.state().pipe(
+      Rx.throttleTime(10_000),
+      Rx.tap((state) => {
+        const scanned = state.syncProgress?.synced ?? 0n;
+        const total = state.syncProgress?.total.toString() ?? 'unknown number';
+        logger.info(`Wallet scanned ${scanned} blocks out of ${total}`);
+      }),
+      Rx.filter((state) => {
+        // Let's allow progress only if wallet is close enough
+        const synced = state.syncProgress?.synced ?? 0n;
+        const total = state.syncProgress?.total ?? 1_000n;
+        return total - synced < 100n;
+      }),
+      Rx.map((s) => s.balances[nativeToken()] ?? 0n),
+      Rx.filter((balance) => balance > 0n),
+    ),
+  );
+
+/* **********************************************************************
+ * buildWalletAndWaitForFunds: the main function that creates a wallet
+ * and waits for tokens to appear in it.  The various "buildWallet"
+ * functions all arrive here after collecting information for the
+ * arguments.
+ */
+
+const buildWalletAndWaitForFunds = async (
+  { indexer, indexerWS, node, proofServer }: Config,
+  logger: Logger,
+  seed: string,
+): Promise<Wallet & Resource> => {
+  const wallet = await WalletBuilder.buildFromSeed(
+    indexer,
+    indexerWS,
+    proofServer,
+    node,
+    seed,
+    getZswapNetworkId(),
+    'warn',
+  );
+  wallet.start();
+  const state = await Rx.firstValueFrom(wallet.state());
+  logger.info(`Your wallet seed is: ${seed}`);
+  logger.info(`Your wallet address is: ${state.address}`);
+  let balance = state.balances[nativeToken()];
+  if (balance === undefined || balance === 0n) {
+    logger.info(`Your wallet balance is: 0`);
+    logger.info(`Waiting to receive tokens...`);
+    balance = await waitForFunds(wallet, logger);
+  }
+  logger.info(`Your wallet balance is: ${balance}`);
+  return wallet;
+};
+
+// Generate a random see and create the wallet with that.
+const buildFreshWallet = async (config: Config, logger: Logger): Promise<Wallet & Resource> =>
+  await buildWalletAndWaitForFunds(config, logger, toHex(utils.randomBytes(32)));
+
+/* ***********************************************************************
+ * This seed gives access to tokens minted in the genesis block of a local development node - only
+ * used in standalone networks to build a wallet with initial funds.
+ */
+const GENESIS_MINT_WALLET_SEED = '0000000000000000000000000000000000000000000000000000000000000042';
+
+/* **********************************************************************
+ * buildWallet: unless running in a standalone (offline) mode,
+ * prompt the user to tell us whether to create a new wallet
+ * or recreate one from a prior seed.
+ */
+
+const buildWallet = async (config: Config, rli: Interface, logger: Logger): Promise<(Wallet & Resource) | null> => {
+  if (config instanceof StandaloneConfig) {
+    return await buildWalletAndWaitForFunds(config, logger, GENESIS_MINT_WALLET_SEED);
+  }
+
+  return await buildFreshWallet(config, logger);
+};
+
+const mapContainerPort = (env: StartedDockerComposeEnvironment, url: string, containerName: string) => {
+  const mappedUrl = new URL(url);
+  const container = env.getContainer(containerName);
+
+  mappedUrl.port = String(container.getFirstMappedPort());
+
+  return mappedUrl.toString().replace(/\/+$/, '');
+};
+
+/* **********************************************************************
+ * run: the main entry point that starts the whole bulletin board CLI.
+ *
+ * If called with a Docker environment argument, the application
+ * will wait for Docker to be ready before doing anything else.
+ */
+
+export const run = async (
+  config: Config,
+  logger: Logger,
+  address: ContractAddress,
+  voter_public_key: Uint8Array,
+  voter_public_payment_key: Uint8Array,
+  dockerEnv?: DockerComposeEnvironment,
+): Promise<void> => {
+  const rli = createInterface({ input, output, terminal: true });
+  let env;
+  if (dockerEnv !== undefined) {
+    env = await dockerEnv.up();
+
+    if (config instanceof StandaloneConfig) {
+      config.indexer = mapContainerPort(env, config.indexer, 'voteguardian-indexer');
+      config.indexerWS = mapContainerPort(env, config.indexerWS, 'voteguardian-indexer');
+      config.node = mapContainerPort(env, config.node, 'voteguardian-node');
+      config.proofServer = mapContainerPort(env, config.proofServer, 'voteguardian-proof-server');
+    }
+  }
+  const wallet = await buildWallet(config, rli, logger);
+
+  console.log('2 after wallet');
+  try {
+    if (wallet !== null) {
+      const walletAndMidnightProvider = await createWalletAndMidnightProvider(wallet);
+      // εδώ φτιάχνονται οι providers και μετά δίνονται όπου χρειάζονται providers
+      const providers = {
+        // privateStateProvider: levelPrivateStateProvider<PrivateStates>({
+        //   privateStateStoreName: config.privateStateStoreName,
+        // }),
+        privateStateProvider: inMemoryPrivateStateProvider<PrivateStates>(),
+
+        // μέσω του publicDataProvider μπορώ να βλέπω το public state του contract
+        publicDataProvider: indexerPublicDataProvider(config.indexer, config.indexerWS),
+
+        // provider για τα zk proofs. Δίνει το path όπου βρίσκονται τα keys και τα circuits
+        zkConfigProvider: new NodeZkConfigProvider<
+          'cast_vote' | 'close_voting' | 'add_voter' | 'create_voting' | 'add_option' | 'record_payment_key'
+        >(config.zkConfigPath),
+        proofProvider: httpClientProofProvider(config.proofServer),
+        walletProvider: walletAndMidnightProvider,
+        midnightProvider: walletAndMidnightProvider,
+      };
+      console.log('3 before main loop');
+      await mainLoop(providers, rli, logger, address, voter_public_key, voter_public_payment_key);
+    }
+  } catch (e) {
+    if (e instanceof Error) {
+      logger.error(`Found error '${e.message}'`);
+      logger.info('Exiting...');
+      1;
+      logger.debug(`${e.stack}`);
+    } else {
+      throw e;
+    }
+  } finally {
+    try {
+      rli.close();
+      rli.removeAllListeners();
+    } catch (e) {
+    } finally {
+      try {
+        if (wallet !== null) {
+          await wallet.close();
+        }
+      } catch (e) {
+      } finally {
+        try {
+          if (env !== undefined) {
+            await env.down();
+            logger.info('Goodbye');
+            process.exit(0);
+          }
+        } catch (e) {}
+      }
+    }
+  }
+};
+
+// Initialize the app
+const app = express();
+const PORT = 3000;
+
+app.use(express.json());
+app.use(cors());
+
+const hexToBytes = (hex: string) => {
+  if (hex.length % 2 !== 0) {
+    throw new Error('Invalid hex string');
+  }
+
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+  }
+  return bytes;
+};
+
+function pad(s: string, n: number): Uint8Array {
+  const encoder = new TextEncoder();
+  const utf8Bytes = encoder.encode(s);
+  if (n < utf8Bytes.length) {
+    throw new Error(`The padded length n must be at least ${utf8Bytes.length}`);
+  }
+  const paddedArray = new Uint8Array(n);
+  paddedArray.set(utf8Bytes);
+  return paddedArray;
+}
+
+const hashSubject = (subject: CredentialSubject): string => {
+  return toHex(pureCircuits.subject_hash(subject));
+};
+
+const generateSignature = (subject: CredentialSubject, sk: Uint8Array): Signature => {
+  const msg = Buffer.from(hashSubject(subject), 'hex');
+  return pureCircuits.sign(msg, sk);
+};
+
+function fromRawSubject(raw: any): CredentialSubject {
+  return {
+    username: pad(raw.username, 32),
+    hashed_secret: new Uint8Array(fromHex(raw.hashed_secret)),
+  };
+}
+
+// Middleware
+app.use(bodyParser.json());
+
+// MongoDB connection string (replace with your MongoDB URI)
+const mongoURI = 'mongodb+srv://dhmhtrhsvassiliou:pIzxC9sXgUSHpXWi@cluster0.ai7xh.mongodb.net/';
+
+mongoose.connect(mongoURI, {
+  // useNewUrlParser: true,
+  // useUnifiedTopology: true,
+});
+
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', () => {
+  console.log('Connected to MongoDB');
+});
+
+// Define a User schema and model
+const userSchema = new mongoose.Schema({
+  username: String,
+  password: String,
+  publicKey: String,
+  isOrganizer: String,
+});
+
+const User = mongoose.model('User', userSchema);
+
+// Endpoint to check if user exists
+app.post('/verify', async (req: Request, res: Response): Promise<void> => {
+  const { username, password, walletPubKey, contractAddress } = req.body.subject;
+  console.log(req.body.subject);
+
+  if (!username || !password) {
+    res.status(400).json({ message: 'Username and password are required.' });
+  }
+
+  try {
+    // Query the database
+    const user = await User.findOne({ username, password });
+
+    if (user) {
+      if (!user.publicKey) {
+        const secretKeybytes = new Uint8Array(32);
+        crypto.getRandomValues(secretKeybytes);
+        const toHex = (bytes: Uint8Array) => Buffer.from(bytes).toString('hex');
+        const secretKeyHex = toHex(secretKeybytes);
+
+        // Hash the secret key using SHA-256 to create the public key
+        const hashSHA256 = (data: string) => {
+          return crypto.createHash('sha256').update(data, 'hex').digest('hex');
+        };
+        const publicKeyHex = hashSHA256(secretKeyHex);
+
+        user.publicKey = publicKeyHex;
+        await user.save();
+        const config = new StandaloneConfig();
+        config.setNetworkId();
+        const logger = await createLogger(config.logDir);
+        console.log('1 before run');
+        await run(config, logger, contractAddress, hexToBytes(publicKeyHex), hexToBytes(walletPubKey));
+        console.log('2 after run');
+        await res.status(200).json({ message: 'User found.', secretKey: secretKeyHex });
+      } else {
+        console.log('here');
+        res.status(200).json({ message: 'User found.' });
+      }
+    } else {
+      res.status(404).json({ message: 'User not found.' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+});
+
+// Endpoint to insert a new user
+app.post('/register', async (req: Request, res: Response): Promise<void> => {
+  const { username, password, isOrganizer } = req.body;
+
+  if (!username || !password) {
+    res.status(400).json({ message: 'Username and password are required.' });
+  }
+
+  try {
+    // Check if the user already exists
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      res.status(400).json({ message: 'Username already exists.' });
+    }
+
+    // Create a new user
+    const newUser = new User({ username, password, isOrganizer });
+    await newUser.save();
+
+    res.status(201).json({ message: 'User registered successfully.', user: newUser });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+});
+
+app.post('/login', async (req: Request, res: Response): Promise<void> => {
+  const { username, password } = req.body.subject;
+
+  if (!username || !password) {
+    res.status(400).json({ message: 'Username and password are required.' });
+  }
+
+  try {
+    // Query the database
+    const user = await User.findOne({ username, password });
+
+    if (user) {
+      res.status(200).json({ message: 'User found.', isOrganizer: user.isOrganizer });
+    } else {
+      res.status(404).json({ message: 'User not found.' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+});
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});

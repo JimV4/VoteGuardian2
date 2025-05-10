@@ -37,6 +37,7 @@ import { EditComponent } from './EditComponent';
 export interface VoteGuardianProps {
   /** The observable bulletin voteGuardian deployment. */
   voteGuardianDeployment$?: Observable<VoteGuardianDeployment>;
+  isOrganizer: string;
 }
 
 /**
@@ -71,11 +72,16 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [whatIsEditing, setWhatIsEditing] = useState<'question' | 'option' | 'voters' | null>(null);
-
+  const [showResults, setShowResults] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
 
   const handleClickBackArrow = (): void => {
     setIsEditing((prev) => !prev);
+    setShowResults(false);
+  };
+
+  const onShowResults = (): void => {
+    setShowResults(true);
   };
 
   const onAdd = useCallback(
@@ -135,7 +141,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
         },
       };
       console.log(input);
-      const response = await fetch('http://localhost:3000/login', {
+      const response = await fetch('http://localhost:3000/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -353,6 +359,54 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
       sx={{ position: 'relative', width: 460, height: 495, minWidth: 460, minHeight: 495, overflowY: 'auto' }}
       color="primary"
     >
+      {showResults &&
+        (() => {
+          const voteCounts = new Map<string, number>();
+
+          // Count each vote
+          for (const [, vote] of voteGuardianState?.votesList ?? []) {
+            voteCounts.set(vote, (voteCounts.get(vote) || 0) + 1);
+          }
+
+          const entries = Array.from(voteCounts.entries());
+
+          return (
+            <div
+              className="w-full"
+              style={{
+                position: 'relative',
+                padding: 16,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '100vh', // ensures vertical centering even on tall screens
+              }}
+            >
+              <Stack spacing={2} alignItems="center">
+                <IconButton
+                  sx={{ position: 'absolute', top: 8, left: 8, mb: 2 }}
+                  aria-label="back"
+                  onClick={handleClickBackArrow}
+                >
+                  <ArrowBackIcon />
+                </IconButton>
+
+                {entries.length > 0 ? (
+                  entries.map(([option, count]) => (
+                    <Typography key={option} data-testid="vote-guardian-option" minHeight={20} color="black">
+                      {option}: {count}
+                    </Typography>
+                  ))
+                ) : (
+                  <Typography data-testid="vote-guardian-option" color="black">
+                    No votes yet.
+                  </Typography>
+                )}
+              </Stack>
+            </div>
+          );
+        })()}
+
       {isEditing && whatIsEditing != null && (
         // <EditComponent
         //   deployedVoteGuardianAPI={deployedVoteGuardianAPI}
@@ -360,8 +414,18 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
         //   voteGuardianDeployment$={voteGuardianDeployment$}
         //   voteGuardianState={voteGuardianState}
         // />
-        <div className="w-full" style={{ position: 'relative', padding: 16 }}>
-          <Stack spacing={2} alignItems="flex-start">
+        <div
+          className="w-full"
+          style={{
+            position: 'relative',
+            padding: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '100vh', // ensures vertical centering even on tall screens
+          }}
+        >
+          <Stack spacing={2} alignItems="center">
             <IconButton
               sx={{ position: 'absolute', top: 8, left: 8, mb: 2 }}
               aria-label="back"
@@ -443,7 +507,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
         </div>
       )}
 
-      {!isEditing && voteGuardianDeployment$ && (
+      {!isEditing && voteGuardianDeployment$ && !showResults && (
         <Card className="max-w-md mx-auto p-6 mt-10 shadow-lg rounded-2xl">
           <CardHeader title={'Identity Verification'} />
           <CardContent className="flex flex-col gap-4">
@@ -471,7 +535,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
         </Card>
       )}
 
-      {!isEditing && (
+      {!isEditing && !showResults && (
         <>
           {/* {!voteGuardianDeployment$ && (
           <EmptyCardContent
@@ -594,6 +658,12 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                 </Button>
 
                 {/* END DISPLAY WALLET PUBLIC KEY MAP */}
+
+                {/* SHOW RESULTS */}
+                <Button variant="contained" color="primary" size="small" onClick={onShowResults}>
+                  SHOW RESULTS
+                </Button>
+                {/* END SHOW RESULTS */}
 
                 {/* VOTING OPTIONS */}
                 {/* Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
