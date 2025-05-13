@@ -76,11 +76,17 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
   const [isEditing, setIsEditing] = useState(false);
   const [whatIsEditing, setWhatIsEditing] = useState<'cast' | 'results' | null>(null);
   const [requestIsLoading, setRequestIsLoading] = useState(false);
+  const [onVerify, setOnVerify] = useState(false);
 
   const [showPrompt, setShowPrompt] = useState(false);
 
   const handleClickBackArrow = (): void => {
-    setIsEditing((prev) => !prev);
+    setIsEditing(false);
+    setOnVerify(false);
+  };
+
+  const handleVerifyClick = (): void => {
+    setOnVerify(true);
   };
 
   const onAdd = useCallback(
@@ -299,6 +305,7 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
       sx={{ position: 'relative', width: 460, height: 495, minWidth: 460, minHeight: 495, overflowY: 'auto' }}
       color="primary"
     >
+      {/* Gia na pshfhsei */}
       {isEditing && whatIsEditing != null && isOrganizer === 'no' && (
         // <EditComponent
         //   deployedVoteGuardianAPI={deployedVoteGuardianAPI}
@@ -400,8 +407,16 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
         </div>
       )}
 
-      {!isEditing && voteGuardianDeployment$ && (
+      {/* Gia Verify */}
+      {!isEditing && voteGuardianDeployment$ && onVerify && (
         <Card className="max-w-md mx-auto p-6 mt-10 shadow-lg rounded-2xl">
+          <IconButton
+            sx={{ position: 'absolute', top: 8, left: 8, mb: 2 }}
+            aria-label="back"
+            onClick={handleClickBackArrow}
+          >
+            <ArrowBackIcon />
+          </IconButton>
           <CardHeader title={'Identity Verification'} />
           <CardContent className="flex flex-col gap-4">
             <Input
@@ -449,7 +464,8 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
         </Card>
       )}
 
-      {!isEditing && (
+      {/* Arxikh Selida */}
+      {!isEditing && !onVerify && (
         <>
           {/* {!voteGuardianDeployment$ && (
           <EmptyCardContent
@@ -514,6 +530,9 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
                   )
                 }
               />
+              <Button variant="contained" color="primary" size="small" onClick={handleVerifyClick}>
+                Verify
+              </Button>
 
               {/* CAST A VOTE */}
               <Stack spacing={2} alignItems="center">
@@ -545,7 +564,7 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
                 {/* END DISPLAY WALLET PUBLIC KEY */}
 
                 <Button variant="contained" color="primary" size="small" onClick={onDisplayPaymentMap}>
-                  Display WALLET PUBLIC key
+                  Display Public Wallet Key Map
                 </Button>
 
                 {/* END DISPLAY WALLET PUBLIC KEY MAP */}
