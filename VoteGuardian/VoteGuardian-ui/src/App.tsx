@@ -33,7 +33,7 @@ const App: React.FC = () => {
   return (
     <Box sx={{ background: '#000', minHeight: '100vh' }}>
       <MainLayout>
-        {VoteGuardianDeployments.map((VoteGuardianDeployment, idx) => (
+        {/* {VoteGuardianDeployments.map((VoteGuardianDeployment, idx) => (
           <div data-testid={`VoteGuardian-${idx}`} key={`VoteGuardian-${idx}`}>
             {isOrganizer === 'yes' && (
               <VoteGuardian voteGuardianDeployment$={VoteGuardianDeployment} isOrganizer={isOrganizer} />
@@ -42,11 +42,23 @@ const App: React.FC = () => {
               <VoteGuardianVoter voteGuardianDeployment$={VoteGuardianDeployment} isOrganizer={isOrganizer} />
             )}
           </div>
-        ))}
-        <div data-testid="VoteGuardian-start">
-          {isOrganizer === 'yes' && <VoteGuardian isOrganizer={isOrganizer} />}
-          {isOrganizer === 'no' && <VoteGuardianVoter isOrganizer={isOrganizer} />}
-        </div>
+        ))} */}
+        {VoteGuardianDeployments.length > 0 && (
+          <div data-testid="VoteGuardian-0">
+            {isOrganizer === 'yes' && (
+              <VoteGuardian voteGuardianDeployment$={VoteGuardianDeployments[0]} isOrganizer={isOrganizer} />
+            )}
+            {isOrganizer === 'no' && (
+              <VoteGuardianVoter voteGuardianDeployment$={VoteGuardianDeployments[0]} isOrganizer={isOrganizer} />
+            )}
+          </div>
+        )}
+        {VoteGuardianDeployments.length === 0 && (
+          <div data-testid="VoteGuardian-start">
+            {isOrganizer === 'yes' && <VoteGuardian isOrganizer={isOrganizer} />}
+            {isOrganizer === 'no' && <VoteGuardianVoter isOrganizer={isOrganizer} />}
+          </div>
+        )}
       </MainLayout>
     </Box>
   );

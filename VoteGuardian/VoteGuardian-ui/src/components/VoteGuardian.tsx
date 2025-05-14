@@ -128,38 +128,38 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
     setWhatIsEditing(type);
   };
 
-  const handleSubmit = async (): Promise<void> => {
-    setError(null);
-    try {
-      const walletPublicKey = await voteGuardianApiProvider.getWalletPublicKey();
-      const input = {
-        subject: {
-          username: credentials.username,
-          password: credentials.password,
-          walletPubKey: walletPublicKey,
-          contractAddress: deployedVoteGuardianAPI!.deployedContractAddress,
-        },
-      };
-      console.log(input);
-      const response = await fetch('http://localhost:3000/verify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(input),
-      });
-      // const response = await axios.post('http://localhost:3000/login', { subject: credentials });
-      const result = await response.json();
-      const secret_key = result.secretKey;
-      await voteGuardianApiProvider.setPrivateStateSecretKey(secret_key);
-      console.log(secretKey);
+  // const handleSubmit = async (): Promise<void> => {
+  //   setError(null);
+  //   try {
+  //     const walletPublicKey = await voteGuardianApiProvider.getWalletPublicKey();
+  //     const input = {
+  //       subject: {
+  //         username: credentials.username,
+  //         password: credentials.password,
+  //         walletPubKey: walletPublicKey,
+  //         contractAddress: deployedVoteGuardianAPI!.deployedContractAddress,
+  //       },
+  //     };
+  //     console.log(input);
+  //     const response = await fetch('http://localhost:3000/verify', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify(input),
+  //     });
+  //     // const response = await axios.post('http://localhost:3000/login', { subject: credentials });
+  //     const result = await response.json();
+  //     const secret_key = result.secretKey;
+  //     await voteGuardianApiProvider.setPrivateStateSecretKey(secret_key);
+  //     console.log(secretKey);
 
-      alert(`Login successful: ${JSON.stringify(result.secretKey)}`);
-    } catch (err) {
-      console.error(err);
-      setError('Login failed. Please check your credentials.');
-    }
-  };
+  //     alert(`Login successful: ${JSON.stringify(result.secretKey)}`);
+  //   } catch (err) {
+  //     console.error(err);
+  //     setError('Login failed. Please check your credentials.');
+  //   }
+  // };
 
   // Two simple callbacks that call `resolve(...)` to either deploy or join a bulletin voteGuardian
   // contract. Since the `DeployedVoteGuardianContext` will create a new voteGuardian and update the UI, we
@@ -448,7 +448,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                   No options yet.
                 </Typography>
               ))}
-            <Button variant="contained" color="primary" size="small" onClick={handleEditClickInside}>
+            <Button variant="contained" color="primary" size="medium" onClick={handleEditClickInside}>
               Edit
             </Button>
             <Backdrop
@@ -494,7 +494,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                 <Button
                   variant="contained"
                   color="primary"
-                  size="small"
+                  size="medium"
                   onClick={() => {
                     onAdd(whatIsEditing);
                   }}
@@ -507,7 +507,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
         </div>
       )}
 
-      {!isEditing && voteGuardianDeployment$ && !showResults && (
+      {/* {!isEditing && voteGuardianDeployment$ && !showResults && (
         <Card className="max-w-md mx-auto p-6 mt-10 shadow-lg rounded-2xl">
           <CardHeader title={'Identity Verification'} />
           <CardContent className="flex flex-col gap-4">
@@ -533,7 +533,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
             </Button>
           </CardContent>
         </Card>
-      )}
+      )} */}
 
       {!isEditing && !showResults && (
         <>
@@ -574,7 +574,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                   {errorMessage}
                 </Typography>
               </Backdrop>
-              <CardHeader
+              {/* <CardHeader
                 avatar={
                   // voteGuardianState ? (
                   //   voteGuardianState.state === STATE.vacant ||
@@ -599,13 +599,37 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                     <Skeleton variant="circular" width={20} height={20} />
                   )
                 }
+              /> */}
+              <CardHeader
+                avatar={<Skeleton variant="circular" width={20} height={20} />}
+                title={
+                  <Typography
+                    color="primary"
+                    sx={{
+                      wordBreak: 'break-all',
+                      whiteSpace: 'pre-wrap',
+                      width: '100%',
+                    }}
+                  >
+                    {deployedVoteGuardianAPI?.deployedContractAddress ?? 'Loading...'}
+                  </Typography>
+                }
+                action={
+                  deployedVoteGuardianAPI?.deployedContractAddress ? (
+                    <IconButton title="Copy contract address" onClick={onCopyContractAddress}>
+                      <CopyIcon fontSize="small" />
+                    </IconButton>
+                  ) : (
+                    <Skeleton variant="circular" width={20} height={20} />
+                  )
+                }
               />
               {/* // VOTING QUESTION */}
               <Stack spacing={2} alignItems="center">
                 <Button
                   variant="contained"
                   color="primary"
-                  size="small"
+                  size="medium"
                   onClick={() => {
                     handleEditClick('question');
                   }}
@@ -618,7 +642,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                 <Button
                   variant="contained"
                   color="primary"
-                  size="small"
+                  size="medium"
                   onClick={() => {
                     handleEditClick('option');
                   }}
@@ -629,7 +653,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                 <Button
                   variant="contained"
                   color="primary"
-                  size="small"
+                  size="medium"
                   onClick={() => {
                     handleEditClick('voters');
                   }}
@@ -639,28 +663,52 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
 
                 {/* DISPLAY SECRET KEY */}
 
-                <Button variant="contained" color="primary" size="small" onClick={onDisplaySecretKey}>
+                <Button variant="contained" color="primary" size="medium" onClick={onDisplaySecretKey}>
                   {secretKey !== undefined ? 'Hide secret key' : 'Display secret key'}
                 </Button>
-                {secretKey !== undefined && <Typography color="black">{secretKey}</Typography>}
+                {secretKey !== undefined && (
+                  <Typography
+                    color="black"
+                    sx={{
+                      wordBreak: 'break-all', // breaks long words (like secret keys)
+                      whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
+                      width: '100%', // ensures it uses the full container width
+                      textAlign: 'center', // optional, for better visual balance
+                    }}
+                  >
+                    {secretKey}
+                  </Typography>
+                )}
                 {/* END DISPLAY SECRET KEY */}
 
                 {/* DISPLAY WALLET PUBLIC KEY */}
 
-                <Button variant="contained" color="primary" size="small" onClick={onDisplayWalletPublicKey}>
+                <Button variant="contained" color="primary" size="medium" onClick={onDisplayWalletPublicKey}>
                   {walletPublicKey !== undefined ? 'Hide wallet public key' : 'Display wallet public key'}
                 </Button>
-                {walletPublicKey !== undefined && <Typography color="black">{walletPublicKey}</Typography>}
+                {walletPublicKey !== undefined && (
+                  <Typography
+                    color="black"
+                    sx={{
+                      wordBreak: 'break-all', // breaks long words (like secret keys)
+                      whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
+                      width: '100%', // ensures it uses the full container width
+                      textAlign: 'center', // optional, for better visual balance
+                    }}
+                  >
+                    {walletPublicKey}
+                  </Typography>
+                )}
                 {/* END DISPLAY WALLET PUBLIC KEY */}
 
-                <Button variant="contained" color="primary" size="small" onClick={onDisplayPaymentMap}>
+                <Button variant="contained" color="primary" size="medium" onClick={onDisplayPaymentMap}>
                   Display WALLET PUBLIC key
                 </Button>
 
                 {/* END DISPLAY WALLET PUBLIC KEY MAP */}
 
                 {/* SHOW RESULTS */}
-                <Button variant="contained" color="primary" size="small" onClick={onShowResults}>
+                <Button variant="contained" color="primary" size="medium" onClick={onShowResults}>
                   SHOW RESULTS
                 </Button>
                 {/* END SHOW RESULTS */}
@@ -707,6 +755,263 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
       )}
     </Card>
   );
+  // return (
+  //   <Card
+  //     sx={{
+  //       position: 'relative',
+  //       width: '100%',
+  //       maxWidth: 480,
+  //       minHeight: 500,
+  //       overflowY: 'auto',
+  //       padding: 2,
+  //       boxShadow: 3,
+  //       borderRadius: 4,
+  //       margin: 'auto',
+  //       mt: 4,
+  //     }}
+  //     color="primary"
+  //   >
+  //     {showResults &&
+  //       (() => {
+  //         const voteCounts = new Map<string, number>();
+  //         for (const [, vote] of voteGuardianState?.votesList ?? []) {
+  //           voteCounts.set(vote, (voteCounts.get(vote) || 0) + 1);
+  //         }
+  //         const entries = Array.from(voteCounts.entries());
+
+  //         return (
+  //           <Box
+  //             sx={{
+  //               p: 3,
+  //               display: 'flex',
+  //               alignItems: 'center',
+  //               justifyContent: 'center',
+  //               minHeight: '60vh',
+  //             }}
+  //           >
+  //             <Stack spacing={2} alignItems="center" sx={{ width: '100%', maxWidth: 400 }}>
+  //               <IconButton
+  //                 sx={{ position: 'absolute', top: 8, left: 8 }}
+  //                 aria-label="back"
+  //                 onClick={handleClickBackArrow}
+  //               >
+  //                 <ArrowBackIcon />
+  //               </IconButton>
+
+  //               {entries.length > 0 ? (
+  //                 entries.map(([option, count]) => (
+  //                   <Typography key={option} data-testid="vote-guardian-option" color="black">
+  //                     {option}: {count}
+  //                   </Typography>
+  //                 ))
+  //               ) : (
+  //                 <Typography data-testid="vote-guardian-option" color="black">
+  //                   No votes yet.
+  //                 </Typography>
+  //               )}
+  //             </Stack>
+  //           </Box>
+  //         );
+  //       })()}
+
+  //     {isEditing && whatIsEditing != null && (
+  //       <Box
+  //         sx={{
+  //           p: 3,
+  //           display: 'flex',
+  //           alignItems: 'center',
+  //           justifyContent: 'center',
+  //           minHeight: '60vh',
+  //         }}
+  //       >
+  //         <Stack spacing={2} alignItems="center" sx={{ width: '100%', maxWidth: 400 }}>
+  //           <IconButton sx={{ position: 'absolute', top: 8, left: 8 }} aria-label="back" onClick={handleClickBackArrow}>
+  //             <ArrowBackIcon />
+  //           </IconButton>
+
+  //           {whatIsEditing === 'question' && (
+  //             <Typography color="black">Question: {voteGuardianState?.voteQuestion || 'No question yet'}</Typography>
+  //           )}
+
+  //           {whatIsEditing === 'option' &&
+  //             (voteGuardianState?.voteOptionMap ? (
+  //               Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
+  //                 <Typography key={key} data-testid="vote-guardian-option" color="black">
+  //                   {key}. {value}
+  //                 </Typography>
+  //               ))
+  //             ) : (
+  //               <Typography data-testid="vote-guardian-option" color="black">
+  //                 No options yet.
+  //               </Typography>
+  //             ))}
+
+  //           <Button variant="contained" color="primary" onClick={handleEditClickInside}>
+  //             Edit
+  //           </Button>
+
+  //           <Backdrop
+  //             sx={{
+  //               position: 'absolute',
+  //               color: '#fff',
+  //               width: '100%',
+  //               height: '100%',
+  //               zIndex: (theme) => theme.zIndex.drawer + 1,
+  //             }}
+  //             open={isWorking}
+  //           >
+  //             <CircularProgress data-testid="vote-guardian-working-indicator" />
+  //           </Backdrop>
+
+  //           <Backdrop
+  //             sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+  //             open={!!errorMessage}
+  //           >
+  //             <StopIcon fontSize="large" />
+  //             <Typography component="div" data-testid="vote-guardian-error-message">
+  //               {errorMessage}
+  //             </Typography>
+  //           </Backdrop>
+
+  //           {showPrompt && (
+  //             <>
+  //               <TextField
+  //                 id="message-prompt2"
+  //                 data-testid="vote-guardian-add-question-prompt"
+  //                 variant="outlined"
+  //                 minRows={6}
+  //                 maxRows={6}
+  //                 placeholder=""
+  //                 size="small"
+  //                 color="primary"
+  //                 inputProps={{ style: { color: 'black' } }}
+  //                 onChange={(e) => setMessagePrompt(e.target.value)}
+  //                 fullWidth
+  //               />
+  //               <Button variant="contained" color="primary" size="small" onClick={() => onAdd(whatIsEditing)}>
+  //                 Add
+  //               </Button>
+  //             </>
+  //           )}
+  //         </Stack>
+  //       </Box>
+  //     )}
+
+  //     {!isEditing && voteGuardianDeployment$ && !showResults && (
+  //       <Card className="mx-auto p-6 mt-6 shadow-lg rounded-2xl max-w-md">
+  //         <CardHeader title="Identity Verification" />
+  //         <CardContent className="flex flex-col gap-4">
+  //           <Input
+  //             type="text"
+  //             name="username"
+  //             placeholder="Username"
+  //             value={credentials.username}
+  //             onChange={handleChange}
+  //             className="p-2 border rounded-lg"
+  //           />
+  //           <Input
+  //             type="password"
+  //             name="password"
+  //             placeholder="Password"
+  //             value={credentials.password}
+  //             onChange={handleChange}
+  //             className="p-2 border rounded-lg"
+  //           />
+  //           {error && <p className="text-red-500">{error}</p>}
+  //           <Button onClick={handleSubmit} className="w-full bg-blue-600 text-white rounded-lg p-2">
+  //             Login
+  //           </Button>
+  //         </CardContent>
+  //       </Card>
+  //     )}
+
+  //     {!isEditing && !showResults && (
+  //       <>
+  //         {!voteGuardianDeployment$ && (
+  //           <DeployOrJoin
+  //             onCreateVoteGuardianCallback={onCreateVoteGuardian}
+  //             onJoinVoteGuardianCallback={onJoinVoteGuardian}
+  //             isOrganizer={isOrganizer}
+  //           />
+  //         )}
+
+  //         {voteGuardianDeployment$ && isOrganizer === 'yes' && (
+  //           <>
+  //             <Backdrop
+  //               sx={{
+  //                 position: 'absolute',
+  //                 color: '#fff',
+  //                 width: '100%',
+  //                 height: '100%',
+  //                 zIndex: (theme) => theme.zIndex.drawer + 1,
+  //               }}
+  //               open={isWorking}
+  //             >
+  //               <CircularProgress data-testid="vote-guardian-working-indicator" />
+  //             </Backdrop>
+
+  //             <Backdrop
+  //               sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+  //               open={!!errorMessage}
+  //             >
+  //               <StopIcon fontSize="large" />
+  //               <Typography component="div" data-testid="vote-guardian-error-message">
+  //                 {errorMessage}
+  //               </Typography>
+  //             </Backdrop>
+
+  //             <CardHeader
+  //               avatar={<Skeleton variant="circular" width={20} height={20} />}
+  //               titleTypographyProps={{ color: 'primary' }}
+  //               title={deployedVoteGuardianAPI?.deployedContractAddress ?? 'Loading...'}
+  //               action={
+  //                 deployedVoteGuardianAPI?.deployedContractAddress ? (
+  //                   <IconButton title="Copy contract address" onClick={onCopyContractAddress}>
+  //                     <CopyIcon fontSize="small" />
+  //                   </IconButton>
+  //                 ) : (
+  //                   <Skeleton variant="circular" width={20} height={20} />
+  //                 )
+  //               }
+  //             />
+
+  //             <Stack spacing={2} alignItems="center" sx={{ width: '100%', maxWidth: 400 }}>
+  //               <Button variant="contained" color="primary" size="small" onClick={() => handleEditClick('question')}>
+  //                 Question
+  //               </Button>
+
+  //               <Button variant="contained" color="primary" size="small" onClick={() => handleEditClick('option')}>
+  //                 Options
+  //               </Button>
+
+  //               <Button variant="contained" color="primary" size="small" onClick={() => handleEditClick('voters')}>
+  //                 Voters
+  //               </Button>
+
+  //               <Button variant="contained" color="primary" size="small" onClick={onDisplaySecretKey}>
+  //                 {secretKey !== undefined ? 'Hide secret key' : 'Display secret key'}
+  //               </Button>
+  //               {secretKey !== undefined && <Typography color="black">{secretKey}</Typography>}
+
+  //               <Button variant="contained" color="primary" size="small" onClick={onDisplayWalletPublicKey}>
+  //                 {walletPublicKey !== undefined ? 'Hide wallet public key' : 'Display wallet public key'}
+  //               </Button>
+  //               {walletPublicKey !== undefined && <Typography color="black">{walletPublicKey}</Typography>}
+
+  //               <Button variant="contained" color="primary" size="small" onClick={onDisplayPaymentMap}>
+  //                 Display WALLET PUBLIC key
+  //               </Button>
+
+  //               <Button variant="contained" color="primary" size="small" onClick={onShowResults}>
+  //                 SHOW RESULTS
+  //               </Button>
+  //             </Stack>
+  //           </>
+  //         )}
+  //       </>
+  //     )}
+  //   </Card>
+  // );
 };
 
 /** @internal */
