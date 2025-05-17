@@ -543,6 +543,7 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
                   variant="contained"
                   color="primary"
                   size="small"
+                  disabled={voteGuardianState?.voteState === VOTE_STATE.closed}
                   onClick={() => {
                     handleEditClick('cast');
                   }}
@@ -553,22 +554,46 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
 
                 {/* DISPLAY SECRET KEY */}
 
-                <Button variant="contained" color="primary" size="small" onClick={onDisplaySecretKey}>
+                <Button variant="contained" color="primary" size="medium" onClick={onDisplaySecretKey}>
                   {secretKey !== undefined ? 'Hide secret key' : 'Display secret key'}
                 </Button>
-                {secretKey !== undefined && <Typography color="black">{secretKey}</Typography>}
+                {secretKey !== undefined && (
+                  <Typography
+                    color="black"
+                    sx={{
+                      wordBreak: 'break-all', // breaks long words (like secret keys)
+                      whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
+                      width: '100%', // ensures it uses the full container width
+                      textAlign: 'center', // optional, for better visual balance
+                    }}
+                  >
+                    {secretKey}
+                  </Typography>
+                )}
                 {/* END DISPLAY SECRET KEY */}
 
                 {/* DISPLAY WALLET PUBLIC KEY */}
 
-                <Button variant="contained" color="primary" size="small" onClick={onDisplayWalletPublicKey}>
+                <Button variant="contained" color="primary" size="medium" onClick={onDisplayWalletPublicKey}>
                   {walletPublicKey !== undefined ? 'Hide wallet public key' : 'Display wallet public key'}
                 </Button>
-                {walletPublicKey !== undefined && <Typography color="black">{walletPublicKey}</Typography>}
+                {walletPublicKey !== undefined && (
+                  <Typography
+                    color="black"
+                    sx={{
+                      wordBreak: 'break-all', // breaks long words (like secret keys)
+                      whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
+                      width: '100%', // ensures it uses the full container width
+                      textAlign: 'center', // optional, for better visual balance
+                    }}
+                  >
+                    {walletPublicKey}
+                  </Typography>
+                )}
                 {/* END DISPLAY WALLET PUBLIC KEY */}
 
-                <Button variant="contained" color="primary" size="small" onClick={onDisplayPaymentMap}>
-                  Display Public Wallet Key Map
+                <Button variant="contained" color="primary" size="medium" onClick={onDisplayPaymentMap}>
+                  Display WALLET PUBLIC key MAP
                 </Button>
 
                 {/* END DISPLAY WALLET PUBLIC KEY MAP */}
