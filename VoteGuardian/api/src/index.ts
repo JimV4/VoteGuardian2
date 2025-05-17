@@ -46,6 +46,7 @@ export interface DeployedVoteGuardianAPI {
   add_voter: (voter_public_key: Uint8Array) => Promise<void>;
   cast_vote: (encrypted_vote: string) => Promise<void>;
   close_voting: () => Promise<void>;
+  open_voting: () => Promise<void>;
   create_voting: (vote_question: string) => Promise<void>;
   add_option: (vote_option: string, index: string) => Promise<void>;
   record_payment_key: (voter_public_key: Uint8Array, voter_public_payment_key: Uint8Array) => Promise<void>;
@@ -290,6 +291,21 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
     this.logger?.trace({
       transactionAdded: {
         circuit: 'close_voting',
+        txHash: txData.public.txHash,
+        blockHeight: txData.public.blockHeight,
+      },
+    });
+  }
+
+  async open_voting(): Promise<void> {
+    this.logger?.info('open voting...');
+    console.log('here');
+
+    const txData = await this.deployedContract.callTx.open_voting();
+
+    this.logger?.trace({
+      transactionAdded: {
+        circuit: 'open_voting',
         txHash: txData.public.txHash,
         blockHeight: txData.public.blockHeight,
       },

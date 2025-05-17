@@ -352,7 +352,8 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
               Vote
             </Button> */}
             {whatIsEditing === 'cast' &&
-              (voteGuardianState?.voteOptionMap ? (
+              (voteGuardianState?.voteOptionMap &&
+              Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).length > 0 ? (
                 <RadioGroup value={selectedOption} onChange={(e) => setSelectedOption(e.target.value)}>
                   {Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
                     <FormControlLabel
@@ -505,21 +506,19 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
                 </Typography>
               </Backdrop>
               <CardHeader
-                avatar={
-                  // voteGuardianState ? (
-                  //   voteGuardianState.state === STATE.vacant ||
-                  //   (voteGuardianState.state === STATE.occupied && voteGuardianState.isOwner) ? (
-                  //     <LockOpenIcon data-testid="post-unlocked-icon" />
-                  //   ) : (
-                  //     <LockIcon data-testid="post-locked-icon" />
-                  //   )
-                  // ) : (
-                  <Skeleton variant="circular" width={20} height={20} />
-                  // )
+                avatar={<Skeleton variant="circular" width={20} height={20} />}
+                title={
+                  <Typography
+                    color="primary"
+                    sx={{
+                      wordBreak: 'break-all',
+                      whiteSpace: 'pre-wrap',
+                      width: '100%',
+                    }}
+                  >
+                    {deployedVoteGuardianAPI?.deployedContractAddress ?? 'Loading...'}
+                  </Typography>
                 }
-                titleTypographyProps={{ color: 'primary' }}
-                // title={toShortFormatContractAddress(deployedVoteGuardianAPI?.deployedContractAddress) ?? 'Loading...'}
-                title={deployedVoteGuardianAPI?.deployedContractAddress ?? 'Loading...'}
                 action={
                   deployedVoteGuardianAPI?.deployedContractAddress ? (
                     <IconButton title="Copy contract address" onClick={onCopyContractAddress}>
@@ -530,12 +529,16 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
                   )
                 }
               />
-              <Button variant="contained" color="primary" size="small" onClick={handleVerifyClick}>
-                Verify
-              </Button>
-
-              {/* CAST A VOTE */}
+              <Typography color="primary">
+                Vote State is{' '}
+                {voteGuardianState ? (voteGuardianState.voteState === VOTE_STATE.open ? 'open' : 'closed') : 'No State'}
+              </Typography>
               <Stack spacing={2} alignItems="center">
+                <Button variant="contained" color="primary" size="small" onClick={handleVerifyClick}>
+                  Verify
+                </Button>
+
+                {/* CAST A VOTE */}
                 <Button
                   variant="contained"
                   color="primary"
@@ -546,6 +549,7 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
                 >
                   Cast a vote
                 </Button>
+                {/* END CAST A VOTE */}
 
                 {/* DISPLAY SECRET KEY */}
 

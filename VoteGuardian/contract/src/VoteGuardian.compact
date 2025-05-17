@@ -116,6 +116,16 @@ export circuit close_voting(): Void {
     vote_state = VOTE_STATE.closed;
 }
 
+// Function to open the voting phase
+export circuit open_voting(): Void {
+    assert voting_organizer == public_key(local_secret_key())
+        "You are not authorized to open the voting";
+
+    assert vote_state == VOTE_STATE.closed
+        "Voting phase is not closed or has already opened";
+    vote_state = VOTE_STATE.open;
+}
+
 export circuit create_voting(vq: Opaque<"string">): Void {
     assert voting_organizer == public_key(local_secret_key())
         "You are not authorized to start a voting";
