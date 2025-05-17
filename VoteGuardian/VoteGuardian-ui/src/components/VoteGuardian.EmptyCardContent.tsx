@@ -60,33 +60,37 @@ export const EmptyCardContent: React.FC<Readonly<EmptyCardContentProps>> = ({
         </IconButton>
       </CardActions>
       {/* Prompt for Contract Address */}
-      <TextPromptDialog
-        prompt="Enter contract address"
-        isOpen={textPromptOpen}
-        onCancel={() => {
-          setTextPromptOpen(false);
-        }}
-        onSubmit={(text) => {
-          setTextPromptOpen(false);
-          setContractAddress(text);
-          setSecretPromptOpen(true); // Open the second prompt
-        }}
-      />
+      <div style={{ transform: 'scale(1.2)', transformOrigin: 'top left' }}>
+        <TextPromptDialog
+          prompt="Enter contract address"
+          isOpen={textPromptOpen}
+          onCancel={() => {
+            setTextPromptOpen(false);
+          }}
+          onSubmit={(text) => {
+            setTextPromptOpen(false);
+            setContractAddress(text);
+            setSecretPromptOpen(true); // Open the second prompt
+          }}
+        />
+      </div>
 
       {/* Prompt for Secret Key */}
-      <TextPromptDialog
-        prompt="Enter secret key"
-        isOpen={secretPromptOpen}
-        onCancel={() => {
-          setSecretPromptOpen(false);
-        }}
-        onSubmit={(secret) => {
-          setSecretPromptOpen(false);
-          if (contractAddress) {
-            onJoinVoteGuardianCallback(contractAddress, secret);
-          }
-        }}
-      />
+      <div style={{ transform: 'scale(1.2)', transformOrigin: 'top left' }}>
+        <TextPromptDialog
+          prompt="Enter secret key"
+          isOpen={secretPromptOpen}
+          onCancel={() => {
+            setSecretPromptOpen(false);
+          }}
+          onSubmit={(secret) => {
+            setSecretPromptOpen(false);
+            if (contractAddress) {
+              onJoinVoteGuardianCallback(contractAddress, secret);
+            }
+          }}
+        />
+      </div>
     </React.Fragment>
   );
 };

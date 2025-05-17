@@ -301,41 +301,42 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
   }, [voteGuardianDeployment, setIsWorking, setErrorMessage, setDeployedVoteGuardianAPI]);
 
   return (
-    <Card
-      sx={{ position: 'relative', width: 460, height: 495, minWidth: 460, minHeight: 495, overflowY: 'auto' }}
-      color="primary"
-    >
-      {/* Gia na pshfhsei */}
-      {isEditing && whatIsEditing != null && isOrganizer === 'no' && (
-        // <EditComponent
-        //   deployedVoteGuardianAPI={deployedVoteGuardianAPI}
-        //   whatIsEditing={whatIsEditing}
-        //   voteGuardianDeployment$={voteGuardianDeployment$}
-        //   voteGuardianState={voteGuardianState}
-        // />
-        <div
-          className="w-full"
-          style={{
-            position: 'relative',
-            padding: 16,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '100vh', // ensures vertical centering even on tall screens
-          }}
-        >
-          <Stack spacing={2} alignItems="center">
-            <IconButton
-              sx={{ position: 'absolute', top: 8, left: 8, mb: 2 }}
-              aria-label="back"
-              onClick={handleClickBackArrow}
-            >
-              <ArrowBackIcon />
-            </IconButton>
-            {whatIsEditing === 'cast' && (
-              <Typography color="black">Question: {voteGuardianState?.voteQuestion || 'No question yet'}</Typography>
-            )}
-            {/* {whatIsEditing === 'cast' &&
+    <div style={{ transform: 'scale(1.2)', transformOrigin: 'top left' }}>
+      <Card
+        sx={{ position: 'relative', width: 460, height: 495, minWidth: 460, minHeight: 495, overflowY: 'auto' }}
+        color="primary"
+      >
+        {/* Gia na pshfhsei */}
+        {isEditing && whatIsEditing != null && isOrganizer === 'no' && (
+          // <EditComponent
+          //   deployedVoteGuardianAPI={deployedVoteGuardianAPI}
+          //   whatIsEditing={whatIsEditing}
+          //   voteGuardianDeployment$={voteGuardianDeployment$}
+          //   voteGuardianState={voteGuardianState}
+          // />
+          <div
+            className="w-full"
+            style={{
+              position: 'relative',
+              padding: 16,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              // minHeight: '100vh', // ensures vertical centering even on tall screens
+            }}
+          >
+            <Stack spacing={2} alignItems="center">
+              <IconButton
+                sx={{ position: 'absolute', top: 8, left: 8, mb: 2 }}
+                aria-label="back"
+                onClick={handleClickBackArrow}
+              >
+                <ArrowBackIcon />
+              </IconButton>
+              {whatIsEditing === 'cast' && (
+                <Typography color="black">Question: {voteGuardianState?.voteQuestion || 'No question yet'}</Typography>
+              )}
+              {/* {whatIsEditing === 'cast' &&
               (voteGuardianState?.voteOptionMap ? (
                 Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
                   <Typography key={key} data-testid="vote-guardian-option" minHeight={20} color="black">
@@ -351,139 +352,38 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
             <Button variant="contained" color="primary" size="small" onClick={handleEditClickInside}>
               Vote
             </Button> */}
-            {whatIsEditing === 'cast' &&
-              (voteGuardianState?.voteOptionMap &&
-              Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).length > 0 ? (
-                <RadioGroup value={selectedOption} onChange={(e) => setSelectedOption(e.target.value)}>
-                  {Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
-                    <FormControlLabel
-                      key={key}
-                      value={key}
-                      control={<Radio />}
-                      label={
-                        <Typography data-testid="vote-guardian-option" minHeight={20} color="black">
-                          Option {key}. {value}
-                        </Typography>
-                      }
-                    />
-                  ))}
-                </RadioGroup>
-              ) : (
-                <Typography data-testid="vote-guardian-option" color="black">
-                  No options yet.
-                </Typography>
-              ))}
+              {whatIsEditing === 'cast' &&
+                (voteGuardianState?.voteOptionMap &&
+                Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).length > 0 ? (
+                  <RadioGroup value={selectedOption} onChange={(e) => setSelectedOption(e.target.value)}>
+                    {Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
+                      <FormControlLabel
+                        key={key}
+                        value={key}
+                        control={<Radio />}
+                        label={
+                          <Typography data-testid="vote-guardian-option" minHeight={20} color="black">
+                            Option {key}. {value}
+                          </Typography>
+                        }
+                      />
+                    ))}
+                  </RadioGroup>
+                ) : (
+                  <Typography data-testid="vote-guardian-option" color="black">
+                    No options yet.
+                  </Typography>
+                ))}
 
-            <Button
-              variant="contained"
-              color="primary"
-              size="small"
-              onClick={() => selectedOption && onAdd('cast', selectedOption)}
-              disabled={!selectedOption}
-            >
-              Vote
-            </Button>
-            <Backdrop
-              sx={{
-                position: 'absolute',
-                color: '#fff',
-                width: '100%', // Full width of the Card
-                height: '100%',
-                zIndex: (theme) => theme.zIndex.drawer + 1,
-              }}
-              open={isWorking}
-            >
-              <CircularProgress data-testid="vote-guardian-working-indicator" />
-            </Backdrop>
-            <Backdrop
-              sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-              open={!!errorMessage}
-            >
-              <StopIcon fontSize="large" />
-              <Typography component="div" data-testid="vote-guardian-error-message">
-                {errorMessage}
-              </Typography>
-            </Backdrop>
-          </Stack>
-        </div>
-      )}
-
-      {/* Gia Verify */}
-      {!isEditing && voteGuardianDeployment$ && onVerify && (
-        <Card className="max-w-md mx-auto p-6 mt-10 shadow-lg rounded-2xl">
-          <IconButton
-            sx={{ position: 'absolute', top: 8, left: 8, mb: 2 }}
-            aria-label="back"
-            onClick={handleClickBackArrow}
-          >
-            <ArrowBackIcon />
-          </IconButton>
-          <CardHeader title={'Identity Verification'} />
-          <CardContent className="flex flex-col gap-4">
-            <Input
-              type="text"
-              name="username"
-              placeholder="Username"
-              value={credentials.username}
-              onChange={handleChange}
-              className="p-2 border rounded-lg"
-            />
-            <Input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={credentials.password}
-              onChange={handleChange}
-              className="p-2 border rounded-lg"
-            />
-            {error && <p className="text-red-500">{error}</p>}
-            <Button onClick={handleSubmit} className="w-full bg-blue-600 text-white rounded-lg p-2">
-              Verify
-            </Button>
-            <Backdrop
-              sx={{
-                position: 'absolute',
-                color: '#fff',
-                width: '100%', // Full width of the Card
-                height: '100%',
-                zIndex: (theme) => theme.zIndex.drawer + 1,
-              }}
-              open={requestIsLoading}
-            >
-              <CircularProgress data-testid="vote-guardian-working-indicator" />
-            </Backdrop>
-            <Backdrop
-              sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-              open={!!errorMessage}
-            >
-              <StopIcon fontSize="large" />
-              <Typography component="div" data-testid="vote-guardian-error-message">
-                {errorMessage}
-              </Typography>
-            </Backdrop>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Arxikh Selida */}
-      {!isEditing && !onVerify && (
-        <>
-          {/* {!voteGuardianDeployment$ && (
-          <EmptyCardContent
-            onCreateVoteGuardianCallback={onCreateVoteGuardian}
-            onJoinVoteGuardianCallback={onJoinVoteGuardian}
-          />
-        )} */}
-          {!voteGuardianDeployment$ && (
-            <DeployOrJoin
-              onCreateVoteGuardianCallback={onCreateVoteGuardian}
-              onJoinVoteGuardianCallback={onJoinVoteGuardian}
-              isOrganizer={isOrganizer}
-            />
-          )}
-
-          {voteGuardianDeployment$ && !isEditing && isOrganizer === 'no' && (
-            <React.Fragment>
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={() => selectedOption && onAdd('cast', selectedOption)}
+                disabled={!selectedOption}
+              >
+                Vote
+              </Button>
               <Backdrop
                 sx={{
                   position: 'absolute',
@@ -505,104 +405,210 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
                   {errorMessage}
                 </Typography>
               </Backdrop>
-              <CardHeader
-                avatar={<Skeleton variant="circular" width={20} height={20} />}
-                title={
-                  <Typography
-                    color="primary"
-                    sx={{
-                      wordBreak: 'break-all',
-                      whiteSpace: 'pre-wrap',
-                      width: '100%',
-                    }}
-                  >
-                    {deployedVoteGuardianAPI?.deployedContractAddress ?? 'Loading...'}
-                  </Typography>
-                }
-                action={
-                  deployedVoteGuardianAPI?.deployedContractAddress ? (
-                    <IconButton title="Copy contract address" onClick={onCopyContractAddress}>
-                      <CopyIcon fontSize="small" />
-                    </IconButton>
-                  ) : (
-                    <Skeleton variant="circular" width={20} height={20} />
-                  )
-                }
+            </Stack>
+          </div>
+        )}
+
+        {/* Gia Verify */}
+        {!isEditing && voteGuardianDeployment$ && onVerify && (
+          <Card className="max-w-md mx-auto p-6 mt-10 shadow-lg rounded-2xl">
+            <IconButton
+              sx={{ position: 'absolute', top: 8, left: 8, mb: 2 }}
+              aria-label="back"
+              onClick={handleClickBackArrow}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            <CardHeader title={'Identity Verification'} />
+            <CardContent className="flex flex-col gap-4">
+              <Input
+                type="text"
+                name="username"
+                placeholder="Username"
+                value={credentials.username}
+                onChange={handleChange}
+                className="p-2 border rounded-lg"
               />
-              <Typography color="primary">
-                Vote State is{' '}
-                {voteGuardianState ? (voteGuardianState.voteState === VOTE_STATE.open ? 'open' : 'closed') : 'No State'}
-              </Typography>
-              <Stack spacing={2} alignItems="center">
-                <Button variant="contained" color="primary" size="small" onClick={handleVerifyClick}>
-                  Verify
-                </Button>
+              <Input
+                type="password"
+                name="password"
+                placeholder="Password"
+                value={credentials.password}
+                onChange={handleChange}
+                className="p-2 border rounded-lg"
+              />
+              {error && <p className="text-red-500">{error}</p>}
+              <Button onClick={handleSubmit} className="w-full bg-blue-600 text-white rounded-lg p-2">
+                Verify
+              </Button>
+              <Backdrop
+                sx={{
+                  position: 'absolute',
+                  color: '#fff',
+                  width: '100%', // Full width of the Card
+                  height: '100%',
+                  zIndex: (theme) => theme.zIndex.drawer + 1,
+                }}
+                open={requestIsLoading}
+              >
+                <CircularProgress data-testid="vote-guardian-working-indicator" />
+              </Backdrop>
+              <Backdrop
+                sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                open={!!errorMessage}
+              >
+                <StopIcon fontSize="large" />
+                <Typography component="div" data-testid="vote-guardian-error-message">
+                  {errorMessage}
+                </Typography>
+              </Backdrop>
+            </CardContent>
+          </Card>
+        )}
 
-                {/* CAST A VOTE */}
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  disabled={voteGuardianState?.voteState === VOTE_STATE.closed}
-                  onClick={() => {
-                    handleEditClick('cast');
+        {/* Arxikh Selida */}
+        {!isEditing && !onVerify && (
+          <>
+            {/* {!voteGuardianDeployment$ && (
+          <EmptyCardContent
+            onCreateVoteGuardianCallback={onCreateVoteGuardian}
+            onJoinVoteGuardianCallback={onJoinVoteGuardian}
+          />
+        )} */}
+            {!voteGuardianDeployment$ && (
+              <DeployOrJoin
+                onCreateVoteGuardianCallback={onCreateVoteGuardian}
+                onJoinVoteGuardianCallback={onJoinVoteGuardian}
+                isOrganizer={isOrganizer}
+              />
+            )}
+
+            {voteGuardianDeployment$ && !isEditing && isOrganizer === 'no' && (
+              <React.Fragment>
+                <Backdrop
+                  sx={{
+                    position: 'absolute',
+                    color: '#fff',
+                    width: '100%', // Full width of the Card
+                    height: '100%',
+                    zIndex: (theme) => theme.zIndex.drawer + 1,
                   }}
+                  open={isWorking}
                 >
-                  Cast a vote
-                </Button>
-                {/* END CAST A VOTE */}
+                  <CircularProgress data-testid="vote-guardian-working-indicator" />
+                </Backdrop>
+                <Backdrop
+                  sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                  open={!!errorMessage}
+                >
+                  <StopIcon fontSize="large" />
+                  <Typography component="div" data-testid="vote-guardian-error-message">
+                    {errorMessage}
+                  </Typography>
+                </Backdrop>
+                <CardHeader
+                  avatar={<Skeleton variant="circular" width={20} height={20} />}
+                  title={
+                    <Typography
+                      color="primary"
+                      sx={{
+                        wordBreak: 'break-all',
+                        whiteSpace: 'pre-wrap',
+                        width: '100%',
+                      }}
+                    >
+                      {deployedVoteGuardianAPI?.deployedContractAddress ?? 'Loading...'}
+                    </Typography>
+                  }
+                  action={
+                    deployedVoteGuardianAPI?.deployedContractAddress ? (
+                      <IconButton title="Copy contract address" onClick={onCopyContractAddress}>
+                        <CopyIcon fontSize="small" />
+                      </IconButton>
+                    ) : (
+                      <Skeleton variant="circular" width={20} height={20} />
+                    )
+                  }
+                />
+                <Typography color="primary">
+                  Vote State is{' '}
+                  {voteGuardianState
+                    ? voteGuardianState.voteState === VOTE_STATE.open
+                      ? 'open'
+                      : 'closed'
+                    : 'No State'}
+                </Typography>
+                <Stack spacing={2} alignItems="center">
+                  <Button variant="contained" color="primary" size="small" onClick={handleVerifyClick}>
+                    Verify
+                  </Button>
 
-                {/* DISPLAY SECRET KEY */}
-
-                <Button variant="contained" color="primary" size="medium" onClick={onDisplaySecretKey}>
-                  {secretKey !== undefined ? 'Hide secret key' : 'Display secret key'}
-                </Button>
-                {secretKey !== undefined && (
-                  <Typography
-                    color="black"
-                    sx={{
-                      wordBreak: 'break-all', // breaks long words (like secret keys)
-                      whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
-                      width: '100%', // ensures it uses the full container width
-                      textAlign: 'center', // optional, for better visual balance
+                  {/* CAST A VOTE */}
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    disabled={voteGuardianState?.voteState === VOTE_STATE.closed}
+                    onClick={() => {
+                      handleEditClick('cast');
                     }}
                   >
-                    {secretKey}
-                  </Typography>
-                )}
-                {/* END DISPLAY SECRET KEY */}
+                    Cast a vote
+                  </Button>
+                  {/* END CAST A VOTE */}
 
-                {/* DISPLAY WALLET PUBLIC KEY */}
+                  {/* DISPLAY SECRET KEY */}
 
-                <Button variant="contained" color="primary" size="medium" onClick={onDisplayWalletPublicKey}>
-                  {walletPublicKey !== undefined ? 'Hide wallet public key' : 'Display wallet public key'}
-                </Button>
-                {walletPublicKey !== undefined && (
-                  <Typography
-                    color="black"
-                    sx={{
-                      wordBreak: 'break-all', // breaks long words (like secret keys)
-                      whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
-                      width: '100%', // ensures it uses the full container width
-                      textAlign: 'center', // optional, for better visual balance
-                    }}
-                  >
-                    {walletPublicKey}
-                  </Typography>
-                )}
-                {/* END DISPLAY WALLET PUBLIC KEY */}
+                  <Button variant="contained" color="primary" size="medium" onClick={onDisplaySecretKey}>
+                    {secretKey !== undefined ? 'Hide secret key' : 'Display secret key'}
+                  </Button>
+                  {secretKey !== undefined && (
+                    <Typography
+                      color="black"
+                      sx={{
+                        wordBreak: 'break-all', // breaks long words (like secret keys)
+                        whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
+                        width: '100%', // ensures it uses the full container width
+                        textAlign: 'center', // optional, for better visual balance
+                      }}
+                    >
+                      {secretKey}
+                    </Typography>
+                  )}
+                  {/* END DISPLAY SECRET KEY */}
 
-                <Button variant="contained" color="primary" size="medium" onClick={onDisplayPaymentMap}>
-                  Display WALLET PUBLIC key MAP
-                </Button>
+                  {/* DISPLAY WALLET PUBLIC KEY */}
 
-                {/* END DISPLAY WALLET PUBLIC KEY MAP */}
-              </Stack>
-            </React.Fragment>
-          )}
-        </>
-      )}
-    </Card>
+                  <Button variant="contained" color="primary" size="medium" onClick={onDisplayWalletPublicKey}>
+                    {walletPublicKey !== undefined ? 'Hide wallet public key' : 'Display wallet public key'}
+                  </Button>
+                  {walletPublicKey !== undefined && (
+                    <Typography
+                      color="black"
+                      sx={{
+                        wordBreak: 'break-all', // breaks long words (like secret keys)
+                        whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
+                        width: '100%', // ensures it uses the full container width
+                        textAlign: 'center', // optional, for better visual balance
+                      }}
+                    >
+                      {walletPublicKey}
+                    </Typography>
+                  )}
+                  {/* END DISPLAY WALLET PUBLIC KEY */}
+
+                  <Button variant="contained" color="primary" size="medium" onClick={onDisplayPaymentMap}>
+                    Display WALLET PUBLIC key MAP
+                  </Button>
+
+                  {/* END DISPLAY WALLET PUBLIC KEY MAP */}
+                </Stack>
+              </React.Fragment>
+            )}
+          </>
+        )}
+      </Card>
+    </div>
   );
 };
 
