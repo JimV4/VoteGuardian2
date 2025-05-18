@@ -22,48 +22,50 @@ export const TextPromptDialog: React.FC<Readonly<TextPromptDialogProps>> = ({ pr
   const [text, setText] = useState<string>('');
 
   return (
-    <Dialog open={isOpen} onClose={onCancel} fullWidth maxWidth="sm">
-      <DialogTitle>
-        <Typography variant="body1" color="black" data-testid="textprompt-dialog-title">
-          {prompt}
-        </Typography>
-      </DialogTitle>
-      <DialogContent>
-        <TextField
-          id="text-prompt"
-          variant="outlined"
-          focused
-          fullWidth
-          size="small"
-          color="primary"
-          autoComplete="off"
-          inputProps={{ style: { color: 'black' } }}
-          onChange={(e) => {
-            setText(e.target.value);
-          }}
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-member-access
-          inputRef={(input) => input?.focus()}
-          data-testid="textprompt-dialog-text-prompt"
-        />
-      </DialogContent>
+    <div style={{ transform: 'scale(1.2)', transformOrigin: 'top left' }}>
+      <Dialog open={isOpen} onClose={onCancel} fullWidth maxWidth="sm">
+        <DialogTitle>
+          <Typography variant="body1" color="black" data-testid="textprompt-dialog-title">
+            {prompt}
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            id="text-prompt"
+            variant="outlined"
+            focused
+            fullWidth
+            size="small"
+            color="primary"
+            autoComplete="off"
+            inputProps={{ style: { color: 'black' } }}
+            onChange={(e) => {
+              setText(e.target.value);
+            }}
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-member-access
+            inputRef={(input) => input?.focus()}
+            data-testid="textprompt-dialog-text-prompt"
+          />
+        </DialogContent>
 
-      <DialogActions>
-        <Button variant="contained" data-testid="textprompt-dialog-cancel-btn" disableElevation onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button
-          variant="contained"
-          data-testid="textprompt-dialog-ok-btn"
-          disabled={!text.length}
-          disableElevation
-          onClick={(_) => {
-            onSubmit(text);
-          }}
-          type="submit"
-        >
-          OK
-        </Button>
-      </DialogActions>
-    </Dialog>
+        <DialogActions>
+          <Button variant="contained" data-testid="textprompt-dialog-cancel-btn" disableElevation onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            data-testid="textprompt-dialog-ok-btn"
+            disabled={!text.length}
+            disableElevation
+            onClick={(_) => {
+              onSubmit(text);
+            }}
+            type="submit"
+          >
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </div>
   );
 };

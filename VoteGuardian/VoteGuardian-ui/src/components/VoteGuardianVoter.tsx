@@ -306,14 +306,33 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
         sx={{ position: 'relative', width: 460, height: 495, minWidth: 460, minHeight: 495, overflowY: 'auto' }}
         color="primary"
       >
+        {!onVerify && (
+          <>
+            <Backdrop
+              sx={{
+                position: 'absolute',
+                color: '#fff',
+                width: '100%', // Full width of the Card
+                height: '100%',
+                zIndex: (theme) => theme.zIndex.drawer + 1,
+              }}
+              open={isWorking}
+            >
+              <CircularProgress data-testid="vote-guardian-working-indicator" />
+            </Backdrop>
+            <Backdrop
+              sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+              open={!!errorMessage}
+            >
+              <StopIcon fontSize="large" />
+              <Typography component="div" data-testid="vote-guardian-error-message">
+                {errorMessage}
+              </Typography>
+            </Backdrop>
+          </>
+        )}
         {/* Gia na pshfhsei */}
         {isEditing && whatIsEditing != null && isOrganizer === 'no' && (
-          // <EditComponent
-          //   deployedVoteGuardianAPI={deployedVoteGuardianAPI}
-          //   whatIsEditing={whatIsEditing}
-          //   voteGuardianDeployment$={voteGuardianDeployment$}
-          //   voteGuardianState={voteGuardianState}
-          // />
           <div
             className="w-full"
             style={{
@@ -336,22 +355,7 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
               {whatIsEditing === 'cast' && (
                 <Typography color="black">Question: {voteGuardianState?.voteQuestion || 'No question yet'}</Typography>
               )}
-              {/* {whatIsEditing === 'cast' &&
-              (voteGuardianState?.voteOptionMap ? (
-                Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
-                  <Typography key={key} data-testid="vote-guardian-option" minHeight={20} color="black">
-                    {key}. {value}
-                  </Typography>
-                ))
-              ) : (
-                <Typography data-testid="vote-guardian-option" color="black">
-                  No options yet.
-                </Typography>
-              ))}
 
-            <Button variant="contained" color="primary" size="small" onClick={handleEditClickInside}>
-              Vote
-            </Button> */}
               {whatIsEditing === 'cast' &&
                 (voteGuardianState?.voteOptionMap &&
                 Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).length > 0 ? (
@@ -384,27 +388,6 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
               >
                 Vote
               </Button>
-              <Backdrop
-                sx={{
-                  position: 'absolute',
-                  color: '#fff',
-                  width: '100%', // Full width of the Card
-                  height: '100%',
-                  zIndex: (theme) => theme.zIndex.drawer + 1,
-                }}
-                open={isWorking}
-              >
-                <CircularProgress data-testid="vote-guardian-working-indicator" />
-              </Backdrop>
-              <Backdrop
-                sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-                open={!!errorMessage}
-              >
-                <StopIcon fontSize="large" />
-                <Typography component="div" data-testid="vote-guardian-error-message">
-                  {errorMessage}
-                </Typography>
-              </Backdrop>
             </Stack>
           </div>
         )}
@@ -469,12 +452,6 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
         {/* Arxikh Selida */}
         {!isEditing && !onVerify && (
           <>
-            {/* {!voteGuardianDeployment$ && (
-          <EmptyCardContent
-            onCreateVoteGuardianCallback={onCreateVoteGuardian}
-            onJoinVoteGuardianCallback={onJoinVoteGuardian}
-          />
-        )} */}
             {!voteGuardianDeployment$ && (
               <DeployOrJoin
                 onCreateVoteGuardianCallback={onCreateVoteGuardian}
@@ -485,27 +462,6 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
 
             {voteGuardianDeployment$ && !isEditing && isOrganizer === 'no' && (
               <React.Fragment>
-                <Backdrop
-                  sx={{
-                    position: 'absolute',
-                    color: '#fff',
-                    width: '100%', // Full width of the Card
-                    height: '100%',
-                    zIndex: (theme) => theme.zIndex.drawer + 1,
-                  }}
-                  open={isWorking}
-                >
-                  <CircularProgress data-testid="vote-guardian-working-indicator" />
-                </Backdrop>
-                <Backdrop
-                  sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-                  open={!!errorMessage}
-                >
-                  <StopIcon fontSize="large" />
-                  <Typography component="div" data-testid="vote-guardian-error-message">
-                    {errorMessage}
-                  </Typography>
-                </Backdrop>
                 <CardHeader
                   avatar={<Skeleton variant="circular" width={20} height={20} />}
                   title={

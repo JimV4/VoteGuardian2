@@ -1,6 +1,6 @@
 
-0200fcb14b1ebfad518c02d9e18a378c92099b224e773bb678d5573920d000688bda
-3f89f5ced63d6b3ae6959b515d6da551742248f0e3172dbf5f24eb1e4d466909
+02005de66d1699d4b2c2ed90860043d8bce69d93247675d9fd649022f6130a3c8fd8
+3d07ff31decd34b929de2cc4684d50c1862bd3a3500dde2ff3313b32c3e13ae2
 
 wallet:
 a5a4af997429e8e904259d1e14b58156e03554b31341b704d6bf682851b6036c
@@ -8,30 +8,27 @@ a5a4af997429e8e904259d1e14b58156e03554b31341b704d6bf682851b6036c
 docker compose -f standalone.yml up -d
 docker stop $(docker ps -q)
 
-contract address: 0200bad5d237c815b6207e44b1e7ab5734697d96a89b8603bf45577648db12d82932
-organizer secret key: 6c2c85a42a3367d3145f4fd3ffbff078009506f09423c5e77798ac6120a33f91
+contract address: 02005de66d1699d4b2c2ed90860043d8bce69d93247675d9fd649022f6130a3c8fd8
+organizer secret key: 3d07ff31decd34b929de2cc4684d50c1862bd3a3500dde2ff3313b32c3e13ae2
 organizer wallet key: a5a4af997429e8e904259d1e14b58156e03554b31341b704d6bf682851b6036c
 
 username: a
 password: test
-secretKey: dca0c05dcff80d0c37141cd748a04baf5e864206ebd0175aeadfdf9f3df9057f κωνστ
-publicKey: 27417d41a61ce132c297fa05031c9165d88e137a4c920af0c08541e58b354023
+secretKey: c69d24a6b8bde81bdac25e808107a9af2489b754c347aed05c055eed77bcbb0d κωνστ
+publicKey: da2faa53e7c9341703dc3f9c40d0ae2ec693f188b81b5569758067a4d0bd4dab
 wallet:    343257a332f97ed43d53ed2d9e0785bddb767f45b7b398204a95563e5ccb9de9
 
 ---------------------------------------------------------------------------------------
 0000000000000000000000000000000000000000000000000000000000000000
-d95b48399efb5c0da4246facbbb0aae5a17bde3d57fef4006533492eb0da7253
-
----------------------------------------------------------------------------------------
-username: 
-password: test
-secretKey: 9b25d745656b7c542556079a6a9a19beecd5ffef0df6be20c6fb01b3a82b32a6 δημητρ
-publicKey: 37e3f5dcf89ef5b6c85e906c20fa65fa7dd3c10fab4e87ea4ae0fe5b9d96a3e6
-wallet:    a5a4af997429e8e904259d1e14b58156e03554b31341b704d6bf682851b6036c
-
 ---------------------------------------------------------------------------------------
 username: b
 password: test
-secretKey: a997e420c91cda509e3cc1f6045b0315e35fed51e8f707c50d9c5af962c9e11e mam 
-publicKey: decb1a9eca4f98fafd4bb5697a10f1aa53883f98ec890c4b87b60a22625b6804
+secretKey: 2cc4b500105526dab9b8e1994ba8a0df1118d7e464c7f8cd8d076fa6c4109e98 mam 
+publicKey: 25769680f1668ece4b9d268695b3a3df17a1e728672ece1795d521b50ee5f4c4
 wallet:    4074b65b5edcbde62ec1af9020db22e2cd712902fb5ff8403edc3125d2d72adb
+---------------------------------------------------------------------------------------
+username: c
+password: test
+secretKey: a9def9ad5d71d482be23f924c427d3f248667585524c309800c8eb80451b8a36 mam 
+publicKey: 34be5482549249fb6ec9ea58b4fd589beb6a1474a22bd7eea49128141ff3a49d
+wallet:    a5a4af997429e8e904259d1e14b58156e03554b31341b704d6bf682851b6036c

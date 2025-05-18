@@ -35,6 +35,10 @@ import {
   type BalancedTransaction,
   createBalancedTx,
   type MidnightProvider,
+  MidnightProviders,
+  PrivateStateKey,
+  PrivateStateProvider,
+  PrivateStateSchema,
   type UnbalancedTransaction,
   type WalletProvider,
 } from '@midnight-ntwrk/midnight-js-types';
@@ -50,11 +54,11 @@ import { type Logger } from 'pino';
 // import { type Config, StandaloneConfig } from '../config.js';
 import type { StartedDockerComposeEnvironment, DockerComposeEnvironment } from 'testcontainers';
 import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
-import { type ContractAddress } from '@midnight-ntwrk/compact-runtime';
+import { SigningKey, type ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import { getLedgerNetworkId, getZswapNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import path from 'node:path';
 import { NetworkId, setNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
-
+import { inMemoryPrivateStateProvider } from '@midnight-ntwrk/vote-guardian-api';
 import * as fs from 'node:fs/promises';
 import pinoPretty from 'pino-pretty';
 import pino from 'pino';
@@ -114,6 +118,51 @@ export class StandaloneConfig implements Config {
     setNetworkId(NetworkId.Undeployed);
   }
 }
+
+// export const inMemoryPrivateStateProvider = <PSS extends PrivateStateSchema>(): PrivateStateProvider<PSS> => {
+//   const record: PSS = {} as PSS;
+//   const signingKeys = {} as Record<ContractAddress, SigningKey>;
+//   return {
+//     set<PSK extends PrivateStateKey<PSS>>(key: PSK, state: PSS[PSK]): Promise<void> {
+//       record[key] = state;
+//       return Promise.resolve();
+//     },
+//     get<PSK extends PrivateStateKey<PSS>>(key: PSK): Promise<PSS[PSK] | null> {
+//       const value = record[key] ?? null;
+//       return Promise.resolve(value);
+//     },
+//     remove<PSK extends PrivateStateKey<PSS>>(key: PSK): Promise<void> {
+//       delete record[key];
+//       return Promise.resolve();
+//     },
+//     clear(): Promise<void> {
+//       Object.keys(record).forEach((key) => {
+//         delete record[key];
+//       });
+//       return Promise.resolve();
+//     },
+//     setSigningKey(contractAddress: ContractAddress, signingKey: SigningKey): Promise<void> {
+//       signingKeys[contractAddress] = signingKey;
+//       return Promise.resolve();
+//     },
+//     getSigningKey(contractAddress: ContractAddress): Promise<SigningKey | null> {
+//       const value = signingKeys[contractAddress] ?? null;
+//       return Promise.resolve(value);
+//     },
+//     removeSigningKey(contractAddress: ContractAddress): Promise<void> {
+//       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+//       delete signingKeys[contractAddress];
+//       return Promise.resolve();
+//     },
+//     clearSigningKeys(): Promise<void> {
+//       Object.keys(signingKeys).forEach((contractAddress) => {
+//         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+//         delete signingKeys[contractAddress];
+//       });
+//       return Promise.resolve();
+//     },
+//   };
+// };
 
 /* **********************************************************************
  * getVoteGuardianLedgerState: a helper that queries the current state of
@@ -328,15 +377,23 @@ export const run = async (
       const walletAndMidnightProvider = await createWalletAndMidnightProvider(wallet);
       // εδώ φτιάχνονται οι providers και μετά δίνονται όπου χρειάζονται providers
       const providers = {
-        privateStateProvider: levelPrivateStateProvider<PrivateStates>({
-          privateStateStoreName: config.privateStateStoreName,
-        }),
+        // privateStateProvider: levelPrivateStateProvider<PrivateStates>({
+        //   privateStateStoreName: config.privateStateStoreName,
+        // }),
+        privateStateProvider: inMemoryPrivateStateProvider<PrivateStates>(),
+
         // μέσω του publicDataProvider μπορώ να βλέπω το public state του contract
         publicDataProvider: indexerPublicDataProvider(config.indexer, config.indexerWS),
 
         // provider για τα zk proofs. Δίνει το path όπου βρίσκονται τα keys και τα circuits
         zkConfigProvider: new NodeZkConfigProvider<
-          'cast_vote' | 'close_voting' | 'add_voter' | 'create_voting' | 'add_option' | 'record_payment_key'
+          | 'cast_vote'
+          | 'close_voting'
+          | 'add_voter'
+          | 'create_voting'
+          | 'add_option'
+          | 'record_payment_key'
+          | 'open_voting'
         >(config.zkConfigPath),
         proofProvider: httpClientProofProvider(config.proofServer),
         walletProvider: walletAndMidnightProvider,
@@ -446,12 +503,13 @@ const userSchema = new mongoose.Schema({
   username: String,
   password: String,
   publicKey: String,
+  isOrganizer: String,
 });
 
 const User = mongoose.model('User', userSchema);
 
 // Endpoint to check if user exists
-app.post('/login', async (req: Request, res: Response): Promise<void> => {
+app.post('/verify', async (req: Request, res: Response): Promise<void> => {
   const { username, password, walletPubKey, contractAddress } = req.body.subject;
   console.log(req.body.subject);
 
@@ -500,7 +558,7 @@ app.post('/login', async (req: Request, res: Response): Promise<void> => {
 
 // Endpoint to insert a new user
 app.post('/register', async (req: Request, res: Response): Promise<void> => {
-  const { username, password } = req.body;
+  const { username, password, isOrganizer } = req.body;
 
   if (!username || !password) {
     res.status(400).json({ message: 'Username and password are required.' });
@@ -514,10 +572,32 @@ app.post('/register', async (req: Request, res: Response): Promise<void> => {
     }
 
     // Create a new user
-    const newUser = new User({ username, password });
+    const newUser = new User({ username, password, isOrganizer });
     await newUser.save();
 
     res.status(201).json({ message: 'User registered successfully.', user: newUser });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+});
+
+app.post('/login', async (req: Request, res: Response): Promise<void> => {
+  const { username, password } = req.body.subject;
+
+  if (!username || !password) {
+    res.status(400).json({ message: 'Username and password are required.' });
+  }
+
+  try {
+    // Query the database
+    const user = await User.findOne({ username, password });
+
+    if (user) {
+      res.status(200).json({ message: 'User found.', isOrganizer: user.isOrganizer });
+    } else {
+      res.status(404).json({ message: 'User not found.' });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error.' });
