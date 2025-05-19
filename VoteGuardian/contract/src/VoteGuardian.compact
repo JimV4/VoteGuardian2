@@ -5,10 +5,10 @@ export { Maybe }
 export enum VOTE_STATE { open, closed }
 
 // Public key of the voting organizer
-export ledger voting_organizer: Cell<Bytes<32>>;
+export ledger voting_organizer: Bytes<32>;
 
 // Ledger to store the state of voting (open, or closed)
-export ledger vote_state: Cell<VOTE_STATE>;
+export ledger vote_state: VOTE_STATE;
 
 // Ledger to store eligible voters in Merkle Tree
 export ledger eligible_voters: HistoricMerkleTree<10, Bytes<32>>;
@@ -23,7 +23,7 @@ export ledger votes_list: List<Opaque<"string">>;
 export ledger vote_count: Counter;
 
 // List with the questions of the voting. At first it will be only one question
-export ledger vote_question: Cell<Opaque<"string">>;
+export ledger vote_question: Opaque<"string">;
 
 // Map voter public key with public payment key
 export ledger map_public_payment: Map<Bytes<32>, Bytes<32>>;
@@ -34,7 +34,7 @@ export ledger vote_option_map: Map<Opaque<"string">, Opaque<"string">>;
 
 // Constructor initializes the state
 constructor() {
-    voting_organizer = public_key(local_secret_key());
+    voting_organizer = disclose(public_key(local_secret_key()));
     vote_state = VOTE_STATE.open;
     vote_count.increment(0); // Initialize vote count at zero
     eligible_voters.reset_to_default(); // Set eligible voters as the empty Merkle Tree
@@ -48,7 +48,7 @@ witness local_secret_key(): Bytes<32>;
 witness find_voter_public_key(voter_public_key: Bytes<32>): MerkleTreePath<10, Bytes<32>>;
 
 
-export circuit add_voter(voter_public_key: Bytes<32>): Void {
+export circuit add_voter(voter_public_key: Bytes<32>): [] {
     assert voting_organizer == public_key(local_secret_key())
         "You are not authorized to add a voter!";
 
@@ -59,20 +59,20 @@ export circuit add_voter(voter_public_key: Bytes<32>): Void {
     eligible_voters.insert(voter_public_key);
 }
 
-export circuit record_payment_key(voter_public_key: Bytes<32>, voter_public_payment_key: Bytes<32>): Void {
+export circuit record_payment_key(voter_public_key: Bytes<32>, voter_public_payment_key: Bytes<32>): [] {
     map_public_payment.insert(voter_public_payment_key, voter_public_key);
 }
 
 
 // Function to cast a vote, only accessible when voting is open and the voter hasn’t already voted
-export circuit cast_vote(vote_option: Opaque<"string">): Void {
+export circuit cast_vote(vote_option: Opaque<"string">): [] {
     assert voting_organizer != public_key(local_secret_key())
         "As organizer, you are not allowed to vote!";
 
     assert vote_state == VOTE_STATE.open
         "Voting is not open";
 
-    const voter_public_key = public_key(local_secret_key());
+    const voter_public_key = disclose(public_key(local_secret_key()));
 
     const voter_public_payment_key_struct = own_public_key();
     const voter_public_payment_key_bytes = voter_public_payment_key_struct.bytes;
@@ -82,13 +82,13 @@ export circuit cast_vote(vote_option: Opaque<"string">): Void {
         "Voter public key does not match with voter public payment key";
 
     // voter must be in the eligible voters
-    const path = find_voter_public_key(voter_public_key);
+    const path = disclose(find_voter_public_key(voter_public_key));
 
     assert eligible_voters.check_root(merkle_tree_path_root<10, Bytes<32>>(path)) 
         "You are not authorized to vote!";
 
      // Υπολόγισε το nullifier για τον τρέχον χρήστη χασάρωντας το secret key του.
-    const voting_nullifier = nullifier(local_secret_key());
+    const voting_nullifier = disclose(nullifier(local_secret_key()));
 
     // Έλεγχος αν ο nullifier για τον τρέχον χρήστη ανήκει στο σύνολο. Αν ανήκει σημαίνει ότι έχει ήδη ψηφίσει
     assert !voting_nulifiers.member(voting_nullifier) 
@@ -107,7 +107,7 @@ export circuit cast_vote(vote_option: Opaque<"string">): Void {
 }
 
 // Function to close the voting phase
-export circuit close_voting(): Void {
+export circuit close_voting(): [] {
     assert voting_organizer == public_key(local_secret_key())
         "You are not authorized to close the voting";
 
@@ -117,7 +117,7 @@ export circuit close_voting(): Void {
 }
 
 // Function to open the voting phase
-export circuit open_voting(): Void {
+export circuit open_voting(): [] {
     assert voting_organizer == public_key(local_secret_key())
         "You are not authorized to open the voting";
 
@@ -126,13 +126,13 @@ export circuit open_voting(): Void {
     vote_state = VOTE_STATE.open;
 }
 
-export circuit create_voting(vq: Opaque<"string">): Void {
+export circuit create_voting(vq: Opaque<"string">): [] {
     assert voting_organizer == public_key(local_secret_key())
         "You are not authorized to start a voting";
     vote_question = vq;
 }
 
-export circuit add_option(vote_option: Opaque<"string">, i: Opaque<"string">): Void {
+export circuit add_option(vote_option: Opaque<"string">, i: Opaque<"string">): [] {
     assert voting_organizer == public_key(local_secret_key())
         "You are not authorized to add a voting option!";
 

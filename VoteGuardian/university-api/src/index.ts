@@ -9,6 +9,7 @@ import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import crypto from 'crypto';
 import cors from 'cors';
+import type { VoteGuardianPrivateState } from '@midnight-ntwrk/vote-guardian-contract';
 
 /*
  * This file is the main driver for the Midnight bulletin board example.
@@ -36,9 +37,7 @@ import {
   createBalancedTx,
   type MidnightProvider,
   MidnightProviders,
-  PrivateStateKey,
   PrivateStateProvider,
-  PrivateStateSchema,
   type UnbalancedTransaction,
   type WalletProvider,
 } from '@midnight-ntwrk/midnight-js-types';
@@ -63,6 +62,8 @@ import * as fs from 'node:fs/promises';
 import pinoPretty from 'pino-pretty';
 import pino from 'pino';
 import { createWriteStream } from 'node:fs';
+
+const ocrt = await import('@midnight-ntwrk/onchain-runtime');
 
 export const createLogger = async (logPath: string): Promise<pino.Logger> => {
   await fs.mkdir(path.dirname(logPath), { recursive: true });
@@ -242,6 +243,7 @@ const createWalletAndMidnightProvider = async (wallet: Wallet): Promise<WalletPr
     submitTx(tx: BalancedTransaction): Promise<TransactionId> {
       return wallet.submitTransaction(tx);
     },
+    encryptionPublicKey: state.encryptionPublicKey,
   };
 };
 
@@ -260,15 +262,15 @@ const waitForFunds = (wallet: Wallet, logger: Logger) =>
       Rx.throttleTime(10_000),
       Rx.tap((state) => {
         const scanned = state.syncProgress?.synced ?? 0n;
-        const total = state.syncProgress?.total.toString() ?? 'unknown number';
+        const total = state.syncProgress?.toString() ?? 'unknown number';
         logger.info(`Wallet scanned ${scanned} blocks out of ${total}`);
       }),
-      Rx.filter((state) => {
-        // Let's allow progress only if wallet is close enough
-        const synced = state.syncProgress?.synced ?? 0n;
-        const total = state.syncProgress?.total ?? 1_000n;
-        return total - synced < 100n;
-      }),
+      // Rx.filter((state) => {
+      //   // Let's allow progress only if wallet is close enough
+      //   const synced = state.syncProgress?.synced ?? 0n;
+      //   const total = state.syncProgress?.total ?? 1_000n;
+      //   return total - synced < 100n;
+      // }),
       Rx.map((s) => s.balances[nativeToken()] ?? 0n),
       Rx.filter((balance) => balance > 0n),
     ),
@@ -380,7 +382,7 @@ export const run = async (
         // privateStateProvider: levelPrivateStateProvider<PrivateStates>({
         //   privateStateStoreName: config.privateStateStoreName,
         // }),
-        privateStateProvider: inMemoryPrivateStateProvider<PrivateStates>(),
+        privateStateProvider: inMemoryPrivateStateProvider<'voteGuardianPrivateState', VoteGuardianPrivateState>(),
 
         // μέσω του publicDataProvider μπορώ να βλέπω το public state του contract
         publicDataProvider: indexerPublicDataProvider(config.indexer, config.indexerWS),

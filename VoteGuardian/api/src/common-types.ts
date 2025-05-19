@@ -4,12 +4,7 @@
  * @module
  */
 
-import {
-  PrivateStateKey,
-  PrivateStateProvider,
-  PrivateStateSchema,
-  type MidnightProviders,
-} from '@midnight-ntwrk/midnight-js-types';
+import { PrivateStateProvider, type MidnightProviders } from '@midnight-ntwrk/midnight-js-types';
 import { type FoundContract } from '@midnight-ntwrk/midnight-js-contracts';
 // τύποι που γίνονται import από τα αρχεία witnesses.ts και index.d.cts
 import type {
@@ -21,50 +16,44 @@ import type {
 } from '@midnight-ntwrk/vote-guardian-contract';
 import { ContractAddress, SigningKey } from '@midnight-ntwrk/compact-runtime';
 
-export const inMemoryPrivateStateProvider = <PSS extends PrivateStateSchema>(): PrivateStateProvider<PSS> => {
-  const record: PSS = {} as PSS;
-  const signingKeys = {} as Record<ContractAddress, SigningKey>;
+export function inMemoryPrivateStateProvider<PSI extends string = string, PS = any>(): PrivateStateProvider<PSI, PS> {
+  const btStateStore: Map<PSI, PS> = new Map();
+  const btSigningKeys: Map<ContractAddress, SigningKey> = new Map();
+
   return {
-    set<PSK extends PrivateStateKey<PSS>>(key: PSK, state: PSS[PSK]): Promise<void> {
-      record[key] = state;
-      return Promise.resolve();
+    async set(privateStateId: PSI, state: PS): Promise<void> {
+      btStateStore.set(privateStateId, state);
     },
-    get<PSK extends PrivateStateKey<PSS>>(key: PSK): Promise<PSS[PSK] | null> {
-      const value = record[key] ?? null;
-      return Promise.resolve(value);
+
+    async get(privateStateId: PSI): Promise<PS | null> {
+      return btStateStore.has(privateStateId) ? btStateStore.get(privateStateId)! : null;
     },
-    remove<PSK extends PrivateStateKey<PSS>>(key: PSK): Promise<void> {
-      delete record[key];
-      return Promise.resolve();
+
+    async remove(privateStateId: PSI): Promise<void> {
+      btStateStore.delete(privateStateId);
     },
-    clear(): Promise<void> {
-      Object.keys(record).forEach((key) => {
-        delete record[key];
-      });
-      return Promise.resolve();
+
+    async clear(): Promise<void> {
+      btStateStore.clear();
     },
-    setSigningKey(contractAddress: ContractAddress, signingKey: SigningKey): Promise<void> {
-      signingKeys[contractAddress] = signingKey;
-      return Promise.resolve();
+
+    async setSigningKey(address: ContractAddress, signingKey: SigningKey): Promise<void> {
+      btSigningKeys.set(address, signingKey);
     },
-    getSigningKey(contractAddress: ContractAddress): Promise<SigningKey | null> {
-      const value = signingKeys[contractAddress] ?? null;
-      return Promise.resolve(value);
+
+    async getSigningKey(address: ContractAddress): Promise<SigningKey | null> {
+      return btSigningKeys.has(address) ? btSigningKeys.get(address)! : null;
     },
-    removeSigningKey(contractAddress: ContractAddress): Promise<void> {
-      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-      delete signingKeys[contractAddress];
-      return Promise.resolve();
+
+    async removeSigningKey(address: ContractAddress): Promise<void> {
+      btSigningKeys.delete(address);
     },
-    clearSigningKeys(): Promise<void> {
-      Object.keys(signingKeys).forEach((contractAddress) => {
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete signingKeys[contractAddress];
-      });
-      return Promise.resolve();
+
+    async clearSigningKeys(): Promise<void> {
+      btSigningKeys.clear();
     },
   };
-};
+}
 
 /**
  * The private states consumed throughout the application.
@@ -111,7 +100,11 @@ export type VoteGuardianCircuitKeys = Exclude<keyof VoteGuardianContract['impure
  * @public
  */
 // Ο τύπος MidnightProviders έρχεται από τη βιβλιοθήκη
-export type VoteGuardianProviders = MidnightProviders<VoteGuardianCircuitKeys, PrivateStates>;
+export type VoteGuardianProviders = MidnightProviders<
+  VoteGuardianCircuitKeys,
+  'voteGuardianPrivateState',
+  VoteGuardianPrivateState
+>;
 
 /**
  * A {@link VoteGuardianContract} that has been deployed to the network.
@@ -119,7 +112,7 @@ export type VoteGuardianProviders = MidnightProviders<VoteGuardianCircuitKeys, P
  * @public
  */
 // Ο τύπος FoundContract έρχεται από τη βιβλιοθήκη. Το DeployedVoteGuardianContract είναι απλώς alias για το FoundContract
-export type DeployedVoteGuardianContract = FoundContract<VoteGuardianPrivateState, VoteGuardianContract>;
+export type DeployedVoteGuardianContract = FoundContract<VoteGuardianContract>;
 
 /**
  * A type that represents the derived combination of public (or ledger), and private state.

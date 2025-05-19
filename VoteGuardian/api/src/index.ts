@@ -375,7 +375,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       DeployContractOptions
       */
       const DeployedVoteGuardianContract = await deployContract(providers, {
-        privateStateKey: 'voteGuardianPrivateState',
+        privateStateId: 'voteGuardianPrivateState',
         contract: VoteGuardianContractInstance,
         initialPrivateState: createVoteGuardianPrivateState(utils.randomBytes(32), {
           leaf: new Uint8Array(32),
@@ -437,7 +437,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
     const deployedVoteGuardianContract = await findDeployedContract(providers, {
       contractAddress,
       contract: VoteGuardianContractInstance,
-      privateStateKey: 'voteGuardianPrivateState',
+      privateStateId: 'voteGuardianPrivateState',
       // initialPrivateState: createVoteGuardianPrivateState(utils.randomBytes(32)),
       // initialPrivateState: createVoteGuardianPrivateState(utils.hexToBytes(secretKey)),
       initialPrivateState:
