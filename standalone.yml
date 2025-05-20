@@ -28,7 +28,7 @@ services:
       node:
         condition: service_started
   node:
-    image: 'midnightnetwork/midnight-node:latest'
+    image: 'midnightnetwork/midnight-node:0.12.0'
     platform: linux/amd64
     container_name: 'identity-node'
     ports:

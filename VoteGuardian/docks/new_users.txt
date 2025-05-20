@@ -6,6 +6,7 @@ wallet:
 a5a4af997429e8e904259d1e14b58156e03554b31341b704d6bf682851b6036c
 
 docker compose -f standalone.yml up -d
+docker compose -f proof-server-tetnet.yml up -d
 docker stop $(docker ps -q)
 
 contract address: 02005de66d1699d4b2c2ed90860043d8bce69d93247675d9fd649022f6130a3c8fd8
