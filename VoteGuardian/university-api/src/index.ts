@@ -1,4 +1,4 @@
-import { type CredentialSubject, pureCircuits, type Signature } from '@midnight-ntwrk/university-contract';
+// import { type CredentialSubject, pureCircuits, type Signature } from '@midnight-ntwrk/university-contract';
 import { fromHex, toHex } from '@midnight-ntwrk/midnight-js-utils';
 import { randomBytes as nodeRandomBytes } from 'crypto';
 import { Request, Response } from 'express';
@@ -63,8 +63,6 @@ import pinoPretty from 'pino-pretty';
 import pino from 'pino';
 import { createWriteStream } from 'node:fs';
 
-const ocrt = await import('@midnight-ntwrk/onchain-runtime');
-
 export const createLogger = async (logPath: string): Promise<pino.Logger> => {
   await fs.mkdir(path.dirname(logPath), { recursive: true });
   const pretty: pinoPretty.PrettyStream = pinoPretty({
@@ -87,8 +85,8 @@ export const createLogger = async (logPath: string): Promise<pino.Logger> => {
   );
 };
 
-// @ts-expect-error: It's needed to make Scala.js and WASM code able to use cryptography
-globalThis.crypto = webcrypto;
+//// @ts-expect-error: It's needed to make Scala.js and WASM code able to use cryptography
+// globalThis.crypto = webcrypto;
 
 // @ts-expect-error: It's needed to enable WebSocket usage through apollo
 globalThis.WebSocket = WebSocket;
@@ -467,21 +465,21 @@ function pad(s: string, n: number): Uint8Array {
   return paddedArray;
 }
 
-const hashSubject = (subject: CredentialSubject): string => {
-  return toHex(pureCircuits.subject_hash(subject));
-};
+// const hashSubject = (subject: CredentialSubject): string => {
+//   return toHex(pureCircuits.subject_hash(subject));
+// };
 
-const generateSignature = (subject: CredentialSubject, sk: Uint8Array): Signature => {
-  const msg = Buffer.from(hashSubject(subject), 'hex');
-  return pureCircuits.sign(msg, sk);
-};
+// const generateSignature = (subject: CredentialSubject, sk: Uint8Array): Signature => {
+//   const msg = Buffer.from(hashSubject(subject), 'hex');
+//   return pureCircuits.sign(msg, sk);
+// };
 
-function fromRawSubject(raw: any): CredentialSubject {
-  return {
-    username: pad(raw.username, 32),
-    hashed_secret: new Uint8Array(fromHex(raw.hashed_secret)),
-  };
-}
+// function fromRawSubject(raw: any): CredentialSubject {
+//   return {
+//     username: pad(raw.username, 32),
+//     hashed_secret: new Uint8Array(fromHex(raw.hashed_secret)),
+//   };
+// }
 
 // Middleware
 app.use(bodyParser.json());

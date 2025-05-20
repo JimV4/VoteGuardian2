@@ -314,6 +314,7 @@ const initializeProviders = async (logger: Logger): Promise<VoteGuardianProvider
     publicDataProvider: indexerPublicDataProvider(uris.indexerUri, uris.indexerWsUri),
     walletProvider: {
       coinPublicKey: walletState.coinPublicKey,
+      encryptionPublicKey: walletState.encryptionPublicKey,
       balanceTx(tx: UnbalancedTransaction, newCoins: CoinInfo[]): Promise<BalancedTransaction> {
         return wallet
           .balanceTransaction(

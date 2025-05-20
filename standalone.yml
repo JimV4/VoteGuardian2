@@ -1,7 +1,7 @@
 services:
   proof-server:
     container_name: 'vote-guardian-proof-server'
-    image: 'midnightnetwork/proof-server:3.0.2'
+    image: 'midnightnetwork/proof-server:4.0.0'
     command: ['midnight-proof-server --network undeployed --verbose']
     ports:
       - '6300:6300'
@@ -9,7 +9,7 @@ services:
       RUST_BACKTRACE: 'full'
   indexer:
     container_name: 'vote-guardian-indexer'
-    image: 'midnightnetwork/midnight-pubsub-indexer:2.2.1'
+    image: 'midnightnetwork/midnight-pubsub-indexer:latest'
     platform: linux/amd64
     ports:
       - '8088:8088'
@@ -28,7 +28,7 @@ services:
       node:
         condition: service_started
   node:
-    image: 'midnightnetwork/midnight-node:0.6.6-6288973b'
+    image: 'midnightnetwork/midnight-node:latest'
     platform: linux/amd64
     container_name: 'identity-node'
     ports:
