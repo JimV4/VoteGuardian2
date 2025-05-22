@@ -9,7 +9,7 @@ import './globals';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { ThemeProvider } from '@mui/material';
-import { setNetworkId, type NetworkId } from '@midnight-ntwrk/midnight-js-network-id';
+import { setNetworkId, NetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import App from './App';
 import { LoginComponent } from './components/LoginComponent';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -22,7 +22,7 @@ import { MainLayout } from './components';
 
 const networkId = import.meta.env.VITE_NETWORK_ID as NetworkId;
 // Ensure that the network IDs are set within the Midnight libraries.
-setNetworkId(networkId);
+setNetworkId(NetworkId.TestNet);
 
 // Create a default `pino` logger and configure it with the configured logging level.
 export const logger = pino.pino({

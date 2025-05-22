@@ -118,6 +118,20 @@ export class StandaloneConfig implements Config {
   }
 }
 
+export class TestnetRemoteConfig implements Config {
+  privateStateStoreName = 'vote-guardian-private-state';
+  logDir = path.resolve(currentDir, '..', 'logs', 'testnet-remote', `${new Date().toISOString()}.log`);
+  zkConfigPath = path.resolve(currentDir, '..', '..', 'contract', 'dist', 'managed', 'vote-guardian');
+  indexer = 'https://indexer.testnet.midnight.network/api/v1/graphql';
+  indexerWS = 'wss://indexer.testnet.midnight.network/api/v1/graphql/ws';
+  node = 'https://rpc.testnet.midnight.network';
+  proofServer = 'http://127.0.0.1:6300';
+
+  setNetworkId() {
+    setNetworkId(NetworkId.TestNet);
+  }
+}
+
 // export const inMemoryPrivateStateProvider = <PSS extends PrivateStateSchema>(): PrivateStateProvider<PSS> => {
 //   const record: PSS = {} as PSS;
 //   const signingKeys = {} as Record<ContractAddress, SigningKey>;
@@ -536,7 +550,8 @@ app.post('/verify', async (req: Request, res: Response): Promise<void> => {
 
         user.publicKey = publicKeyHex;
         await user.save();
-        const config = new StandaloneConfig();
+        // const config = new StandaloneConfig();
+        const config = new TestnetRemoteConfig();
         config.setNetworkId();
         const logger = await createLogger(config.logDir);
         console.log('1 before run');
