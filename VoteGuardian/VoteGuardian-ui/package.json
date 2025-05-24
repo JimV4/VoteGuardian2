@@ -6,7 +6,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "http-server --port 0 ./dist",
+    "start": "http-server --port 8080 ./dist --proxy 'http://127.0.0.1:8080?'",
     "dev": "vite",
     "prepack": "yarn build",
     "build": "tsc && vite build --mode testnet && cp -r ../contract/dist/managed/vote-guardian/keys ./dist/keys && cp -r ../contract/dist/managed/vote-guardian/zkir ./dist/zkir",

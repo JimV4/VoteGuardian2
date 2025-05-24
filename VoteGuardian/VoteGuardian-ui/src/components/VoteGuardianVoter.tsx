@@ -126,16 +126,32 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
   };
 
   const handleSubmit = async (): Promise<void> => {
+    console.log('jimv2');
     setError(null);
     setRequestIsLoading(true); // Show loader
 
     try {
+      console.log('jimv1');
       const walletPublicKey = await voteGuardianApiProvider.getWalletPublicKey();
+      const prefixToRemove = 'mn_shield-cpk_test';
+      let updatedPublicKey;
+
+      if (walletPublicKey.startsWith(prefixToRemove)) {
+        console.log('jimv');
+        const zeroPadding = '0'.repeat(prefixToRemove.length);
+        updatedPublicKey = zeroPadding + walletPublicKey.slice(prefixToRemove.length);
+        updatedPublicKey = updatedPublicKey.replace(/^0{13}/, '');
+        console.log(updatedPublicKey);
+      } else {
+        updatedPublicKey = walletPublicKey; // no change if prefix doesn't match
+      }
+      console.log(updatedPublicKey);
       const input = {
         subject: {
           username: credentials.username,
           password: credentials.password,
-          walletPubKey: walletPublicKey,
+          // walletPubKey: walletPublicKey,
+          walletPubKey: updatedPublicKey,
           contractAddress: deployedVoteGuardianAPI!.deployedContractAddress,
         },
       };
