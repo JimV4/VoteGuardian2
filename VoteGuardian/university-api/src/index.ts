@@ -754,8 +754,8 @@ app.post('/verify', async (req: Request, res: Response): Promise<void> => {
 
         user.publicKey = publicKeyHex;
         await user.save();
-        // const config = new StandaloneConfig();
-        const config = new TestnetRemoteConfig();
+        const config = new StandaloneConfig();
+        // const config = new TestnetRemoteConfig();
         config.setNetworkId();
         logger = await createLogger(config.logDir);
         console.log('1 before run');

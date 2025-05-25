@@ -133,25 +133,26 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
     try {
       console.log('jimv1');
       const walletPublicKey = await voteGuardianApiProvider.getWalletPublicKey();
-      const prefixToRemove = 'mn_shield-cpk_test';
-      let updatedPublicKey;
+      // const prefixToRemove = 'mn_shield-cpk_test';
+      // const prefixToRemove = 'mn_shield-cpk_undeployed';
+      // let updatedPublicKey;
 
-      if (walletPublicKey.startsWith(prefixToRemove)) {
-        console.log('jimv');
-        const zeroPadding = '0'.repeat(prefixToRemove.length);
-        updatedPublicKey = zeroPadding + walletPublicKey.slice(prefixToRemove.length);
-        updatedPublicKey = updatedPublicKey.replace(/^0{13}/, '');
-        console.log(updatedPublicKey);
-      } else {
-        updatedPublicKey = walletPublicKey; // no change if prefix doesn't match
-      }
-      console.log(updatedPublicKey);
+      // if (walletPublicKey.startsWith(prefixToRemove)) {
+      //   console.log('jimv');
+      //   const zeroPadding = '0'.repeat(prefixToRemove.length);
+      //   updatedPublicKey = zeroPadding + walletPublicKey.slice(prefixToRemove.length);
+      //   updatedPublicKey = updatedPublicKey.replace(/^0{19}/, '');
+      //   console.log(updatedPublicKey);
+      // } else {
+      //   updatedPublicKey = walletPublicKey; // no change if prefix doesn't match
+      // }
+      // console.log(updatedPublicKey);
       const input = {
         subject: {
           username: credentials.username,
           password: credentials.password,
-          // walletPubKey: walletPublicKey,
-          walletPubKey: updatedPublicKey,
+          walletPubKey: encodeCoinPublicKey(walletPublicKey),
+          // walletPubKey: updatedPublicKey,
           contractAddress: deployedVoteGuardianAPI!.deployedContractAddress,
         },
       };
@@ -383,7 +384,7 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
                         control={<Radio />}
                         label={
                           <Typography data-testid="vote-guardian-option" minHeight={20} color="black">
-                            Option {key}. {value}
+                            {Number(key) + 1}. {value}
                           </Typography>
                         }
                       />
@@ -520,7 +521,7 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
                     variant="contained"
                     color="primary"
                     size="small"
-                    disabled={voteGuardianState?.voteState === VOTE_STATE.closed}
+                    // disabled={voteGuardianState?.voteState === VOTE_STATE.closed}
                     onClick={() => {
                       handleEditClick('cast');
                     }}

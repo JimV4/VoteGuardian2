@@ -43,8 +43,8 @@ import { toHex } from '@midnight-ntwrk/midnight-js-utils';
 import { getLedgerNetworkId, getZswapNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import axios from 'axios';
 
-// @ts-expect-error: It's needed to make Scala.js and WASM code able to use cryptography
-globalThis.crypto = webcrypto;
+// //@ts-expect-error: It's needed to make Scala.js and WASM code able to use cryptography
+// globalThis.crypto = webcrypto;
 
 // @ts-expect-error: It's needed to enable WebSocket usage through apollo
 globalThis.WebSocket = WebSocket;
@@ -59,6 +59,7 @@ const createWalletAndMidnightProvider = async (wallet: Wallet): Promise<WalletPr
   const state = await Rx.firstValueFrom(wallet.state());
   return {
     coinPublicKey: state.coinPublicKey,
+    encryptionPublicKey: state.encryptionPublicKey,
     balanceTx(tx: UnbalancedTransaction, newCoins: CoinInfo[]): Promise<BalancedTransaction> {
       return wallet
         .balanceTransaction(
@@ -84,20 +85,20 @@ const createWalletAndMidnightProvider = async (wallet: Wallet): Promise<WalletPr
  *  2. the balance held by the wallet.
  */
 
-const waitForFunds = (wallet: Wallet, logger: Logger) =>
+export const waitForFunds = (wallet: Wallet, logger: Logger) =>
   Rx.firstValueFrom(
     wallet.state().pipe(
       Rx.throttleTime(10_000),
       Rx.tap((state) => {
-        const scanned = state.syncProgress?.synced ?? 0n;
-        const total = state.syncProgress?.total.toString() ?? 'unknown number';
-        logger.info(`Wallet scanned ${scanned} blocks out of ${total}`);
+        const applyGap = state.syncProgress?.lag.applyGap ?? 0n;
+        const sourceGap = state.syncProgress?.lag.sourceGap ?? 0n;
+        logger.info(
+          `Waiting for funds. Backend lag: ${sourceGap}, wallet lag: ${applyGap}, transactions=${state.transactionHistory.length}`,
+        );
       }),
       Rx.filter((state) => {
-        // Let's allow progress only if wallet is close enough
-        const synced = state.syncProgress?.synced ?? 0n;
-        const total = state.syncProgress?.total ?? 1_000n;
-        return total - synced < 100n;
+        // Let's allow progress only if wallet is synced
+        return state.syncProgress?.synced === true;
       }),
       Rx.map((s) => s.balances[nativeToken()] ?? 0n),
       Rx.filter((balance) => balance > 0n),
@@ -153,7 +154,7 @@ const buildWalletFromSeed = async (config: Config, rli: Interface, logger: Logge
  * This seed gives access to tokens minted in the genesis block of a local development node - only
  * used in standalone networks to build a wallet with initial funds.
  */
-const GENESIS_MINT_WALLET_SEED = '0000000000000000000000000000000000000000000000000000000000000042';
+const GENESIS_MINT_WALLET_SEED = '0000000000000000000000000000000000000000000000000000000000000001';
 
 /* **********************************************************************
  * buildWallet: unless running in a standalone (offline) mode,
@@ -235,7 +236,7 @@ export const run = async (config: Config, logger: Logger, dockerEnv?: DockerComp
     }
 
     await sendNativeToken(
-      '4074b65b5edcbde62ec1af9020db22e2cd712902fb5ff8403edc3125d2d72adb|03004d9b539a4704d839fb2188125a1a8bb0cb258b36a1aee6315ca4574dc910ccb4047575fc260bfa93b7457288edd8cf86543e7fa9c510f71a',
+      'mn_shield-addr_undeployed13vf6p5t70mx5a78q85stmg33ta5trf2xn9q5g3gdnmqw28u70qdqxqpya5t5tunf6y0msq4lkxhz7t2l0a8jlt8yzz8l249w9y0q48y0csnsku3x',
       10000000000n,
     );
   }

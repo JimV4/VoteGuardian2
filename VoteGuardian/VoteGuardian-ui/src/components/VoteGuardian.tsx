@@ -413,7 +413,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                 Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).length > 0 ? (
                   Array.from(voteGuardianState.voteOptionMap as Iterable<[string, string]>).map(([key, value]) => (
                     <Typography key={key} data-testid="vote-guardian-option" minHeight={20} color="black">
-                      {key}. {value}
+                      {Number(key) + 1}. {value}
                     </Typography>
                   ))
                 ) : (

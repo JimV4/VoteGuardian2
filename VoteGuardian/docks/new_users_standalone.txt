@@ -1,0 +1,13 @@
+CONTRACT ADDRESS: 0200a6cf2c21efb6f5c1d6c0628c6ea88baa0c7b5317db482fffaa5b2849d3af0bb2
+0000000000000000000000000000000000000000000000000000000000000000
+
+ORGANIZER      
+secret key:    6ac48f34847f564763f78d876c4266778abc05d204231963a3057fe99bc13e6e
+               0000000013vf6p5t70mx5a78q85stmg33ta5trf2xn9q5g3gdnmqw28u70qdq2z0
+wallet pubkey: mn_shield-cpk_undeployed1mvejcmc3s2sd7y6fxvrpac580mkm9l53jxm488v4xgs48a922gxs06ze7p
+
+----------------------------------------------------------------------------------------------
+a, test
+secret key:    2c66255908d24fa294753cdaba80ba6411e5973f087878dada1a5d4414ecce89
+wallet pubkey: mn_shield-cpk_undeployed13vf6p5t70mx5a78q85stmg33ta5trf2xn9q5g3gdnmqw28u70qdq2z0g06
+public key   : a43ec7ddb39a4ddd896015887dfa6dd1bb17c889b79f09d1da455a31296c0dd7
