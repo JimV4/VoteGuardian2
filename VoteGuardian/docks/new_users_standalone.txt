@@ -12,3 +12,10 @@ secret key:    3c594fe058208a8a78fb305a435475ec48721d8e17d12aa93907f4cd42cd82b7
 wallet pubkey: mn_shield-cpk_undeployed13vf6p5t70mx5a78q85stmg33ta5trf2xn9q5g3gdnmqw28u70qdq2z0g06
                8b13a0d17e7ecd4ef8e03d20bda2315f68b1a546994144450d9ec0e51f9e781a
 public key   : 29d1f480d01da462fdd551a5db2149425bef148643d996d541d728408fbbc66a
+
+----------------------------------------------------------------------------------------------
+b, test
+secret key:    229f5dcd649a5f0fe4990c9d205ea247c71ebd807b27f6549ef078db98e3c410
+wallet pubkey: mn_shield-cpk_undeployed13l3a7fm4ywz47043zvfppfdqe95lx9p9c9lhv45us4an2a4rq9hshm3s3d
+               8fe3df277523855f3eb1131210a5a0c969f31425c17f76569c857b3576a3016f
+public key   : 1913b15b34c789aa4cbf26c6fc2dcb604f9e29cc6b75b428b5a2f08c92b54e4f

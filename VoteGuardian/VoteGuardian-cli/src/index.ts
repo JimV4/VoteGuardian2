@@ -236,7 +236,7 @@ export const run = async (config: Config, logger: Logger, dockerEnv?: DockerComp
     }
 
     await sendNativeToken(
-      'mn_shield-addr_undeployed13vf6p5t70mx5a78q85stmg33ta5trf2xn9q5g3gdnmqw28u70qdqxqpya5t5tunf6y0msq4lkxhz7t2l0a8jlt8yzz8l249w9y0q48y0csnsku3x',
+      'mn_shield-addr_undeployed13l3a7fm4ywz47043zvfppfdqe95lx9p9c9lhv45us4an2a4rq9hsxqzfjylahuqymc3vvm0dm8nexzm6mg8vwrzc456d5cswrpawt7pm2uvp6nqu',
       10000000000n,
     );
   }
