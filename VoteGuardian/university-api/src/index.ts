@@ -10,6 +10,7 @@ import bodyParser from 'body-parser';
 import crypto from 'crypto';
 import cors from 'cors';
 import type { VoteGuardianPrivateState } from '@midnight-ntwrk/vote-guardian-contract';
+import { encodeCoinPublicKey } from '@midnight-ntwrk/ledger';
 
 /*
  * This file is the main driver for the Midnight bulletin board example.

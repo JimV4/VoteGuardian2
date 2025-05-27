@@ -27,6 +27,7 @@ import CopyIcon from '@mui/icons-material/ContentPasteOutlined';
 import StopIcon from '@mui/icons-material/HighlightOffOutlined';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { VoteGuardianDerivedState, type DeployedVoteGuardianAPI } from '@midnight-ntwrk/vote-guardian-api';
+import { getZswapNetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import { useDeployedVoteGuardianContext } from '../hooks';
 import { type VoteGuardianDeployment } from '../contexts';
 import { type Observable } from 'rxjs';
@@ -34,6 +35,9 @@ import { VOTE_STATE } from '@midnight-ntwrk/vote-guardian-contract';
 import { EmptyCardContent } from './VoteGuardian.EmptyCardContent';
 import { utils } from '@midnight-ntwrk/vote-guardian-api';
 import { DeployOrJoin } from './DeployOrJoin';
+import { encodeCoinPublicKey } from '@midnight-ntwrk/ledger';
+import { toHex } from '@midnight-ntwrk/midnight-js-utils';
+import { MidnightBech32m, ShieldedCoinPublicKey } from '@midnight-ntwrk/wallet-sdk-address-format';
 
 /** The props required by the {@link VoteGuardian} component. */
 export interface VoteGuardianProps {
@@ -147,12 +151,21 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
       //   updatedPublicKey = walletPublicKey; // no change if prefix doesn't match
       // }
       // console.log(updatedPublicKey);
+      console.log(walletPublicKey);
+      console.log(getZswapNetworkId());
+      const parsedBech32 = MidnightBech32m.parse(walletPublicKey);
+      console.log(parsedBech32);
+
+      const decoded = ShieldedCoinPublicKey.codec.decode(getZswapNetworkId(), parsedBech32);
+      // console.log(toHex(encodeCoinPublicKey(walletPublicKey)));
+      console.log(decoded);
+      const walletPublicKeyHex = Buffer.from(decoded.data).toString('hex');
       const input = {
         subject: {
           username: credentials.username,
           password: credentials.password,
-          walletPubKey: encodeCoinPublicKey(walletPublicKey),
-          // walletPubKey: updatedPublicKey,
+          // walletPubKey: toHex(encodeCoinPublicKey(walletPublicKey)),
+          walletPubKey: walletPublicKeyHex,
           contractAddress: deployedVoteGuardianAPI!.deployedContractAddress,
         },
       };

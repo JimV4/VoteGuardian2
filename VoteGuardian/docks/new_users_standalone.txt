@@ -1,13 +1,14 @@
-CONTRACT ADDRESS: 0200a6cf2c21efb6f5c1d6c0628c6ea88baa0c7b5317db482fffaa5b2849d3af0bb2
+CONTRACT ADDRESS: 02001f5885f7860de7d2a7e8c542551ecd994f619f161eac53bd5e49aa6dd4ef51f4
 0000000000000000000000000000000000000000000000000000000000000000
 
 ORGANIZER      
-secret key:    6ac48f34847f564763f78d876c4266778abc05d204231963a3057fe99bc13e6e
+secret key:    cf8eefece2b2b4c96b81f7b68141e1a116942229cf7972aa2d9ad6a00e0e38e1
                0000000013vf6p5t70mx5a78q85stmg33ta5trf2xn9q5g3gdnmqw28u70qdq2z0
 wallet pubkey: mn_shield-cpk_undeployed1mvejcmc3s2sd7y6fxvrpac580mkm9l53jxm488v4xgs48a922gxs06ze7p
 
 ----------------------------------------------------------------------------------------------
 a, test
-secret key:    2c66255908d24fa294753cdaba80ba6411e5973f087878dada1a5d4414ecce89
+secret key:    3c594fe058208a8a78fb305a435475ec48721d8e17d12aa93907f4cd42cd82b7
 wallet pubkey: mn_shield-cpk_undeployed13vf6p5t70mx5a78q85stmg33ta5trf2xn9q5g3gdnmqw28u70qdq2z0g06
-public key   : a43ec7ddb39a4ddd896015887dfa6dd1bb17c889b79f09d1da455a31296c0dd7
+               8b13a0d17e7ecd4ef8e03d20bda2315f68b1a546994144450d9ec0e51f9e781a
+public key   : 29d1f480d01da462fdd551a5db2149425bef148643d996d541d728408fbbc66a
