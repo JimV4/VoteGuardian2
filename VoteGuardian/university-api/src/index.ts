@@ -125,10 +125,10 @@ export class TestnetRemoteConfig implements Config {
   privateStateStoreName = 'vote-guardian-private-state';
   logDir = path.resolve(currentDir, '..', 'logs', 'testnet-remote', `${new Date().toISOString()}.log`);
   zkConfigPath = path.resolve(currentDir, '..', '..', 'contract', 'dist', 'managed', 'vote-guardian');
-  indexer = 'https://indexer.testnet-02.midnight.network/api/v1/graphql';
+  indexer = 'https://indexer-rs.testnet-02.midnight.network/api/v1/graphql';
   //   indexer = 'https://indexer-rs.testnet-02.midnight.network/api/v1/graphql';
-  indexerWS = 'wss://indexer.testnet-02.midnight.network/api/v1/graphql/ws';
-  //   indexerWS = 'wss://indexer-rs.testnet-02.midnight.network/api/v1/graphql/ws';
+  // indexerWS = 'wss://indexer.testnet-02.midnight.network/api/v1/graphql/ws';
+  indexerWS = 'wss://indexer-rs.testnet-02.midnight.network/api/v1/graphql/ws';
   node = 'https://rpc.testnet-02.midnight.network';
   proofServer = 'http://127.0.0.1:6300';
 
@@ -755,8 +755,8 @@ app.post('/verify', async (req: Request, res: Response): Promise<void> => {
 
         user.publicKey = publicKeyHex;
         await user.save();
-        const config = new StandaloneConfig();
-        // const config = new TestnetRemoteConfig();
+        // const config = new StandaloneConfig();
+        const config = new TestnetRemoteConfig();
         config.setNetworkId();
         logger = await createLogger(config.logDir);
         console.log('1 before run');

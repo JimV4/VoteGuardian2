@@ -23,7 +23,7 @@ import { MainLayout } from './components';
 const networkId = import.meta.env.VITE_NETWORK_ID as NetworkId;
 // Ensure that the network IDs are set within the Midnight libraries.
 // setNetworkId(NetworkId.TestNet);
-setNetworkId(NetworkId.Undeployed);
+setNetworkId(NetworkId.TestNet);
 
 // Create a default `pino` logger and configure it with the configured logging level.
 export const logger = pino.pino({
