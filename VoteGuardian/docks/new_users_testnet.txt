@@ -8,10 +8,10 @@ wallet pubkey: mn_shield-cpk_test1mvejcmc3s2sd7y6fxvrpac580mkm9l53jxm488v4xgs48a
 
 ----------------------------------------------------------------------------------------------
 a, test
-secret key:    3c594fe058208a8a78fb305a435475ec48721d8e17d12aa93907f4cd42cd82b7
-wallet pubkey: mn_shield-cpk_undeployed13vf6p5t70mx5a78q85stmg33ta5trf2xn9q5g3gdnmqw28u70qdq2z0g06
+secret key:    a17d22d64a076fdc0d2810a020d387b1ec283c6d857f56d2efbe9cc8231ba660
+wallet pubkey: mn_shield-cpk_test13vf6p5t70mx5a78q85stmg33ta5trf2xn9q5g3gdnmqw28u70qdqdqtw3y
                8b13a0d17e7ecd4ef8e03d20bda2315f68b1a546994144450d9ec0e51f9e781a
-public key   : 29d1f480d01da462fdd551a5db2149425bef148643d996d541d728408fbbc66a
+public key   : 614492c7e852e66940061d37d3636538d1a18b96331aedeb01d295f611e39bd1
 
 ----------------------------------------------------------------------------------------------
 b, test

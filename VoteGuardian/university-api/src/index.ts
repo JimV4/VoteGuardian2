@@ -359,89 +359,95 @@ export const buildWalletAndWaitForFunds = async (
   seed: string,
   filename: string,
 ): Promise<Wallet & Resource> => {
-  const directoryPath = process.env.SYNC_CACHE;
+  // const directoryPath = process.env.SYNC_CACHE;
+
+  const walletSeedFile = path.resolve(process.cwd(), 'wallet_seed.txt');
+  const content = fs.readFileSync(walletSeedFile, 'utf8').trim();
+
   let wallet: Wallet & Resource;
-  if (directoryPath !== undefined) {
-    if (fs.existsSync(`${directoryPath}/${filename}`)) {
-      logger.info(`Attempting to restore state from ${directoryPath}/${filename}`);
-      try {
-        const serializedStream = fs.createReadStream(`${directoryPath}/${filename}`, 'utf-8');
-        const serialized = await streamToString(serializedStream);
-        serializedStream.on('finish', () => {
-          serializedStream.close();
-        });
-        wallet = await WalletBuilder.restore(indexer, indexerWS, proofServer, node, seed, serialized, 'info');
-        wallet.start();
-        const stateObject = JSON.parse(serialized);
-        if ((await isAnotherChain(wallet, Number(stateObject.offset))) === true) {
-          logger.warn('The chain was reset, building wallet from scratch');
-          wallet = await WalletBuilder.buildFromSeed(
-            indexer,
-            indexerWS,
-            proofServer,
-            node,
-            seed,
-            getZswapNetworkId(),
-            'info',
-          );
-          wallet.start();
-        } else {
-          const newState = await waitForSync(wallet);
-          // allow for situations when there's no new index in the network between runs
-          if (newState.syncProgress?.synced) {
-            logger.info('Wallet was able to sync from restored state');
-          } else {
-            logger.info(`Offset: ${stateObject.offset}`);
-            logger.info(`SyncProgress.lag.applyGap: ${newState.syncProgress?.lag.applyGap}`);
-            logger.info(`SyncProgress.lag.sourceGap: ${newState.syncProgress?.lag.sourceGap}`);
-            logger.warn('Wallet was not able to sync from restored state, building wallet from scratch');
-            wallet = await WalletBuilder.buildFromSeed(
-              indexer,
-              indexerWS,
-              proofServer,
-              node,
-              seed,
-              getZswapNetworkId(),
-              'info',
-            );
-            wallet.start();
-          }
-        }
-      } catch (error: unknown) {
-        if (typeof error === 'string') {
-          logger.error(error);
-        } else if (error instanceof Error) {
-          logger.error(error.message);
-        } else {
-          logger.error(error);
-        }
-        logger.warn('Wallet was not able to restore using the stored state, building wallet from scratch');
-        wallet = await WalletBuilder.buildFromSeed(
-          indexer,
-          indexerWS,
-          proofServer,
-          node,
-          seed,
-          getZswapNetworkId(),
-          'info',
-        );
-        wallet.start();
-      }
-    } else {
-      logger.info('Wallet save file not found, building wallet from scratch');
-      wallet = await WalletBuilder.buildFromSeed(
-        indexer,
-        indexerWS,
-        proofServer,
-        node,
-        seed,
-        getZswapNetworkId(),
-        'info',
-      );
-      wallet.start();
-    }
+
+  if (content) {
+    logger.info('Wallet save file found, building wallet from seed');
+    seed = content;
+    wallet = await WalletBuilder.buildFromSeed(
+      indexer,
+      indexerWS,
+      proofServer,
+      node,
+      content,
+      getZswapNetworkId(),
+      'info',
+    );
+    wallet.start();
+    // }
+    // if (directoryPath !== undefined) {
+    //   if (fs.existsSync(`${directoryPath}/${filename}`)) {
+    //     logger.info(`Attempting to restore state from ${directoryPath}/${filename}`);
+    //     try {
+    //       const serializedStream = fs.createReadStream(`${directoryPath}/${filename}`, 'utf-8');
+    //       const serialized = await streamToString(serializedStream);
+    //       serializedStream.on('finish', () => {
+    //         serializedStream.close();
+    //       });
+    //       wallet = await WalletBuilder.restore(indexer, indexerWS, proofServer, node, seed, serialized, 'info');
+    //       wallet.start();
+    //       const stateObject = JSON.parse(serialized);
+    //       if ((await isAnotherChain(wallet, Number(stateObject.offset))) === true) {
+    //         logger.warn('The chain was reset, building wallet from scratch');
+    //         wallet = await WalletBuilder.buildFromSeed(
+    //           indexer,
+    //           indexerWS,
+    //           proofServer,
+    //           node,
+    //           seed,
+    //           getZswapNetworkId(),
+    //           'info',
+    //         );
+    //         wallet.start();
+    //       } else {
+    //         const newState = await waitForSync(wallet);
+    //         // allow for situations when there's no new index in the network between runs
+    //         if (newState.syncProgress?.synced) {
+    //           logger.info('Wallet was able to sync from restored state');
+    //         } else {
+    //           logger.info(`Offset: ${stateObject.offset}`);
+    //           logger.info(`SyncProgress.lag.applyGap: ${newState.syncProgress?.lag.applyGap}`);
+    //           logger.info(`SyncProgress.lag.sourceGap: ${newState.syncProgress?.lag.sourceGap}`);
+    //           logger.warn('Wallet was not able to sync from restored state, building wallet from scratch');
+    //           wallet = await WalletBuilder.buildFromSeed(
+    //             indexer,
+    //             indexerWS,
+    //             proofServer,
+    //             node,
+    //             seed,
+    //             getZswapNetworkId(),
+    //             'info',
+    //           );
+    //           wallet.start();
+    //         }
+    //       }
+    //     } catch (error: unknown) {
+    //       if (typeof error === 'string') {
+    //         logger.error(error);
+    //       } else if (error instanceof Error) {
+    //         logger.error(error.message);
+    //       } else {
+    //         logger.error(error);
+    //       }
+    //       logger.warn('Wallet was not able to restore using the stored state, building wallet from scratch');
+    //       wallet = await WalletBuilder.buildFromSeed(
+    //         indexer,
+    //         indexerWS,
+    //         proofServer,
+    //         node,
+    //         seed,
+    //         getZswapNetworkId(),
+    //         'info',
+    //       );
+    //       wallet.start();
+    //     }
   } else {
-    logger.info('File path for save file not found, building wallet from scratch');
+    logger.info('Wallet save file not found, building wallet from scratch');
     wallet = await WalletBuilder.buildFromSeed(
       indexer,
       indexerWS,
@@ -452,7 +458,21 @@ export const buildWalletAndWaitForFunds = async (
       'info',
     );
     wallet.start();
+    fs.writeFileSync(walletSeedFile, seed, 'utf8');
   }
+  // } else {
+  //   logger.info('File path for save file not found, building wallet from scratch');
+  //   wallet = await WalletBuilder.buildFromSeed(
+  //     indexer,
+  //     indexerWS,
+  //     proofServer,
+  //     node,
+  //     seed,
+  //     getZswapNetworkId(),
+  //     'info',
+  //   );
+  //   wallet.start();
+  // }
 
   const state = await Rx.firstValueFrom(wallet.state());
   logger.info(`Your wallet seed is: ${seed}`);

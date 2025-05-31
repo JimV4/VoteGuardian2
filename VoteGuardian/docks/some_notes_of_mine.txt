@@ -9,3 +9,27 @@ These ideas are not at all new; some of the important papers about zero-knowledg
 
 Ο organizer θα έχει μια λίστα από eligible_voters οπου θα κρατάει τα hashes των secret_keys των φοιτητών. Ο κάθε
 φοιτητής θα έχει ως secret key μια τιμή που το hash της θα είναι εντός της λίστας eligible_voters
+
+
+ιδέα: Στο map_public_payment θα μπορούσε αντί να αποθηκεύεται το ζευγάρι
+
+-> ΜΑΛΛΟΝ η insert στο Merkle Tree hasharei οπότε το public key που μπαίνει σα leaf χασάρεται
+
+
+QUESTION: when a dapp user makes a transaction, is it written on chain that this wallet made this transaction ?
+
+On Midnight, transactions are handled differently than on traditional public blockchains. When a user makes a transaction through a DApp on Midnight, their wallet address and transaction details are not necessarily exposed on the public ledger.
+
+Midnight uses zero-knowledge proofs (specifically zkSNARKs) to protect user privacy. Instead of recording the wallet address that made a transaction, Midnight's transactions embed cryptographic proofs that attest to the validity of an action without revealing sensitive data like the sender's identity [Learn > Understanding Midnight's Technology](https://docs.midnight.network/learn/understanding-midnights-technology/).
+
+As explained in the documentation:
+
+> Most transactions on Midnight are unsigned and adhere to a format defined by the Midnight Ledger itself. Rather than relying on traditional signature-based authorization, these transactions embed a cryptographic proof that attests to the validity of a specific action. [Develop > Nodes-and-dapps > Transactions](https://docs.midnight.network/develop/nodes-and-dapps/transactions)
+
+Midnight supports "shielded" transactions, where:
+
+> Wallet addresses and transaction details are not disclosed to counterparties or made available on a public ledger. [Learn > Glossary](https://docs.midnight.network/learn/glossary#shielded)
+
+This privacy-preserving approach allows users to conduct transactions without exposing their identity or transaction details on-chain. The blockchain verifies that the transaction is valid through the zero-knowledge proof, but doesn't need to know who specifically initiated it.
+
+This is a key difference from traditional blockchains where all transaction details, including wallet addresses, are publicly visible to anyone examining the ledger.
