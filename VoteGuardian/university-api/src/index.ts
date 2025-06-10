@@ -214,7 +214,8 @@ const mainLoop = async (
 ): Promise<void> => {
   let api: VoteGuardianAPI | null = null;
   const secretKeyBytes = new Uint8Array(32);
-  const secretKey = toHex(secretKeyBytes);
+  // const secretKey = toHex(secretKeyBytes);
+  const secretKey = '484c260c54d366f37c854c770a096e04993c595e4162e754fa7b8c8d474613c2';
   const VoteGuardianApi = await await VoteGuardianAPI.join(providers, address, secretKey, logger);
   if (VoteGuardianApi === null) {
     return;
@@ -230,6 +231,9 @@ const mainLoop = async (
     console.log('5 before record_payment_key');
     await VoteGuardianApi.record_payment_key(voter_public_key, voter_public_payment_key);
     console.log('6 after record_payment_key');
+    console.log('7 starting add_voter');
+    await VoteGuardianApi.add_voter(voter_public_key);
+    console.log('8 end add_voter');
   } finally {
     // While we allow errors to bubble up to the 'run' function, we will always need to dispose of the state
     // subscription when we exit.
@@ -773,14 +777,14 @@ app.post('/verify', async (req: Request, res: Response): Promise<void> => {
         };
         const publicKeyHex = hashSHA256(secretKeyHex);
 
-        user.publicKey = publicKeyHex;
-        await user.save();
         // const config = new StandaloneConfig();
         const config = new TestnetRemoteConfig();
         config.setNetworkId();
         logger = await createLogger(config.logDir);
         console.log('1 before run');
         await run(config, logger, contractAddress, hexToBytes(publicKeyHex), hexToBytes(walletPubKey));
+        user.publicKey = publicKeyHex;
+        await user.save();
         console.log('2 after run');
         await res.status(200).json({ message: 'User found.', secretKey: secretKeyHex });
       } else {

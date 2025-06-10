@@ -1,25 +1,22 @@
 
-0200068316cfd11779caf25afe828194856a35d990f2c19dff940217fd07274eef2b testnet
-444d2f697c08166b99ce7116bec125336b2363f5403cf3f59aba41a8a15ca58d
+0200e087ea4f5799bd47a5f4207514af341044b34fc35afed8a85a724bfd360d3b57 testnet
+484c260c54d366f37c854c770a096e04993c595e4162e754fa7b8c8d474613c2
 mn_shield-cpk_test1mvejcmc3s2sd7y6fxvrpac580mkm9l53jxm488v4xgs48a922gxsgcxlql
 
 
-wallet:
-mn_shield-cpk_test1mvejcmc3s2sd7y6fxvrpac580mkm9l53jxm488v4xgs48a922gxsgcxlql
+
 
 docker compose -f standalone.yml up -d
 docker compose -f proof-server-testnet.yml up -d
 docker stop $(docker ps -q)
 
-contract address: 0200068316cfd11779caf25afe828194856a35d990f2c19dff940217fd07274eef2b
-organizer secret key: 444d2f697c08166b99ce7116bec125336b2363f5403cf3f59aba41a8a15ca58d
-organizer wallet key: mn_shield-cpk_test1mvejcmc3s2sd7y6fxvrpac580mkm9l53jxm488v4xgs48a922gxsgcxlql
 
-username: a
+
+username: c
 password: test
-secretKey: c69d24a6b8bde81bdac25e808107a9af2489b754c347aed05c055eed77bcbb0d κωνστ
-publicKey: da2faa53e7c9341703dc3f9c40d0ae2ec693f188b81b5569758067a4d0bd4dab
-wallet:    mn_shield-cpk_test13vf6p5t70mx5a78q85stmg33ta5trf2xn9q5g3gdnmqw28u70qdqdqtw3y
+secretKey: ca118ca1647b9c0f94f040c299fc81a30c52ea5be3759e274303b0930929f0c4 
+publicKey: f481d7a2e576aebd4fc1cdaa11c72d8263b759ff102bf78151085456ca324adc
+wallet:    
 
 ---------------------------------------------------------------------------------------
 0000000000000000000000000000000000000000000000000000000000000000
