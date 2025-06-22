@@ -32,12 +32,49 @@ import { EmptyCardContent } from './VoteGuardian.EmptyCardContent';
 import { utils } from '@midnight-ntwrk/vote-guardian-api';
 import { DeployOrJoin } from './DeployOrJoin';
 import { EditComponent } from './EditComponent';
+import crypto from 'crypto';
+import { webcrypto } from 'crypto';
 
 /** The props required by the {@link VoteGuardian} component. */
 export interface VoteGuardianProps {
   /** The observable bulletin voteGuardian deployment. */
   voteGuardianDeployment$?: Observable<VoteGuardianDeployment>;
   isOrganizer: string;
+}
+
+function base64ToArrayBuffer(base64: string): ArrayBuffer {
+  return Uint8Array.from(Buffer.from(base64, 'base64')).buffer;
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  return Buffer.from(buffer).toString('base64');
+}
+
+async function generateKeys(): Promise<{
+  ecdh: webcrypto.CryptoKeyPair;
+  ecdsa: webcrypto.CryptoKeyPair;
+}> {
+  const ecdh = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']);
+  const ecdsa = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+  return { ecdh, ecdsa };
+}
+
+async function exportKeyBase64(key: CryptoKey): Promise<string> {
+  const spki = await crypto.subtle.exportKey('spki', key);
+  return arrayBufferToBase64(spki);
+}
+
+async function signData(privateKey: CryptoKey, data: ArrayBuffer): Promise<string> {
+  return arrayBufferToBase64(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, privateKey, data));
+}
+
+async function importKey(spkiBase64: string, type: 'ECDSA' | 'ECDH'): Promise<CryptoKey> {
+  const spki = base64ToArrayBuffer(spkiBase64);
+  return await crypto.subtle.importKey('spki', spki, { name: type, namedCurve: 'P-256' }, true, ['verify']);
+}
+
+async function deriveSharedSecret(privateKey: CryptoKey, theirPublicKey: CryptoKey): Promise<Uint8Array<ArrayBuffer>> {
+  return new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: theirPublicKey }, privateKey, 256));
 }
 
 /**
@@ -75,6 +112,53 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   const [showResults, setShowResults] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
   const [votingState, setVotingState] = useState<'open' | 'closed' | null>(null);
+
+  const onDiffieHellmanKeyExchange = async (): Promise<void> => {
+    const userKeys = await generateKeys();
+    const ecdhPubRaw = await crypto.subtle.exportKey('spki', userKeys.ecdh.publicKey);
+    const signature = await signData(userKeys.ecdsa.privateKey, ecdhPubRaw);
+
+    const res = await fetch('http://localhost:3000/exchange', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ecdhPub: arrayBufferToBase64(ecdhPubRaw),
+        ecdsaPub: await exportKeyBase64(userKeys.ecdsa.publicKey),
+        signature,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (res.status !== 200) {
+      console.error('Server error:', data.error);
+      return;
+    }
+
+    // Verify server response
+    const universityECDSAPub = await crypto.subtle.importKey(
+      'spki',
+      base64ToArrayBuffer(data.ecdsaPub),
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      true,
+      ['verify'],
+    );
+    const valid = await crypto.subtle.verify(
+      { name: 'ECDSA', hash: 'SHA-256' },
+      universityECDSAPub,
+      base64ToArrayBuffer(data.signature),
+      base64ToArrayBuffer(data.ecdhPub),
+    );
+
+    if (!valid) {
+      throw new Error('University signature verification failed');
+    }
+
+    const universityECDHPub = await importKey(data.ecdhPub, 'ECDH');
+
+    const sharedSecret = await deriveSharedSecret(userKeys.ecdh.privateKey, universityECDHPub);
+    console.log('Derived shared secret (hex):', Buffer.from(sharedSecret).toString('hex'));
+  };
 
   const handleClickBackArrow = (): void => {
     setShowPrompt(false);
@@ -615,6 +699,10 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                     SHOW RESULTS
                   </Button>
                   {/* END SHOW RESULTS */}
+
+                  <Button variant="contained" color="primary" size="medium" onClick={onDiffieHellmanKeyExchange}>
+                    DH KEY EXCHANGE
+                  </Button>
                 </Stack>
               </React.Fragment>
             )}

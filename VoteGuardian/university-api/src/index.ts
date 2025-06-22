@@ -848,6 +848,70 @@ app.post('/login', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+// Diffie Hellman Key Exchange
+
+let universityKeys;
+
+function base64ToArrayBuffer(base64: string): ArrayBuffer {
+  return Uint8Array.from(Buffer.from(base64, 'base64')).buffer;
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer) {
+  return Buffer.from(buffer).toString('base64');
+}
+
+async function generateUniversityKeys() {
+  const ecdh = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']);
+  const ecdsa = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+  return { ecdh, ecdsa };
+}
+
+async function exportKeyBase64(key: CryptoKey): Promise<string> {
+  const spki = await crypto.subtle.exportKey('spki', key);
+  return arrayBufferToBase64(spki);
+}
+
+async function signData(privateKey: CryptoKey, data: ArrayBuffer): Promise<string> {
+  return arrayBufferToBase64(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, privateKey, data));
+}
+
+async function importKey(spkiBase64: string, type: 'ECDSA' | 'ECDH'): Promise<CryptoKey> {
+  const spki = base64ToArrayBuffer(spkiBase64);
+  return await crypto.subtle.importKey('spki', spki, { name: type, namedCurve: 'P-256' }, true, ['verify']);
+}
+
+app.post('/exchange', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { ecdhPub, ecdsaPub, signature } = req.body;
+
+    const userECDSAPub = await importKey(ecdsaPub, 'ECDSA');
+    const userECDHPubRaw = base64ToArrayBuffer(ecdhPub);
+
+    const valid = await crypto.subtle.verify(
+      { name: 'ECDSA', hash: 'SHA-256' },
+      userECDSAPub,
+      base64ToArrayBuffer(signature),
+      userECDHPubRaw,
+    );
+
+    if (!valid) res.status(400).json({ error: 'Invalid signature' });
+
+    universityKeys = await generateUniversityKeys();
+
+    const universityECDHPubRaw = await crypto.subtle.exportKey('spki', universityKeys.ecdh.publicKey);
+    const signatureBack = await signData(universityKeys.ecdsa.privateKey, universityECDHPubRaw);
+
+    res.json({
+      ecdhPub: arrayBufferToBase64(universityECDHPubRaw),
+      ecdsaPub: await exportKeyBase64(universityKeys.ecdsa.publicKey),
+      signature: signatureBack,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
