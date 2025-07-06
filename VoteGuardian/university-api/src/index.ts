@@ -95,6 +95,8 @@ let logger: Logger;
 globalThis.WebSocket = WebSocket;
 export const currentDir = path.resolve(new URL(import.meta.url).pathname, '..');
 
+let secretKeyFromDh: string;
+
 export interface Config {
   readonly privateStateStoreName: string;
   readonly logDir: string;
@@ -215,7 +217,8 @@ const mainLoop = async (
   let api: VoteGuardianAPI | null = null;
   const secretKeyBytes = new Uint8Array(32);
   // const secretKey = toHex(secretKeyBytes);
-  const secretKey = '484c260c54d366f37c854c770a096e04993c595e4162e754fa7b8c8d474613c2';
+  // const secretKey = '484c260c54d366f37c854c770a096e04993c595e4162e754fa7b8c8d474613c2';
+  const secretKey = secretKeyFromDh;
   const VoteGuardianApi = await await VoteGuardianAPI.join(providers, address, secretKey, logger);
   if (VoteGuardianApi === null) {
     return;
@@ -880,10 +883,13 @@ async function importKey(spkiBase64: string, type: 'ECDSA' | 'ECDH'): Promise<Cr
   return await crypto.subtle.importKey('spki', spki, { name: type, namedCurve: 'P-256' }, true, ['verify']);
 }
 
+async function deriveSharedSecret(privateKey: CryptoKey, theirPublicKey: CryptoKey): Promise<Uint8Array<ArrayBuffer>> {
+  return new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: theirPublicKey }, privateKey, 256));
+}
+
 app.post('/exchange', async (req: Request, res: Response): Promise<void> => {
   try {
     const { ecdhPub, ecdsaPub, signature } = req.body;
-
     const userECDSAPub = await importKey(ecdsaPub, 'ECDSA');
     const userECDHPubRaw = base64ToArrayBuffer(ecdhPub);
 
@@ -895,12 +901,22 @@ app.post('/exchange', async (req: Request, res: Response): Promise<void> => {
     );
 
     if (!valid) res.status(400).json({ error: 'Invalid signature' });
-
     universityKeys = await generateUniversityKeys();
-
     const universityECDHPubRaw = await crypto.subtle.exportKey('spki', universityKeys.ecdh.publicKey);
     const signatureBack = await signData(universityKeys.ecdsa.privateKey, universityECDHPubRaw);
+    const userECDHPubKey = await crypto.subtle.importKey(
+      'spki',
+      userECDHPubRaw,
+      { name: 'ECDH', namedCurve: 'P-256' },
+      true,
+      [],
+    );
 
+    // const userECDHPub = await importKey(ecdhPub, 'ECDH');
+    const sharedSecret = await deriveSharedSecret(universityKeys.ecdh.privateKey, userECDHPubKey);
+
+    console.log('Derived shared secret (hex):', Buffer.from(sharedSecret).toString('hex'));
+    secretKeyFromDh = Buffer.from(sharedSecret).toString('hex');
     res.json({
       ecdhPub: arrayBufferToBase64(universityECDHPubRaw),
       ecdsaPub: await exportKeyBase64(universityKeys.ecdsa.publicKey),

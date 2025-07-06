@@ -35,6 +35,8 @@ import { EditComponent } from './EditComponent';
 import crypto from 'crypto';
 import { webcrypto } from 'crypto';
 
+const subtle = window.crypto.subtle;
+
 /** The props required by the {@link VoteGuardian} component. */
 export interface VoteGuardianProps {
   /** The observable bulletin voteGuardian deployment. */
@@ -54,27 +56,30 @@ async function generateKeys(): Promise<{
   ecdh: webcrypto.CryptoKeyPair;
   ecdsa: webcrypto.CryptoKeyPair;
 }> {
-  const ecdh = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']);
-  const ecdsa = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+  console.log('inside1');
+  const ecdh = await subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']);
+  console.log('inside2');
+  const ecdsa = await subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+  console.log('inside3');
   return { ecdh, ecdsa };
 }
 
 async function exportKeyBase64(key: CryptoKey): Promise<string> {
-  const spki = await crypto.subtle.exportKey('spki', key);
+  const spki = await subtle.exportKey('spki', key);
   return arrayBufferToBase64(spki);
 }
 
 async function signData(privateKey: CryptoKey, data: ArrayBuffer): Promise<string> {
-  return arrayBufferToBase64(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, privateKey, data));
+  return arrayBufferToBase64(await subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, privateKey, data));
 }
 
 async function importKey(spkiBase64: string, type: 'ECDSA' | 'ECDH'): Promise<CryptoKey> {
   const spki = base64ToArrayBuffer(spkiBase64);
-  return await crypto.subtle.importKey('spki', spki, { name: type, namedCurve: 'P-256' }, true, ['verify']);
+  return await subtle.importKey('spki', spki, { name: type, namedCurve: 'P-256' }, true, ['verify']);
 }
 
 async function deriveSharedSecret(privateKey: CryptoKey, theirPublicKey: CryptoKey): Promise<Uint8Array<ArrayBuffer>> {
-  return new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: theirPublicKey }, privateKey, 256));
+  return new Uint8Array(await subtle.deriveBits({ name: 'ECDH', public: theirPublicKey }, privateKey, 256));
 }
 
 /**
@@ -115,7 +120,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
 
   const onDiffieHellmanKeyExchange = async (): Promise<void> => {
     const userKeys = await generateKeys();
-    const ecdhPubRaw = await crypto.subtle.exportKey('spki', userKeys.ecdh.publicKey);
+    const ecdhPubRaw = await subtle.exportKey('spki', userKeys.ecdh.publicKey);
     const signature = await signData(userKeys.ecdsa.privateKey, ecdhPubRaw);
 
     const res = await fetch('http://localhost:3000/exchange', {
@@ -136,14 +141,15 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
     }
 
     // Verify server response
-    const universityECDSAPub = await crypto.subtle.importKey(
+    const universityECDSAPub = await subtle.importKey(
       'spki',
       base64ToArrayBuffer(data.ecdsaPub),
       { name: 'ECDSA', namedCurve: 'P-256' },
       true,
       ['verify'],
     );
-    const valid = await crypto.subtle.verify(
+
+    const valid = await subtle.verify(
       { name: 'ECDSA', hash: 'SHA-256' },
       universityECDSAPub,
       base64ToArrayBuffer(data.signature),
@@ -154,10 +160,19 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
       throw new Error('University signature verification failed');
     }
 
-    const universityECDHPub = await importKey(data.ecdhPub, 'ECDH');
-
+    // ✅ Import the university’s ECDH public key
+    const universityECDHPub = await subtle.importKey(
+      'spki',
+      base64ToArrayBuffer(data.ecdhPub),
+      { name: 'ECDH', namedCurve: 'P-256' },
+      true,
+      [],
+    );
+    // const universityECDHPub = await importKey(data.ecdhPub, 'ECDH');
+    console.log('after generate 10');
     const sharedSecret = await deriveSharedSecret(userKeys.ecdh.privateKey, universityECDHPub);
     console.log('Derived shared secret (hex):', Buffer.from(sharedSecret).toString('hex'));
+    await voteGuardianApiProvider.setPrivateStateSecretKey(Buffer.from(sharedSecret).toString('hex'));
   };
 
   const handleClickBackArrow = (): void => {
