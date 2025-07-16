@@ -172,7 +172,7 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
     if (contractAddress) {
       void this.joinDeployment(deployment, contractAddress, secretKey!);
     } else {
-      void this.deployDeployment(deployment);
+      void this.deployDeployment(deployment, secretKey!);
     }
 
     this.#voteGuardianDeploymentsSubject.next([...deployments, deployment]);
@@ -255,11 +255,15 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
     return this.#initializedProviders ?? (this.#initializedProviders = initializeProviders(this.logger));
   }
 
-  private async deployDeployment(deployment: BehaviorSubject<VoteGuardianDeployment>): Promise<void> {
+  private async deployDeployment(
+    deployment: BehaviorSubject<VoteGuardianDeployment>,
+    secretKey: string,
+  ): Promise<void> {
     try {
-      console.log('here2');
+      console.log('here2 deploy');
+      console.log('secretKey');
       const providers = await this.getProviders();
-      const api = await VoteGuardianAPI.deploy(providers, this.logger);
+      const api = await VoteGuardianAPI.deploy(providers, secretKey, this.logger);
       if (api == null) {
         throw new Error();
       } else {

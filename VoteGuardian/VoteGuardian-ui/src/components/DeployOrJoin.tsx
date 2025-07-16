@@ -5,6 +5,51 @@ import VoteGuardianAddIcon from '@mui/icons-material/PostAddOutlined';
 import CreateVoteGuardianIcon from '@mui/icons-material/AddCircleOutlined';
 import JoinVoteGuardianIcon from '@mui/icons-material/AddLinkOutlined';
 import { TextPromptDialog } from './TextPromptDialog';
+import crypto from 'crypto';
+import { webcrypto } from 'crypto';
+import { useDeployedVoteGuardianContext } from '../hooks';
+
+const subtle = window.crypto.subtle;
+
+function base64ToArrayBuffer(base64: string): ArrayBuffer {
+  return Uint8Array.from(Buffer.from(base64, 'base64')).buffer;
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  return Buffer.from(buffer).toString('base64');
+}
+
+async function generateKeys(): Promise<{
+  ecdh: webcrypto.CryptoKeyPair;
+  ecdsa: webcrypto.CryptoKeyPair;
+}> {
+  console.log('inside1');
+  const ecdh = await subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']);
+  console.log('inside2');
+  const ecdsa = await subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+  console.log('inside3');
+  return { ecdh, ecdsa };
+}
+
+async function exportKeyBase64(key: CryptoKey): Promise<string> {
+  const spki = await subtle.exportKey('spki', key);
+  return arrayBufferToBase64(spki);
+}
+
+async function signData(privateKey: CryptoKey, data: ArrayBuffer): Promise<string> {
+  return arrayBufferToBase64(await subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, privateKey, data));
+}
+
+async function importKey(spkiBase64: string, type: 'ECDSA' | 'ECDH'): Promise<CryptoKey> {
+  const spki = base64ToArrayBuffer(spkiBase64);
+  return await subtle.importKey('spki', spki, { name: type, namedCurve: 'P-256' }, true, ['verify']);
+}
+
+async function deriveSharedSecret(privateKey: CryptoKey, theirPublicKey: CryptoKey): Promise<Uint8Array<ArrayBuffer>> {
+  return new Uint8Array(await subtle.deriveBits({ name: 'ECDH', public: theirPublicKey }, privateKey, 256));
+}
+
+const voteGuardianApiProvider = useDeployedVoteGuardianContext();
 
 /**
  * The props required by the {@link DeployOrJoinProps} component.
@@ -13,7 +58,7 @@ import { TextPromptDialog } from './TextPromptDialog';
  */
 export interface DeployOrJoinProps {
   /** A callback that will be called to create a new bulletin voteGuardian. */
-  onCreateVoteGuardianCallback: () => void;
+  onCreateVoteGuardianCallback: (dhSecretKey: string) => void;
   /** A callback that will be called to join an existing bulletin voteGuardian. */
   onJoinVoteGuardianCallback: (contractAddress: ContractAddress, secretKey: string) => void;
   isOrganizer: string;
@@ -32,6 +77,66 @@ export const DeployOrJoin: React.FC<Readonly<DeployOrJoinProps>> = ({
   const [textPromptOpen, setTextPromptOpen] = useState(false);
   const [contractAddress, setContractAddress] = useState<ContractAddress | null>(null);
   const [secretPromptOpen, setSecretPromptOpen] = useState(false);
+  const [dhSecretKey, setDhSecretKey] = useState('');
+
+  const onDiffieHellmanKeyExchange = async (): Promise<void> => {
+    const userKeys = await generateKeys();
+    const ecdhPubRaw = await subtle.exportKey('spki', userKeys.ecdh.publicKey);
+    const signature = await signData(userKeys.ecdsa.privateKey, ecdhPubRaw);
+
+    const res = await fetch('http://localhost:3000/exchange', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ecdhPub: arrayBufferToBase64(ecdhPubRaw),
+        ecdsaPub: await exportKeyBase64(userKeys.ecdsa.publicKey),
+        signature,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (res.status !== 200) {
+      console.error('Server error:', data.error);
+      return;
+    }
+
+    // Verify server response
+    const universityECDSAPub = await subtle.importKey(
+      'spki',
+      base64ToArrayBuffer(data.ecdsaPub),
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      true,
+      ['verify'],
+    );
+
+    const valid = await subtle.verify(
+      { name: 'ECDSA', hash: 'SHA-256' },
+      universityECDSAPub,
+      base64ToArrayBuffer(data.signature),
+      base64ToArrayBuffer(data.ecdhPub),
+    );
+
+    if (!valid) {
+      throw new Error('University signature verification failed');
+    }
+
+    // ✅ Import the university’s ECDH public key
+    const universityECDHPub = await subtle.importKey(
+      'spki',
+      base64ToArrayBuffer(data.ecdhPub),
+      { name: 'ECDH', namedCurve: 'P-256' },
+      true,
+      [],
+    );
+    // const universityECDHPub = await importKey(data.ecdhPub, 'ECDH');
+    console.log('after generate 10');
+    const sharedSecret = await deriveSharedSecret(userKeys.ecdh.privateKey, universityECDHPub);
+    const sharedSecretHex = Buffer.from(sharedSecret).toString('hex');
+    console.log('Derived shared secret (hex):', sharedSecretHex);
+    setDhSecretKey(sharedSecretHex);
+    await voteGuardianApiProvider.setPrivateStateSecretKey(sharedSecretHex);
+  };
 
   return (
     <>
@@ -60,10 +165,18 @@ export const DeployOrJoin: React.FC<Readonly<DeployOrJoinProps>> = ({
             variant="outlined"
             size="large"
             color="secondary"
-            onClick={onCreateVoteGuardianCallback}
+            onClick={() => {
+              onCreateVoteGuardianCallback(dhSecretKey);
+            }}
             data-testid="vote-guardian-deploy-btn"
           >
             Deploy New Contract
+          </Button>
+        )}
+
+        {isOrganizer === 'yes' && (
+          <Button variant="contained" color="primary" size="medium" onClick={onDiffieHellmanKeyExchange}>
+            DH KEY EXCHANGE
           </Button>
         )}
       </Stack>

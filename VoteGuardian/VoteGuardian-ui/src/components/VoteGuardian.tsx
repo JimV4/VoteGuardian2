@@ -270,7 +270,10 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   // Two simple callbacks that call `resolve(...)` to either deploy or join a bulletin voteGuardian
   // contract. Since the `DeployedVoteGuardianContext` will create a new voteGuardian and update the UI, we
   // don't have to do anything further once we've called `resolve`.
-  const onCreateVoteGuardian = useCallback(() => voteGuardianApiProvider.resolve(), [voteGuardianApiProvider]);
+  const onCreateVoteGuardian = useCallback(
+    (secretKey: string) => voteGuardianApiProvider.resolve(secretKey),
+    [voteGuardianApiProvider],
+  );
   const onJoinVoteGuardian = useCallback(
     (contractAddress: ContractAddress, secretKey: string) =>
       voteGuardianApiProvider.resolve(contractAddress, secretKey),

@@ -367,7 +367,11 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
    * {@link DeployedVoteGuardianContract}; or rejects with a deployment error.
    */
   // ο τύπος VoteGuardianProviders έρχεται από το common-types
-  static async deploy(providers: VoteGuardianProviders, logger?: Logger): Promise<VoteGuardianAPI | null> {
+  static async deploy(
+    providers: VoteGuardianProviders,
+    secretKey: string,
+    logger?: Logger,
+  ): Promise<VoteGuardianAPI | null> {
     try {
       logger?.info('deployContract');
 
@@ -377,7 +381,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       const DeployedVoteGuardianContract = await deployContract(providers, {
         privateStateId: 'voteGuardianPrivateState',
         contract: VoteGuardianContractInstance,
-        initialPrivateState: createVoteGuardianPrivateState(utils.randomBytes(32), {
+        initialPrivateState: createVoteGuardianPrivateState(utils.hexToBytes(secretKey) /*utils.randomBytes(32)*/, {
           leaf: new Uint8Array(32),
           path: [
             {
