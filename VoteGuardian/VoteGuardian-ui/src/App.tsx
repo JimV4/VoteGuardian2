@@ -6,6 +6,7 @@ import { type VoteGuardianDeployment } from './contexts';
 import { type Observable } from 'rxjs';
 import { useLocation } from 'react-router-dom';
 import { VoteGuardianVoter } from './components/VoteGuardianVoter';
+import { DhSecretKeyProvider } from './contexts/DhSecretKeyContext';
 /**
  * The root bulletin VoteGuardian application component.
  *

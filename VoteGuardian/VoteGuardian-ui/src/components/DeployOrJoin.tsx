@@ -8,6 +8,9 @@ import { TextPromptDialog } from './TextPromptDialog';
 import crypto from 'crypto';
 import { webcrypto } from 'crypto';
 import { useDeployedVoteGuardianContext } from '../hooks';
+import { useDhSecretKey } from '../contexts/DhSecretKeyContext';
+import { Backdrop, CircularProgress } from '@mui/material';
+import StopIcon from '@mui/icons-material/HighlightOffOutlined';
 
 const subtle = window.crypto.subtle;
 
@@ -49,7 +52,7 @@ async function deriveSharedSecret(privateKey: CryptoKey, theirPublicKey: CryptoK
   return new Uint8Array(await subtle.deriveBits({ name: 'ECDH', public: theirPublicKey }, privateKey, 256));
 }
 
-const voteGuardianApiProvider = useDeployedVoteGuardianContext();
+// const voteGuardianApiProvider = useDeployedVoteGuardianContext();
 
 /**
  * The props required by the {@link DeployOrJoinProps} component.
@@ -78,64 +81,76 @@ export const DeployOrJoin: React.FC<Readonly<DeployOrJoinProps>> = ({
   const [contractAddress, setContractAddress] = useState<ContractAddress | null>(null);
   const [secretPromptOpen, setSecretPromptOpen] = useState(false);
   const [dhSecretKey, setDhSecretKey] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string>();
+  const { setSecretKey } = useDhSecretKey();
+  const [loading, setLoading] = useState(false);
 
   const onDiffieHellmanKeyExchange = async (): Promise<void> => {
-    const userKeys = await generateKeys();
-    const ecdhPubRaw = await subtle.exportKey('spki', userKeys.ecdh.publicKey);
-    const signature = await signData(userKeys.ecdsa.privateKey, ecdhPubRaw);
+    try {
+      setLoading(true);
+      const userKeys = await generateKeys();
+      const ecdhPubRaw = await subtle.exportKey('spki', userKeys.ecdh.publicKey);
+      const signature = await signData(userKeys.ecdsa.privateKey, ecdhPubRaw);
 
-    const res = await fetch('http://localhost:3000/exchange', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ecdhPub: arrayBufferToBase64(ecdhPubRaw),
-        ecdsaPub: await exportKeyBase64(userKeys.ecdsa.publicKey),
-        signature,
-      }),
-    });
+      const res = await fetch('http://localhost:3000/exchange', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ecdhPub: arrayBufferToBase64(ecdhPubRaw),
+          ecdsaPub: await exportKeyBase64(userKeys.ecdsa.publicKey),
+          signature,
+        }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (res.status !== 200) {
-      console.error('Server error:', data.error);
-      return;
+      if (res.status !== 200) {
+        console.error('Server error:', data.error);
+        return;
+      }
+
+      // Verify server response
+      const universityECDSAPub = await subtle.importKey(
+        'spki',
+        base64ToArrayBuffer(data.ecdsaPub),
+        { name: 'ECDSA', namedCurve: 'P-256' },
+        true,
+        ['verify'],
+      );
+
+      const valid = await subtle.verify(
+        { name: 'ECDSA', hash: 'SHA-256' },
+        universityECDSAPub,
+        base64ToArrayBuffer(data.signature),
+        base64ToArrayBuffer(data.ecdhPub),
+      );
+
+      if (!valid) {
+        throw new Error('University signature verification failed');
+      }
+
+      // ✅ Import the university’s ECDH public key
+      const universityECDHPub = await subtle.importKey(
+        'spki',
+        base64ToArrayBuffer(data.ecdhPub),
+        { name: 'ECDH', namedCurve: 'P-256' },
+        true,
+        [],
+      );
+      // const universityECDHPub = await importKey(data.ecdhPub, 'ECDH');
+      console.log('after generate 10');
+      const sharedSecret = await deriveSharedSecret(userKeys.ecdh.privateKey, universityECDHPub);
+      const sharedSecretHex = Buffer.from(sharedSecret).toString('hex');
+      console.log('Derived shared secret (hex):', sharedSecretHex);
+      setDhSecretKey(sharedSecretHex);
+      setSecretKey(sharedSecretHex);
+    } catch (err) {
+      setErrorMessage(String(err));
+      console.error(err);
+    } finally {
+      setLoading(false); // stop spinner
     }
-
-    // Verify server response
-    const universityECDSAPub = await subtle.importKey(
-      'spki',
-      base64ToArrayBuffer(data.ecdsaPub),
-      { name: 'ECDSA', namedCurve: 'P-256' },
-      true,
-      ['verify'],
-    );
-
-    const valid = await subtle.verify(
-      { name: 'ECDSA', hash: 'SHA-256' },
-      universityECDSAPub,
-      base64ToArrayBuffer(data.signature),
-      base64ToArrayBuffer(data.ecdhPub),
-    );
-
-    if (!valid) {
-      throw new Error('University signature verification failed');
-    }
-
-    // ✅ Import the university’s ECDH public key
-    const universityECDHPub = await subtle.importKey(
-      'spki',
-      base64ToArrayBuffer(data.ecdhPub),
-      { name: 'ECDH', namedCurve: 'P-256' },
-      true,
-      [],
-    );
-    // const universityECDHPub = await importKey(data.ecdhPub, 'ECDH');
-    console.log('after generate 10');
-    const sharedSecret = await deriveSharedSecret(userKeys.ecdh.privateKey, universityECDHPub);
-    const sharedSecretHex = Buffer.from(sharedSecret).toString('hex');
-    console.log('Derived shared secret (hex):', sharedSecretHex);
-    setDhSecretKey(sharedSecretHex);
-    await voteGuardianApiProvider.setPrivateStateSecretKey(sharedSecretHex);
+    // await voteGuardianApiProvider.setPrivateStateSecretKey(sharedSecretHex);
   };
 
   return (
@@ -205,6 +220,27 @@ export const DeployOrJoin: React.FC<Readonly<DeployOrJoinProps>> = ({
           }
         }}
       />
+      <Backdrop
+        sx={{
+          position: 'absolute',
+          color: '#fff',
+          width: '100%', // Full width of the Card
+          height: '100%',
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+        }}
+        open={loading}
+      >
+        <CircularProgress data-testid="vote-guardian-working-indicator" />
+      </Backdrop>
+      <Backdrop
+        sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={!!errorMessage}
+      >
+        <StopIcon fontSize="large" />
+        <Typography component="div" data-testid="vote-guardian-error-message">
+          {errorMessage}
+        </Typography>
+      </Backdrop>
     </>
   );
 };

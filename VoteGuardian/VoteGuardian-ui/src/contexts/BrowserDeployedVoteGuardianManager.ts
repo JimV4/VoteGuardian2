@@ -170,8 +170,10 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
     });
 
     if (contractAddress) {
+      console.log('joinC');
       void this.joinDeployment(deployment, contractAddress, secretKey!);
     } else {
+      console.log('deployC');
       void this.deployDeployment(deployment, secretKey!);
     }
 
@@ -271,6 +273,7 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
           status: 'deployed',
           api,
         });
+        await this.setPrivateStateSecretKey(secretKey);
       }
     } catch (error: unknown) {
       console.error('Deployment failed:', error);

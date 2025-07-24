@@ -19,6 +19,7 @@ import * as pino from 'pino';
 import { DeployedVoteGuardianProvider } from './contexts';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { MainLayout } from './components';
+import { DhSecretKeyProvider } from './contexts/DhSecretKeyContext';
 
 const networkId = import.meta.env.VITE_NETWORK_ID as NetworkId;
 // Ensure that the network IDs are set within the Midnight libraries.
@@ -49,9 +50,11 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
           <Route
             path="/home"
             element={
-              <DeployedVoteGuardianProvider logger={logger}>
-                <App />
-              </DeployedVoteGuardianProvider>
+              <DhSecretKeyProvider>
+                <DeployedVoteGuardianProvider logger={logger}>
+                  <App />
+                </DeployedVoteGuardianProvider>
+              </DhSecretKeyProvider>
             }
           />
           <Route path="*" element={<Navigate to="/login" replace />} />
