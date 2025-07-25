@@ -8478,7 +8478,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-gyp@npm:latest":
+"node-gyp@npm:^11.2.0, node-gyp@npm:latest":
   version: 11.2.0
   resolution: "node-gyp@npm:11.2.0"
   dependencies:
@@ -9717,6 +9717,7 @@ __metadata:
     jest-html-reporters: "npm:^3.1.4"
     jest-junit: "npm:^16.0.0"
     mongoose: "npm:^8.10.1"
+    node-gyp: "npm:^11.2.0"
     pino: "npm:^8.16.0"
     pino-pretty: "npm:^10.2.3"
     prettier: "npm:^3.0.3"
