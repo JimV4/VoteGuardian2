@@ -753,6 +753,11 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', uptime: process.uptime() });
+});
+
 // Endpoint to check if user exists
 app.post('/verify', async (req: Request, res: Response): Promise<void> => {
   const { username, password, walletPubKey, contractAddress } = req.body.subject;
