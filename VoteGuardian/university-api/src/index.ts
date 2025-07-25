@@ -683,7 +683,6 @@ export const saveState = async (wallet: Wallet, filename: string) => {
 
 // Initialize the app
 const app = express();
-const PORT = 3000;
 
 app.use(express.json());
 app.use(cors());
@@ -928,7 +927,15 @@ app.post('/exchange', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+app.use(
+  cors({
+    origin: 'https://courageous-griffin-be709e.netlify.app',
+  }),
+);
+
+const PORT = process.env.PORT;
+
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

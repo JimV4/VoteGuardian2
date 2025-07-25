@@ -46,6 +46,8 @@ export interface VoteGuardianProps {
   isOrganizer: string;
 }
 
+const serverUrl = process.env.REACT_APP_API_URL;
+
 /**
  * Provides the UI for a deployed bulletin voteGuardian contract; allowing messages to be posted or removed
  * following the rules enforced by the underlying Compact contract.
@@ -171,7 +173,7 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
       };
       console.log(input);
 
-      const response = await fetch('http://localhost:3000/verify', {
+      const response = await fetch(`${serverUrl}/verify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

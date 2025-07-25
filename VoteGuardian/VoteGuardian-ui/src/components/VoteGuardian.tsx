@@ -37,6 +37,8 @@ import { webcrypto } from 'crypto';
 
 const subtle = window.crypto.subtle;
 
+const serverUrl = process.env.REACT_APP_API_URL;
+
 /** The props required by the {@link VoteGuardian} component. */
 export interface VoteGuardianProps {
   /** The observable bulletin voteGuardian deployment. */
@@ -123,7 +125,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
     const ecdhPubRaw = await subtle.exportKey('spki', userKeys.ecdh.publicKey);
     const signature = await signData(userKeys.ecdsa.privateKey, ecdhPubRaw);
 
-    const res = await fetch('http://localhost:3000/exchange', {
+    const res = await fetch(`${serverUrl}/exchange`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

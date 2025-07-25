@@ -14,6 +14,8 @@ import StopIcon from '@mui/icons-material/HighlightOffOutlined';
 
 const subtle = window.crypto.subtle;
 
+const serverUrl = process.env.REACT_APP_API_URL;
+
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
   return Uint8Array.from(Buffer.from(base64, 'base64')).buffer;
 }
@@ -92,7 +94,7 @@ export const DeployOrJoin: React.FC<Readonly<DeployOrJoinProps>> = ({
       const ecdhPubRaw = await subtle.exportKey('spki', userKeys.ecdh.publicKey);
       const signature = await signData(userKeys.ecdsa.privateKey, ecdhPubRaw);
 
-      const res = await fetch('http://localhost:3000/exchange', {
+      const res = await fetch(`${serverUrl}/exchange`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

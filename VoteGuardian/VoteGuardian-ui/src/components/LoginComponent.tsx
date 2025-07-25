@@ -23,6 +23,8 @@ import WriteIcon from '@mui/icons-material/EditNoteOutlined';
 import CopyIcon from '@mui/icons-material/ContentPasteOutlined';
 import StopIcon from '@mui/icons-material/HighlightOffOutlined';
 
+const serverUrl = process.env.REACT_APP_API_URL;
+
 export const LoginComponent: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string>();
   const [messagePrompt, setMessagePrompt] = useState<string>();
@@ -43,7 +45,7 @@ export const LoginComponent: React.FC = () => {
         },
       };
       console.log(input);
-      const response = await fetch('http://localhost:3000/login', {
+      const response = await fetch(`${serverUrl}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
