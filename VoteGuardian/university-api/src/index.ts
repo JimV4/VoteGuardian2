@@ -933,7 +933,7 @@ app.use(
   }),
 );
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 
 // Start the server
 app.listen(PORT, () => {
