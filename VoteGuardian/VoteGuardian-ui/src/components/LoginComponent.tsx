@@ -45,7 +45,7 @@ export const LoginComponent: React.FC = () => {
         },
       };
       console.log(input);
-      const response = await fetch(`${serverUrl}/login`, {
+      const response = await fetch('https://voteguardian2.onrender.com/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

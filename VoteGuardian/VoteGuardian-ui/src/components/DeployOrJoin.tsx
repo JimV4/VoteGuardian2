@@ -94,7 +94,7 @@ export const DeployOrJoin: React.FC<Readonly<DeployOrJoinProps>> = ({
       const ecdhPubRaw = await subtle.exportKey('spki', userKeys.ecdh.publicKey);
       const signature = await signData(userKeys.ecdsa.privateKey, ecdhPubRaw);
 
-      const res = await fetch(`${serverUrl}/exchange`, {
+      const res = await fetch('https://voteguardian2.onrender.com/exchange', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

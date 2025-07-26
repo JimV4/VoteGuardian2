@@ -173,7 +173,7 @@ export const VoteGuardianVoter: React.FC<Readonly<VoteGuardianProps>> = ({ voteG
       };
       console.log(input);
 
-      const response = await fetch(`${serverUrl}/verify`, {
+      const response = await fetch('https://voteguardian2.onrender.com/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
