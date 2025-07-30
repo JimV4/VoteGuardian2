@@ -64,6 +64,9 @@ import pinoPretty from 'pino-pretty';
 import pino from 'pino';
 import { createWriteStream } from 'node:fs';
 import * as fs from 'node:fs';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export const createLogger = async (logPath: string): Promise<pino.Logger> => {
   await fsAsync.mkdir(path.dirname(logPath), { recursive: true });
@@ -215,11 +218,14 @@ const mainLoop = async (
   voter_public_key: Uint8Array,
   voter_public_payment_key: Uint8Array,
 ): Promise<void> => {
+  console.log(`at main loop1 address: ${address}`);
   let api: VoteGuardianAPI | null = null;
   const secretKeyBytes = new Uint8Array(32);
   // const secretKey = toHex(secretKeyBytes);
   // const secretKey = '484c260c54d366f37c854c770a096e04993c595e4162e754fa7b8c8d474613c2';
-  const secretKey = secretKeyFromDh;
+  const secretKey = await getSecretKeyFromContract(address);
+  console.log('at main loop2');
+  console.log(`decrypted: ${secretKey}`);
   const VoteGuardianApi = await await VoteGuardianAPI.join(providers, address, secretKey, logger);
   if (VoteGuardianApi === null) {
     return;
@@ -752,6 +758,33 @@ const userSchema = new mongoose.Schema({
   isOrganizer: String,
 });
 
+const ContractSecretSchema = new mongoose.Schema(
+  {
+    contract_address: {
+      type: String,
+      required: true,
+      unique: true, // Each contract should only be stored once
+    },
+    shared_secret: {
+      type: String,
+      required: true,
+    },
+    iv: {
+      type: String,
+      required: true,
+    },
+    tag: {
+      type: String,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+const ContractSecret = mongoose.model('ContractSecret', ContractSecretSchema);
+
 const User = mongoose.model('User', userSchema);
 
 // Health check endpoint
@@ -831,6 +864,77 @@ app.post('/register', async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error.' });
+  }
+});
+
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY!;
+
+const decryptSecret = (encryptedHex: string, ivHex: string, tagHex: string): string => {
+  const key = Buffer.from(ENCRYPTION_KEY, 'hex');
+  const iv = Buffer.from(ivHex, 'hex');
+  const tag = Buffer.from(tagHex, 'hex');
+  const encrypted = Buffer.from(encryptedHex, 'hex');
+
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+  decipher.setAuthTag(tag);
+
+  let decrypted = decipher.update(encrypted);
+  decrypted = Buffer.concat([decrypted, decipher.final()]);
+  return decrypted.toString('utf8');
+};
+
+export const getSecretKeyFromContract = async (contractAddress: string): Promise<string> => {
+  console.log('inside get sevret 1');
+  const record = await ContractSecret.findOne({ contract_address: contractAddress });
+  console.log('inside get sevret 2');
+  console.log(record);
+  if (!record) {
+    throw new Error('Secret not found for contract address');
+  }
+  console.log('inside get sevret 3');
+  console.log('inside get sevret 4');
+  const decryptedSecret = decryptSecret(record.shared_secret, record.iv, record.tag);
+  console.log('inside get sevret 5');
+  return decryptedSecret;
+};
+
+app.post('/storeKeyAddress', async (req: Request, res: Response): Promise<void> => {
+  console.log(`encryption key: ${ENCRYPTION_KEY}`);
+  const { contract_address, shared_secret } = req.body;
+
+  if (!contract_address || !shared_secret) {
+    res.status(400).json({ message: 'Missing contract_address or shared_secret' });
+  }
+
+  try {
+    // Save or update the secret
+    const existing = await ContractSecret.findOne({ contract_address });
+
+    if (existing) {
+      res.status(400).json({ message: 'already inserted key for this address' });
+    } else {
+      const iv = crypto.randomBytes(12); // Initialization vector
+      const cipher = crypto.createCipheriv('aes-256-gcm', Buffer.from(ENCRYPTION_KEY!, 'hex'), iv);
+
+      let encrypted = cipher.update(shared_secret, 'utf8', 'hex');
+      encrypted += cipher.final('hex');
+      const tag = cipher.getAuthTag().toString('hex');
+      console.log(encrypted);
+
+      const newEntry = new ContractSecret({
+        contract_address,
+        shared_secret: encrypted,
+        iv: iv.toString('hex'),
+        tag,
+      });
+
+      await newEntry.save();
+
+      res.json({ message: 'Stored new contract secret.' });
+    }
+  } catch (error) {
+    console.error('Error saving to MongoDB:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
@@ -919,9 +1023,9 @@ app.post('/exchange', async (req: Request, res: Response): Promise<void> => {
 
     // const userECDHPub = await importKey(ecdhPub, 'ECDH');
     const sharedSecret = await deriveSharedSecret(universityKeys.ecdh.privateKey, userECDHPubKey);
+    const sharedSecretHex = Buffer.from(sharedSecret).toString('hex');
 
-    console.log('Derived shared secret (hex):', Buffer.from(sharedSecret).toString('hex'));
-    secretKeyFromDh = Buffer.from(sharedSecret).toString('hex');
+    console.log('Derived shared secret (hex):', sharedSecretHex);
     res.json({
       ecdhPub: arrayBufferToBase64(universityECDHPubRaw),
       ecdsaPub: await exportKeyBase64(universityKeys.ecdsa.publicKey),
@@ -933,13 +1037,14 @@ app.post('/exchange', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-app.use(
-  cors({
-    origin: 'https://courageous-griffin-be709e.netlify.app',
-  }),
-);
+// app.use(
+//   cors({
+//     origin: 'http://localhost',
+//   }),
+// );
 
-const PORT = process.env.PORT || 5000;
+// const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
 // Start the server
 app.listen(PORT, () => {

@@ -263,16 +263,41 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
   ): Promise<void> {
     try {
       console.log('here2 deploy');
-      console.log('secretKey');
+      console.log(`secretKey: ${secretKey}`);
       const providers = await this.getProviders();
       const api = await VoteGuardianAPI.deploy(providers, secretKey, this.logger);
+
       if (api == null) {
         throw new Error();
       } else {
+        console.log(api.deployedContractAddress);
         deployment.next({
           status: 'deployed',
           api,
         });
+        // Send request to the server with the pair address, secret key
+        try {
+          const response = await fetch('http://localhost:3000/storeKeyAddress', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              contract_address: api.deployedContractAddress,
+              shared_secret: secretKey,
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+          } else {
+            const error = await response.json();
+          }
+        } catch (err) {
+          console.error(err);
+        }
+        // End request
+
         await this.setPrivateStateSecretKey(secretKey);
       }
     } catch (error: unknown) {

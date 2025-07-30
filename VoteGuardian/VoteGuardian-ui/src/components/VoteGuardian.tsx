@@ -125,7 +125,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
     const ecdhPubRaw = await subtle.exportKey('spki', userKeys.ecdh.publicKey);
     const signature = await signData(userKeys.ecdsa.privateKey, ecdhPubRaw);
 
-    const res = await fetch('https://voteguardian2.onrender.com/exchange', {
+    const res = await fetch('http://localhost:3000/exchange', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

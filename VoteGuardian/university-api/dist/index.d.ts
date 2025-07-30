@@ -50,3 +50,4 @@ export declare const run: (config: Config, logger: Logger, address: ContractAddr
 export declare const streamToString: (stream: fs.ReadStream) => Promise<string>;
 export declare const isAnotherChain: (wallet: Wallet, offset: number) => Promise<boolean>;
 export declare const saveState: (wallet: Wallet, filename: string) => Promise<void>;
+export declare const getSecretKeyFromContract: (contractAddress: string) => Promise<string>;
