@@ -737,7 +737,7 @@ function pad(s: string, n: number): Uint8Array {
 app.use(bodyParser.json());
 
 // MongoDB connection string (replace with your MongoDB URI)
-const mongoURI = 'mongodb+srv://dhmhtrhsvassiliou:pIzxC9sXgUSHpXWi@cluster0.ai7xh.mongodb.net/';
+const mongoURI = 'mongodb://127.0.0.1:27017/voteguardian';
 
 mongoose.connect(mongoURI, {
   // useNewUrlParser: true,
