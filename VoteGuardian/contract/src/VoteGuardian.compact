@@ -4,6 +4,8 @@ export { Maybe }
 // Voting states: voting can be open, or counted
 export enum VOTE_STATE { open, closed }
 
+export ledger count: Counter;
+
 // Public key of the university
 export ledger university_public_key: Bytes<32>;
 
@@ -14,13 +16,17 @@ export ledger votes_list: Map<Bytes<32>, List<Opaque<"string">>;        // Map w
 export ledger eligible_voters: HistoricMerkleTree<100, Bytes<32>>;      // Merkle tree of eligible voters
 export ledger voting_states: Map<Bytes<32>, VOTE_STATE>;                // Map with the state of each voting
 export ledger voting_nulifiers: Map<Bytes<32>, Set<Bytes<32>>>;         // Unique tokens per voting per user to avoid double voting
+export ledger voting_organizers: Map<Bytes<32>, Bytes<32>>;             // Map with the votings of each organizer
 
 // Constructor initializes the ADTs and predefines eligible voters
 constructor() {
     university_public_key = disclose(public_key(local_secret_key()));
-    vote_state = VOTE_STATE.open;
-    eligible_voters.reset_to_default(); // Set eligible voters as the empty Merkle Tree
+    voting_options.reset_to_default(); 
+    votes_list.reset_to_default();
+    eligible_voters.reset_to_default();
+    voting_states.reset_to_default();
     voting_nulifiers.reset_to_default();
+    voting_organizers.reset_to_default();
 }
 
 // Witness function to hold the user's (voter or organizer) secret key
@@ -175,4 +181,9 @@ export circuit public_key(sk: Bytes<32>): Bytes<32> {
 
 circuit nullifier (sk: Bytes<32>): Bytes<32> {
   return persistent_hash<Vector<2, Bytes<32>>>([pad(32, "nullifier-domain"), sk]);
+}
+
+circuit generate_voting_id (pk: Bytes<32>) : Bytes<32> {
+    return persistentHash<Vector<3, Bytes<32>>>(
+           [pad(32, "generate_id"), round as Bytes<32>, pk]);
 }
