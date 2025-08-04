@@ -32,9 +32,18 @@ export ledger map_public_payment: Map<Bytes<32>, Bytes<32>>;
 export ledger vote_option_map: Map<Opaque<"string">, Opaque<"string">>;
 
 
+
+
+export ledger votings: Map<Bytes<32>, Opaque<"string">>;           // Map with the votings ids and the question of each voting
+export ledger voting_options: Map<Bytes<32>, Map<Opaque<"string">, Opaque<"string">>; // Map with the options of each question of each voting;
+export ledger votes_list: Map<Bytes<32>, List<Opaque<"string">>;        // Map with a list of votes for each voting
+export ledger eligible_voters: HistoricMerkleTree<100, Bytes<32>>;      // Merkle tree of eligible voters
+export ledger voting_states: Map<Bytes<32>, VOTE_STATE>;                // Map with the state of each voting
+
+
 // Constructor initializes the state
 constructor() {
-    voting_organizer = disclose(public_key(local_secret_key()));
+    university_public_key = disclose(public_key(local_secret_key()));
     vote_state = VOTE_STATE.open;
     vote_count.increment(0); // Initialize vote count at zero
     eligible_voters.reset_to_default(); // Set eligible voters as the empty Merkle Tree
@@ -47,20 +56,58 @@ witness local_secret_key(): Bytes<32>;
 // Witness that prooves if a public_key is inside the Merkle Tree
 witness find_voter_public_key(voter_public_key: Bytes<32>): MerkleTreePath<10, Bytes<32>>;
 
+circuit prove_eligibility(): Boolean {
+    const participant_public_key = disclose(public_key(local_secret_key()));
+    const path = participant_public_key;
 
-export circuit add_voter(voter_public_key: Bytes<32>): [] {
-    assert voting_organizer == public_key(local_secret_key())
-        "You are not authorized to add a voter!";
-
-    assert voter_public_key != public_key(local_secret_key())
-        "You cannot add yourself to the voting!";
-
-    // insert the voter into eligible voters Merkle Tree
-    eligible_voters.insert(voter_public_key);
+    if (eligible_voters.check_root(merkle_tree_path_root<10, Bytes<32>>(path)))
+        return true;
+    else 
+        return false;
+        
 }
 
-export circuit record_payment_key(voter_public_key: Bytes<32>, voter_public_payment_key: Bytes<32>): [] {
-    map_public_payment.insert(voter_public_payment_key, voter_public_key);
+
+export circuit create_voting(voting_question: Opaque<"string">): [] {
+    const organizer_public_key = disclose(public_key(local_secret_key()));
+
+    assert university_public_key == organizer_public_key
+        "University cannot create votings";
+
+    assert prove_eligibility
+        "Not authorized!"
+
+    votings.insert((organizer_public_key, voting_question));
+}
+
+export circuit add_option(vote_option: Opaque<"string">, i: Opaque<"string">): [] {
+     const organizer_public_key = disclose(public_key(local_secret_key()));
+
+    assert university_public_key == organizer_public_key
+        "University cannot add options";
+
+    voting_options.insert(organizer_public_key, (i, vote_option));
+}
+
+
+export circuit close_voting(): [] {
+    assert university_public_key == public_key(local_secret_key())
+        "University cannot close votings";
+
+    const current_vote_state = lookup 
+
+    assert vote_state == VOTE_STATE.open
+        "Voting phase is not open or has already closed";
+    vote_state = VOTE_STATE.closed;
+}
+
+export circuit open_voting(): [] {
+    assert voting_organizer == public_key(local_secret_key())
+        "You are not authorized to open the voting";
+
+    assert vote_state == VOTE_STATE.closed
+        "Voting phase is not closed or has already opened";
+    vote_state = VOTE_STATE.open;
 }
 
 
@@ -124,12 +171,6 @@ export circuit open_voting(): [] {
     assert vote_state == VOTE_STATE.closed
         "Voting phase is not closed or has already opened";
     vote_state = VOTE_STATE.open;
-}
-
-export circuit create_voting(vq: Opaque<"string">): [] {
-    assert voting_organizer == public_key(local_secret_key())
-        "You are not authorized to start a voting";
-    vote_question = vq;
 }
 
 export circuit add_option(vote_option: Opaque<"string">, i: Opaque<"string">): [] {
