@@ -4,48 +4,21 @@ export { Maybe }
 // Voting states: voting can be open, or counted
 export enum VOTE_STATE { open, closed }
 
-// Public key of the voting organizer
-export ledger voting_organizer: Bytes<32>;
+// Public key of the university
+export ledger university_public_key: Bytes<32>;
 
 // Ledger to store the state of voting (open, or closed)
-export ledger vote_state: VOTE_STATE;
-
-// Ledger to store eligible voters in Merkle Tree
-export ledger eligible_voters: HistoricMerkleTree<10, Bytes<32>>;
-
-// Unique one-time "tokens" for someone to vote
-export ledger voting_nulifiers: Set<Bytes<32>>;
-
-// Ledger to store votes in encrypted formd
-export ledger votes_list: List<Opaque<"string">>;
-
-// Counter for total votes, incremented with each vote cast
-export ledger vote_count: Counter;
-
-// List with the questions of the voting. At first it will be only one question
-export ledger vote_question: Opaque<"string">;
-
-// Map voter public key with public payment key
-export ledger map_public_payment: Map<Bytes<32>, Bytes<32>>;
-
-// Ledger to store options and their id. For example: 1: "yes", 2: "no"
-export ledger vote_option_map: Map<Opaque<"string">, Opaque<"string">>;
-
-
-
-
-export ledger votings: Map<Bytes<32>, Opaque<"string">>;           // Map with the votings ids and the question of each voting
+export ledger votings: Map<Bytes<32>, Opaque<"string">>;                // Map with the votings ids and the question of each voting
 export ledger voting_options: Map<Bytes<32>, Map<Opaque<"string">, Opaque<"string">>; // Map with the options of each question of each voting;
 export ledger votes_list: Map<Bytes<32>, List<Opaque<"string">>;        // Map with a list of votes for each voting
 export ledger eligible_voters: HistoricMerkleTree<100, Bytes<32>>;      // Merkle tree of eligible voters
 export ledger voting_states: Map<Bytes<32>, VOTE_STATE>;                // Map with the state of each voting
+export ledger voting_nulifiers: Map<Bytes<32>, Set<Bytes<32>>>;         // Unique tokens per voting per user to avoid double voting
 
-
-// Constructor initializes the state
+// Constructor initializes the ADTs and predefines eligible voters
 constructor() {
     university_public_key = disclose(public_key(local_secret_key()));
     vote_state = VOTE_STATE.open;
-    vote_count.increment(0); // Initialize vote count at zero
     eligible_voters.reset_to_default(); // Set eligible voters as the empty Merkle Tree
     voting_nulifiers.reset_to_default();
 }
@@ -77,7 +50,7 @@ export circuit create_voting(voting_question: Opaque<"string">): [] {
     assert prove_eligibility
         "Not authorized!"
 
-    votings.insert((organizer_public_key, voting_question));
+    votings.insert(organizer_public_key, voting_question);
 }
 
 export circuit add_option(vote_option: Opaque<"string">, i: Opaque<"string">): [] {
@@ -86,71 +59,85 @@ export circuit add_option(vote_option: Opaque<"string">, i: Opaque<"string">): [
     assert university_public_key == organizer_public_key
         "University cannot add options";
 
+    assert prove_eligibility
+        "Not authorized!"    
+
     voting_options.insert(organizer_public_key, (i, vote_option));
 }
 
 
 export circuit close_voting(): [] {
+    const organizer_public_key = disclose(public_key(local_secret_key()));
+
     assert university_public_key == public_key(local_secret_key())
         "University cannot close votings";
 
-    const current_vote_state = lookup 
+    const current_voting_state = voting_states.lookup(university_public_key);
 
-    assert vote_state == VOTE_STATE.open
+    assert current_voting_state == VOTE_STATE.open
         "Voting phase is not open or has already closed";
-    vote_state = VOTE_STATE.closed;
+    
+    voting_states.insert(organizer_public_key, VOTE_STATE.closed);
 }
 
 export circuit open_voting(): [] {
-    assert voting_organizer == public_key(local_secret_key())
-        "You are not authorized to open the voting";
+    const organizer_public_key = disclose(public_key(local_secret_key()));
 
-    assert vote_state == VOTE_STATE.closed
+    assert university_public_key == public_key(local_secret_key())
+        "University cannot open votings";
+
+    const current_voting_state = voting_states.lookup(organizer_public_key);
+
+    assert current_voting_state == VOTE_STATE.closed
         "Voting phase is not closed or has already opened";
-    vote_state = VOTE_STATE.open;
+    
+    voting_states.insert(organizer_public_key, VOTE_STATE.open);
 }
 
 
 // Function to cast a vote, only accessible when voting is open and the voter hasn’t already voted
-export circuit cast_vote(vote_option: Opaque<"string">): [] {
-    assert voting_organizer != public_key(local_secret_key())
-        "As organizer, you are not allowed to vote!";
+export circuit cast_vote(voting_id: Bytes<32>, vote_option: Opaque<"string">): [] {
+    const organizer_public_key = disclose(public_key(local_secret_key()));
 
-    assert vote_state == VOTE_STATE.open
+    assert university_public_key == public_key(local_secret_key())
+        "University cannot open votings";
+
+
+    const current_voting_state = voting_states.lookup(voting_id);
+
+    assert current_voting_state == VOTE_STATE.open
         "Voting is not open";
 
     const voter_public_key = disclose(public_key(local_secret_key()));
 
-    const voter_public_payment_key_struct = own_public_key();
-    const voter_public_payment_key_bytes = voter_public_payment_key_struct.bytes;
+    assert prove_eligibility
+        "Not authorized!"
 
-    const voter_public_key_from_map = map_public_payment.lookup(voter_public_payment_key_bytes);
-    assert voter_public_key_from_map == voter_public_key
-        "Voter public key does not match with voter public payment key";
+    const voting_nulifiers_set = voting_nulifiers.lookup(voting_id)
 
-    // voter must be in the eligible voters
-    const path = disclose(find_voter_public_key(voter_public_key));
-
-    assert eligible_voters.check_root(merkle_tree_path_root<10, Bytes<32>>(path)) 
-        "You are not authorized to vote!";
-
-     // Υπολόγισε το nullifier για τον τρέχον χρήστη χασάρωντας το secret key του.
     const voting_nullifier = disclose(nullifier(local_secret_key()));
 
     // Έλεγχος αν ο nullifier για τον τρέχον χρήστη ανήκει στο σύνολο. Αν ανήκει σημαίνει ότι έχει ήδη ψηφίσει
-    assert !voting_nulifiers.member(voting_nullifier) 
-        "You have already voted!";
+    assert !voting_nulifiers_set.member(voting_nullifier) 
+        "Already voted for this voting";
 
-    voting_nulifiers.insert(voting_nullifier);
+    voting_nulifiers.insert(voting_id, (voting_nullifier));
 
     assert vote_option_map.member(vote_option)
         "Not a valid option!";
 
-    // Record the vote 
-    const vote = vote_option_map.lookup(vote_option);
+    // Record the vote and the nullifiers
+    voting_nulifiers.remove(voting_id);
+    voting_nulifiers_set.insert(voting_nullifier);
+    voting_nulifiers.insert(voting_id, voting_nulifiers_set);
 
-    votes_list.push_front(vote); // must run the contract again
-    vote_count.increment(1);
+    const current_vote_option_map = voting_options.lookup(voting_id);
+    const vote = current_vote_option_map.lookup(vote_option);
+
+    const current_vote_list = votes_list.lookup(voting_id);
+    votes_list.remove(voting_id);
+    current_vote_list.push_front(vote); // must run the contract again
+    votes_list.insert(current_vote_list);
 }
 
 // Function to close the voting phase
@@ -186,12 +173,6 @@ export circuit public_key(sk: Bytes<32>): Bytes<32> {
     return persistent_hash<Bytes<32>>(sk);
 }
 
-circuit nullifier(sk: Bytes<32>): Bytes<32> {
+circuit nullifier (sk: Bytes<32>): Bytes<32> {
   return persistent_hash<Vector<2, Bytes<32>>>([pad(32, "nullifier-domain"), sk]);
 }
-
-// Utility function to decrypt a vote (assumes encrypted vote format)
-// fn decrypt(encrypted_vote: Opaque<"string">): Opaque<"string"> {
-//     // Actual decryption logic here (for simplicity, left as a placeholder)
-//     return encrypted_vote;
-// }
