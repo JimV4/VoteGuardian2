@@ -1,94 +1,11 @@
 {
   "circuits": [
     {
-      "name": "add_voter",
-      "pure": false,
-      "arguments": [
-        {
-          "name": "voter_public_key",
-          "type": {
-            "type-name": "Bytes",
-            "length": 32
-          }
-        }
-      ],
-      "result-type": {
-        "type-name": "Tuple",
-        "types": [
-        ]
-      }
-    },
-    {
-      "name": "record_payment_key",
-      "pure": false,
-      "arguments": [
-        {
-          "name": "voter_public_key",
-          "type": {
-            "type-name": "Bytes",
-            "length": 32
-          }
-        },
-        {
-          "name": "voter_public_payment_key",
-          "type": {
-            "type-name": "Bytes",
-            "length": 32
-          }
-        }
-      ],
-      "result-type": {
-        "type-name": "Tuple",
-        "types": [
-        ]
-      }
-    },
-    {
-      "name": "cast_vote",
-      "pure": false,
-      "arguments": [
-        {
-          "name": "vote_option",
-          "type": {
-            "type-name": "Opaque",
-            "tsType": "string"
-          }
-        }
-      ],
-      "result-type": {
-        "type-name": "Tuple",
-        "types": [
-        ]
-      }
-    },
-    {
-      "name": "close_voting",
-      "pure": false,
-      "arguments": [
-      ],
-      "result-type": {
-        "type-name": "Tuple",
-        "types": [
-        ]
-      }
-    },
-    {
-      "name": "open_voting",
-      "pure": false,
-      "arguments": [
-      ],
-      "result-type": {
-        "type-name": "Tuple",
-        "types": [
-        ]
-      }
-    },
-    {
       "name": "create_voting",
       "pure": false,
       "arguments": [
         {
-          "name": "vq",
+          "name": "voting_question",
           "type": {
             "type-name": "Opaque",
             "tsType": "string"
@@ -105,6 +22,13 @@
       "name": "add_option",
       "pure": false,
       "arguments": [
+        {
+          "name": "voting_id",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
         {
           "name": "vote_option",
           "type": {
@@ -127,11 +51,11 @@
       }
     },
     {
-      "name": "public_key",
-      "pure": true,
+      "name": "close_voting",
+      "pure": false,
       "arguments": [
         {
-          "name": "sk",
+          "name": "voting_id",
           "type": {
             "type-name": "Bytes",
             "length": 32
@@ -139,8 +63,52 @@
         }
       ],
       "result-type": {
-        "type-name": "Bytes",
-        "length": 32
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "open_voting",
+      "pure": false,
+      "arguments": [
+        {
+          "name": "voting_id",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "cast_vote",
+      "pure": false,
+      "arguments": [
+        {
+          "name": "voting_id",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "vote_option",
+          "type": {
+            "type-name": "Opaque",
+            "tsType": "string"
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
       }
     }
   ]

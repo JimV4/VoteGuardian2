@@ -1,0 +1,150 @@
+import CompactStandardLibrary;
+
+// Voting states: voting can be open, or counted
+export enum VOTE_STATE { open, closed }
+
+struct Voting {
+    voting_id: Bytes<32>,
+    voting_organizer: Bytes<32>,
+    voting_question: Opaque<"string">,
+    voting_options: Map<Opaque<"string">, Opaque<"string">>,
+    voting_state: VOTE_STATE,
+    votes_list: List<Opaque<"string">>
+};
+
+export ledger votings: Map<Bytes<32>, Voting>;
+
+export ledger count: Counter;
+
+// Public key of the university
+export ledger university_public_key: Bytes<32>;
+
+export ledger eligible_voters: HistoricMerkleTree<5, Bytes<32>>;      // Merkle tree of eligible voters
+// export ledger voting_nulifiers: Map<Bytes<32>, Set<Bytes<32>>>;         // Unique tokens per voting per user to avoid double voting
+export ledger voting_nulifiers: Set<Bytes<32>>;
+
+// Constructor initializes the ADTs and predefines eligible voters
+constructor(eligible_voter_public_keys: Vector<5, Bytes<32>>) {
+    university_public_key = disclose(public_key(local_secret_key()));
+    votings.resetToDefault();
+    voting_nulifiers.resetToDefault();
+
+    for (const v of disclose(eligible_voter_public_keys)) {
+        eligible_voters.insert(v);
+    }
+}
+
+// Witness function to hold the user's (voter or organizer) secret key
+witness local_secret_key(): Bytes<32>;
+
+// Witness that prooves if a public_key is inside the Merkle Tree
+witness find_voter_public_key(voter_public_key: Bytes<32>): MerkleTreePath<5, Bytes<32>>;
+
+circuit prove_eligibility(): Boolean {
+    const participant_public_key = disclose(public_key(local_secret_key()));
+    const path = find_voter_public_key(participant_public_key);
+
+    if (eligible_voters.checkRoot(merkleTreePathRoot<5, Bytes<32>>(path)))
+        return true;
+    else 
+        return false;
+        
+}
+
+export circuit create_voting(voting: Voting): [] {
+    const organizer_public_key = disclose(public_key(local_secret_key()));
+
+    assert (university_public_key == organizer_public_key,
+        "University cannot create votings");
+
+    assert (prove_eligibility(), 
+        "Not authorized!");
+
+    voting.voting_id = disclose(generate_voting_id(local_secret_key()));
+    voting.voting_organizer = organizer_public_key;
+    votings.insert(voting.voting_id, voting);
+
+    count.increment(1);
+}
+
+
+export circuit close_voting(voting_id: Bytes<32>): [] {
+    const organizer_public_key = disclose(public_key(local_secret_key()));
+
+    assert (prove_eligibility(),
+        "Not authorized");   
+
+    const current_voting = votings.lookup(voting_id);   
+
+    assert (current_voting.voting_organizer == organizer_public_key,
+        "Not authorized");       
+
+
+    assert (current_voting.voting_state == VOTE_STATE.open,
+        "Voting phase is not open or has already closed");
+    
+    current_voting.voting_states = VOTE_STATE.closed;
+    votings.insert(current_voting);
+}
+
+export circuit open_voting(voting_id: Bytes<32>): [] {
+    const organizer_public_key = disclose(public_key(local_secret_key()));
+
+    assert (prove_eligibility(),
+        "Not authorized");    
+
+    const current_voting = votings.lookup(voting_id);
+
+    assert (current_voting.voting_organizer == organizer_public_key,
+        "Not authorized");       
+
+    assert (current_voting.voting_state == VOTE_STATE.closed,
+        "Voting phase is not closed or has already opened");
+    
+    current_voting.voting_states = VOTE_STATE.open;
+    votings.insert(current_voting);
+}
+
+
+// Function to cast a vote, only accessible when voting is open and the voter hasn’t already voted
+export circuit cast_vote(voting_id: Bytes<32>, vote_option: Opaque<"string">): [] {
+    const current_voting = votings.lookup(voting_id);
+
+    assert (current_voting.voting_state == VOTE_STATE.open, 
+        "Voting is not open");
+
+    assert (prove_eligibility(), 
+        "Not authorized!");
+
+    const voting_nullifier = disclose(nullifier(local_secret_key(), voting_id));
+
+    assert (!voting_nulifiers.member(voting_nullifier),
+            "Already voted");
+
+    voting_nulifiers.insert(voting_nullifier);
+
+    assert (current_voting.vote_options.member(vote_option),
+        "Not a valid option");
+
+    const vote = current_voting.vote_options.lookup(vote_option);
+
+    current_voting.votes_list.push_front(vote); 
+    
+    votings.insert(current_voting);
+}
+
+
+// Function to compute a public key for a voter based on secret key
+circuit public_key(sk: Bytes<32>): Bytes<32> {
+    return persistentHash<Bytes<32>>(sk);
+}
+
+circuit nullifier (sk: Bytes<32>, voting_id: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<3, Bytes<32>>>(
+           [pad(32, "nulifier-domain"), voting_id as Bytes<32>, sk]);
+}
+
+circuit generate_voting_id (sk: Bytes<32>) : Bytes<32> {
+    return persistentHash<Vector<3, Bytes<32>>>(
+           [pad(32, "generate_id"), count as Bytes<32>, sk]);
+}
