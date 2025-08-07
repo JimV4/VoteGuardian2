@@ -3,11 +3,10 @@
  *
  * @packageDocumentation
  */
-import { Contract, createVoteGuardianPrivateState, ledger, pureCircuits, witnesses, VOTE_STATE, } from '@midnight-ntwrk/vote-guardian-contract';
+import { Contract, createVoteGuardianPrivateState, ledger, witnesses, } from '@midnight-ntwrk/vote-guardian-contract';
 import * as utils from './utils/index.js';
 import { deployContract, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { combineLatest, map, tap, from } from 'rxjs';
-import { toHex } from '@midnight-ntwrk/midnight-js-utils';
 /** @internal */
 // ο τύπος Contract έρχεται από το αρχείο index.d.cts. Το witnesses έρχεται από το αρχείο witnesses.ts
 const VoteGuardianContractInstance = new Contract(witnesses);
@@ -44,15 +43,14 @@ export class VoteGuardianAPI {
                 ledgerStateChanged: {
                     ledgerState: {
                         ...ledgerState,
-                        // state: ledgerState.state === STATE.occupied ? 'occupied' : 'vacant',
-                        voteState: () => {
-                            if (ledgerState.voteState === VOTE_STATE.open) {
-                                return 'open';
-                            }
-                            else if (ledgerState.voteState === VOTE_STATE.closed) {
-                                return 'closed';
-                            }
-                        },
+                        // // state: ledgerState.state === STATE.occupied ? 'occupied' : 'vacant',
+                        // voteState: () => {
+                        //   if (ledgerState.voteState === VOTE_STATE.open) {
+                        //     return 'open';
+                        //   } else if (ledgerState.voteState === VOTE_STATE.closed) {
+                        //     return 'closed';
+                        //   }
+                        // },
                         // votersMap: ledgerState.votersMap,
                         // votesList: ledgerState.votesList,
                         // voteCountForEachOption: ledgerState.voteCountForEachOption,
@@ -69,17 +67,15 @@ export class VoteGuardianAPI {
         ], 
         // ...and combine them to produce the required derived state.
         (ledgerState, privateState) => {
-            const hashedSecretKey = pureCircuits.public_key(privateState.secretKey);
             return {
-                voteState: ledgerState.voteState,
-                // votersMap: ledgerState.votersMap,
-                eligibleVoters: ledgerState.eligibleVoters,
-                votesList: ledgerState.votesList,
-                voteCount: ledgerState.voteCount,
-                voteQuestion: ledgerState.voteQuestion,
-                mapPublicPayment: ledgerState.mapPublicPayment,
-                voteOptionMap: ledgerState.voteOptionMap,
-                isOrganizer: toHex(ledgerState.votingOrganizer) === toHex(hashedSecretKey),
+                // voteState: VOTE_STATE,
+                votings: ledgerState.votings,
+                votingOptions: ledgerState.voting_options,
+                votingResults: ledgerState.voting_results,
+                votingStates: ledgerState.voting_states,
+                votingNulifiers: ledgerState.voting_nulifiers,
+                votingOrganizers: ledgerState.voting_organizers,
+                eligibleVoters: ledgerState.eligible_voters
             };
         });
     }
@@ -92,68 +88,10 @@ export class VoteGuardianAPI {
      * and private state data.
      */
     state$;
-    /**
-     * Attempts to add a voter .
-     *
-     * @param encrypted_vote The voter's key to be added.
-     *
-     * @remarks
-     * This method can fail during local circuit execution if the voting is not open.
-     */
-    async record_payment_key(voter_public_key, voter_public_payment_key) {
-        try {
-            this.logger?.info('record payment key');
-            const txData = await this.deployedContract.callTx.record_payment_key(voter_public_key, voter_public_payment_key);
-            this.logger?.trace({
-                transactionAdded: {
-                    circuit: 'record_payment_key',
-                    txHash: txData.public.txHash,
-                    blockHeight: txData.public.blockHeight,
-                },
-            });
-        }
-        catch (error) {
-            console.log('asdasdasad');
-            console.log(error.message);
-            console.log(error.stack);
-            console.log(error);
-            // Log the full exception, including stack trace if available.
-            this.logger?.error('Error record_payment_key...', {
-                message: error.message,
-                stack: error.stack,
-                details: error, // Capture additional details if the error is a custom object.
-            });
-        }
-    }
-    async add_voter(voter_public_key) {
-        try {
-            this.logger?.info('adding voter');
-            const txData = await this.deployedContract.callTx.add_voter(voter_public_key);
-            this.logger?.trace({
-                transactionAdded: {
-                    circuit: 'add_voter',
-                    txHash: txData.public.txHash,
-                    blockHeight: txData.public.blockHeight,
-                },
-            });
-        }
-        catch (error) {
-            console.log('asdasdasad');
-            console.log(error.message);
-            console.log(error.stack);
-            console.log(error);
-            // Log the full exception, including stack trace if available.
-            this.logger?.error('Error adding voter...', {
-                message: error.message,
-                stack: error.stack,
-                details: error, // Capture additional details if the error is a custom object.
-            });
-        }
-    }
-    async add_option(vote_option, index) {
+    async add_option(voting_id, vote_option, index) {
         try {
             this.logger?.info(`added option: ${vote_option}`);
-            const txData = await this.deployedContract.callTx.add_option(vote_option, index);
+            const txData = await this.deployedContract.callTx.add_option(voting_id, vote_option, index);
             this.logger?.trace({
                 transactionAdded: {
                     circuit: 'add_option',
@@ -183,10 +121,10 @@ export class VoteGuardianAPI {
      * @remarks
      * This method can fail during local circuit execution if the voting is not open or the user has already voted.
      */
-    async cast_vote(encrypted_vote) {
+    async cast_vote(voting_id, encrypted_vote) {
         try {
             this.logger?.info(`casted votee: ${encrypted_vote}`);
-            const txData = await this.deployedContract.callTx.cast_vote(encrypted_vote);
+            const txData = await this.deployedContract.callTx.cast_vote(voting_id, encrypted_vote);
             this.logger?.trace({
                 transactionAdded: {
                     circuit: 'cast_vote',
@@ -224,10 +162,10 @@ export class VoteGuardianAPI {
      * @remarks
      * This method can fail during local circuit execution if the voting is not open.
      */
-    async close_voting() {
+    async close_voting(voting_id) {
         this.logger?.info('close voting...');
         console.log('here');
-        const txData = await this.deployedContract.callTx.close_voting();
+        const txData = await this.deployedContract.callTx.close_voting(voting_id);
         this.logger?.trace({
             transactionAdded: {
                 circuit: 'close_voting',
@@ -236,10 +174,10 @@ export class VoteGuardianAPI {
             },
         });
     }
-    async open_voting() {
+    async open_voting(voting_id) {
         this.logger?.info('open voting...');
         console.log('here');
-        const txData = await this.deployedContract.callTx.open_voting();
+        const txData = await this.deployedContract.callTx.open_voting(voting_id);
         this.logger?.trace({
             transactionAdded: {
                 circuit: 'open_voting',
@@ -299,7 +237,7 @@ export class VoteGuardianAPI {
      * {@link DeployedVoteGuardianContract}; or rejects with a deployment error.
      */
     // ο τύπος VoteGuardianProviders έρχεται από το common-types
-    static async deploy(providers, secretKey, logger) {
+    static async deploy(providers, secretKey, eligibleVoterPublicKeys, logger) {
         try {
             logger?.info('deployContract');
             /* η συνάρτηση deployContract έρχεται από τη βιβλιοθήκη. Πα΄ίρνει ως παράμετρο ένα αντικείμενο τύπου MidnightProviders και ένα αντικείμενο που είναι το
@@ -308,7 +246,7 @@ export class VoteGuardianAPI {
             const DeployedVoteGuardianContract = await deployContract(providers, {
                 privateStateId: 'voteGuardianPrivateState',
                 contract: VoteGuardianContractInstance,
-                initialPrivateState: createVoteGuardianPrivateState(utils.hexToBytes(secretKey) /*utils.randomBytes(32)*/, {
+                initialPrivateState: createVoteGuardianPrivateState(utils.hexToBytes(secretKey), {
                     leaf: new Uint8Array(32),
                     path: [
                         {
@@ -317,7 +255,7 @@ export class VoteGuardianAPI {
                         },
                     ],
                 }),
-                // initialPrivateState: createVoteGuardianPrivateState(utils.hexToBytes(secretKey)),
+                args: [eligibleVoterPublicKeys]
             });
             logger?.info('Passed deploy contract');
             logger?.trace({

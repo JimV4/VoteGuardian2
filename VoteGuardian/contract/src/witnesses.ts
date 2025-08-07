@@ -3,7 +3,7 @@
  * as well as the single witness function that accesses it.
  */
 
-import { Ledger, Maybe, ledger } from './managed/vote-guardian/contract/index.cjs';
+import { Ledger, ledger } from './managed/vote-guardian/contract/index.cjs';
 import { MerkleTreePath, WitnessContext } from '@midnight-ntwrk/compact-runtime';
 
 /* **********************************************************************
@@ -73,7 +73,7 @@ export const witnesses = {
     { privateState, ledger }: WitnessContext<Ledger, VoteGuardianPrivateState>,
     item: Uint8Array,
   ): [VoteGuardianPrivateState, MerkleTreePath<Uint8Array>] => [
-    createVoteGuardianPrivateState(privateState.secretKey, ledger.eligibleVoters.findPathForLeaf(item)!),
-    ledger.eligibleVoters.findPathForLeaf(item)!,
+    createVoteGuardianPrivateState(privateState.secretKey, ledger.eligible_voters.findPathForLeaf(item)!),
+    ledger.eligible_voters.findPathForLeaf(item)!,
   ],
 };

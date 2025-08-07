@@ -119,16 +119,18 @@ export type DeployedVoteGuardianContract = FoundContract<VoteGuardianContract>;
  */
 export type VoteGuardianDerivedState = {
   // ο τύπος VOTE_STATE έρχεται από το αρχείο index.d.cts
-  readonly voteState: VOTE_STATE;
+  // readonly voteState: VOTE_STATE;
 
   // Τα αντίστοιχα πεδία πα΄ίρνουν τους τύπους τους από τους αντίστοιχους τύπους του Ledger, το οποίο γίνεται defined
   // στο contract/index.d.cts και γίνεται import εδώ πέρα
   // readonly votersMap: Ledger['votersMap'];
-  readonly votesList: Ledger['votesList'];
-  readonly voteCount: bigint;
-  readonly voteQuestion: string;
-  readonly mapPublicPayment: Ledger['mapPublicPayment'];
-  readonly voteOptionMap: Ledger['voteOptionMap'];
+  readonly votings: Ledger['votings'];
+  readonly votingOptions: Ledger['voting_options'];
+  readonly votingResults: Ledger['voting_results'];
+  readonly eligibleVoters: Ledger['eligible_voters'];
+  readonly votingStates: Ledger['voting_states'];
+  readonly votingNulifiers: Ledger['voting_nulifiers'];
+  readonly votingOrganizers: Ledger['voting_organizers'];
 
   /**
    * A readonly flag that determines if the current message was posted by the current user.

@@ -13,13 +13,11 @@ import { type Observable } from 'rxjs';
 export interface DeployedVoteGuardianAPI {
     readonly deployedContractAddress: ContractAddress;
     readonly state$: Observable<VoteGuardianDerivedState>;
-    add_voter: (voter_public_key: Uint8Array) => Promise<void>;
-    cast_vote: (encrypted_vote: string) => Promise<void>;
-    close_voting: () => Promise<void>;
-    open_voting: () => Promise<void>;
+    cast_vote: (voting_id: Uint8Array, encrypted_vote: string) => Promise<void>;
+    close_voting: (voting_id: Uint8Array) => Promise<void>;
+    open_voting: (voting_id: Uint8Array) => Promise<void>;
     create_voting: (vote_question: string) => Promise<void>;
-    add_option: (vote_option: string, index: string) => Promise<void>;
-    record_payment_key: (voter_public_key: Uint8Array, voter_public_payment_key: Uint8Array) => Promise<void>;
+    add_option: (voting_id: Uint8Array, vote_option: string, index: string) => Promise<void>;
 }
 /**
  * Provides an implementation of {@link DeployedVoteGuardianAPI} by adapting a deployed Vote Guardian
@@ -51,17 +49,7 @@ export declare class VoteGuardianAPI implements DeployedVoteGuardianAPI {
      * and private state data.
      */
     readonly state$: Observable<VoteGuardianDerivedState>;
-    /**
-     * Attempts to add a voter .
-     *
-     * @param encrypted_vote The voter's key to be added.
-     *
-     * @remarks
-     * This method can fail during local circuit execution if the voting is not open.
-     */
-    record_payment_key(voter_public_key: Uint8Array, voter_public_payment_key: Uint8Array): Promise<void>;
-    add_voter(voter_public_key: Uint8Array): Promise<void>;
-    add_option(vote_option: string, index: string): Promise<void>;
+    add_option(voting_id: Uint8Array, vote_option: string, index: string): Promise<void>;
     /**
      * Attempts to caste a vote .
      *
@@ -70,7 +58,7 @@ export declare class VoteGuardianAPI implements DeployedVoteGuardianAPI {
      * @remarks
      * This method can fail during local circuit execution if the voting is not open or the user has already voted.
      */
-    cast_vote(encrypted_vote: string): Promise<void>;
+    cast_vote(voting_id: Uint8Array, encrypted_vote: string): Promise<void>;
     /**
      * Attempts to caste a vote .
      *
@@ -79,8 +67,8 @@ export declare class VoteGuardianAPI implements DeployedVoteGuardianAPI {
      * @remarks
      * This method can fail during local circuit execution if the voting is not open.
      */
-    close_voting(): Promise<void>;
-    open_voting(): Promise<void>;
+    close_voting(voting_id: Uint8Array): Promise<void>;
+    open_voting(voting_id: Uint8Array): Promise<void>;
     create_voting(vote_question: string): Promise<void>;
     /**
      * Attempts to  count all the votes.
@@ -96,7 +84,7 @@ export declare class VoteGuardianAPI implements DeployedVoteGuardianAPI {
      * @returns A `Promise` that resolves with a {@link VoteGuardianAPI} instance that manages the newly deployed
      * {@link DeployedVoteGuardianContract}; or rejects with a deployment error.
      */
-    static deploy(providers: VoteGuardianProviders, secretKey: string, logger?: Logger): Promise<VoteGuardianAPI | null>;
+    static deploy(providers: VoteGuardianProviders, secretKey: string, eligibleVoterPublicKeys: Uint8Array[], logger?: Logger): Promise<VoteGuardianAPI | null>;
     /**
      * Finds an already deployed bulletin board contract on the network, and joins it.
      *

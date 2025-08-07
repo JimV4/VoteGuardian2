@@ -50,7 +50,7 @@ import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config
 import { type Resource, WalletBuilder } from '@midnight-ntwrk/wallet';
 import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-public-data-provider';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
-import { type Logger } from 'pino';
+import { P, type Logger } from 'pino';
 // import { type Config, StandaloneConfig } from '../config.js';
 import type { StartedDockerComposeEnvironment, DockerComposeEnvironment } from 'testcontainers';
 import { levelPrivateStateProvider } from '@midnight-ntwrk/midnight-js-level-private-state-provider';
@@ -210,45 +210,40 @@ function uint8ArrayToString(uint8Array: Uint8Array): string {
   return decoder.decode(uint8Array);
 }
 
-const mainLoop = async (
-  providers: VoteGuardianProviders,
-  rli: Interface,
-  logger: Logger,
-  address: ContractAddress,
-  voter_public_key: Uint8Array,
-  voter_public_payment_key: Uint8Array,
-): Promise<void> => {
-  console.log(`at main loop1 address: ${address}`);
-  let api: VoteGuardianAPI | null = null;
+const mainLoop = async (providers: VoteGuardianProviders, rli: Interface, logger: Logger): Promise<void> => {
   const secretKeyBytes = new Uint8Array(32);
-  // const secretKey = toHex(secretKeyBytes);
-  // const secretKey = '484c260c54d366f37c854c770a096e04993c595e4162e754fa7b8c8d474613c2';
-  const secretKey = await getSecretKeyFromContract(address);
-  console.log('at main loop2');
-  console.log(`decrypted: ${secretKey}`);
-  const VoteGuardianApi = await await VoteGuardianAPI.join(providers, address, secretKey, logger);
+  const secretKey = toHex(secretKeyBytes);
+
+  let eligibleVoters: Uint8Array[] = [
+    new Uint8Array(32),
+    new Uint8Array(32),
+    new Uint8Array(32),
+    new Uint8Array(32),
+    new Uint8Array(32),
+  ];
+
+  const contractAddressFile = path.resolve(process.cwd(), 'contract_address.txt');
+  const contractAddress = fs.readFileSync(contractAddressFile, 'utf8').trim();
+  let VoteGuardianApi: VoteGuardianAPI | null;
+
+  if (contractAddress) {
+    VoteGuardianApi = await VoteGuardianAPI.join(providers, contractAddress, secretKey, logger);
+  } else {
+    VoteGuardianApi = await VoteGuardianAPI.deploy(providers, secretKey, eligibleVoters, logger);
+  }
+
   if (VoteGuardianApi === null) {
     return;
   }
+  console.log(`deployed - joined at address ${VoteGuardianApi.deployedContractAddress}`);
+
+  fs.writeFileSync(contractAddressFile, VoteGuardianApi.deployedContractAddress, 'utf8');
   console.log('4 at main loop');
   let currentState: VoteGuardianDerivedState | undefined;
   const stateObserver = {
     next: (state: VoteGuardianDerivedState) => (currentState = state),
   };
   const subscription = VoteGuardianApi.state$.subscribe(stateObserver);
-
-  try {
-    console.log('5 before record_payment_key');
-    await VoteGuardianApi.record_payment_key(voter_public_key, voter_public_payment_key);
-    console.log('6 after record_payment_key');
-    console.log('7 starting add_voter');
-    await VoteGuardianApi.add_voter(voter_public_key);
-    console.log('8 end add_voter');
-  } finally {
-    // While we allow errors to bubble up to the 'run' function, we will always need to dispose of the state
-    // subscription when we exit.
-    subscription.unsubscribe();
-  }
 };
 
 /* **********************************************************************
@@ -546,14 +541,7 @@ const mapContainerPort = (env: StartedDockerComposeEnvironment, url: string, con
  * will wait for Docker to be ready before doing anything else.
  */
 
-export const run = async (
-  config: Config,
-  logger: Logger,
-  address: ContractAddress,
-  voter_public_key: Uint8Array,
-  voter_public_payment_key: Uint8Array,
-  dockerEnv?: DockerComposeEnvironment,
-): Promise<void> => {
+export const run = async (config: Config, logger: Logger, dockerEnv?: DockerComposeEnvironment): Promise<void> => {
   const rli = createInterface({ input, output, terminal: true });
   let env;
   if (dockerEnv !== undefined) {
@@ -584,20 +572,14 @@ export const run = async (
 
         // provider για τα zk proofs. Δίνει το path όπου βρίσκονται τα keys και τα circuits
         zkConfigProvider: new NodeZkConfigProvider<
-          | 'cast_vote'
-          | 'close_voting'
-          | 'add_voter'
-          | 'create_voting'
-          | 'add_option'
-          | 'record_payment_key'
-          | 'open_voting'
+          'cast_vote' | 'close_voting' | 'create_voting' | 'add_option' | 'open_voting'
         >(config.zkConfigPath),
         proofProvider: httpClientProofProvider(config.proofServer),
         walletProvider: walletAndMidnightProvider,
         midnightProvider: walletAndMidnightProvider,
       };
       console.log('3 before main loop');
-      await mainLoop(providers, rli, logger, address, voter_public_key, voter_public_payment_key);
+      await mainLoop(providers, rli, logger);
     }
   } catch (e) {
     if (e instanceof Error) {
@@ -754,91 +736,14 @@ db.once('open', () => {
 const userSchema = new mongoose.Schema({
   username: String,
   password: String,
-  publicKey: String,
-  isOrganizer: String,
+  encryptionPublicKey: String,
 });
-
-const ContractSecretSchema = new mongoose.Schema(
-  {
-    contract_address: {
-      type: String,
-      required: true,
-      unique: true, // Each contract should only be stored once
-    },
-    shared_secret: {
-      type: String,
-      required: true,
-    },
-    iv: {
-      type: String,
-      required: true,
-    },
-    tag: {
-      type: String,
-      required: true,
-    },
-  },
-  {
-    timestamps: true,
-  },
-);
-
-const ContractSecret = mongoose.model('ContractSecret', ContractSecretSchema);
 
 const User = mongoose.model('User', userSchema);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', uptime: process.uptime() });
-});
-
-// Endpoint to check if user exists
-app.post('/verify', async (req: Request, res: Response): Promise<void> => {
-  const { username, password, walletPubKey, contractAddress } = req.body.subject;
-  console.log(req.body.subject);
-
-  if (!username || !password) {
-    res.status(400).json({ message: 'Username and password are required.' });
-  }
-
-  try {
-    // Query the database
-    const user = await User.findOne({ username, password });
-
-    if (user) {
-      if (!user.publicKey) {
-        const secretKeybytes = new Uint8Array(32);
-        crypto.getRandomValues(secretKeybytes);
-        const toHex = (bytes: Uint8Array) => Buffer.from(bytes).toString('hex');
-        const secretKeyHex = toHex(secretKeybytes);
-
-        // Hash the secret key using SHA-256 to create the public key
-        const hashSHA256 = (data: string) => {
-          return crypto.createHash('sha256').update(data, 'hex').digest('hex');
-        };
-        const publicKeyHex = hashSHA256(secretKeyHex);
-
-        // const config = new StandaloneConfig();
-        const config = new TestnetRemoteConfig();
-        config.setNetworkId();
-        logger = await createLogger(config.logDir);
-        console.log('1 before run');
-        await run(config, logger, contractAddress, hexToBytes(publicKeyHex), hexToBytes(walletPubKey));
-        user.publicKey = publicKeyHex;
-        await user.save();
-        console.log('2 after run');
-        await res.status(200).json({ message: 'User found.', secretKey: secretKeyHex });
-      } else {
-        console.log('here');
-        res.status(200).json({ message: 'User found.' });
-      }
-    } else {
-      res.status(404).json({ message: 'User not found.' });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error.' });
-  }
 });
 
 // Endpoint to insert a new user
@@ -883,61 +788,6 @@ const decryptSecret = (encryptedHex: string, ivHex: string, tagHex: string): str
   return decrypted.toString('utf8');
 };
 
-export const getSecretKeyFromContract = async (contractAddress: string): Promise<string> => {
-  console.log('inside get sevret 1');
-  const record = await ContractSecret.findOne({ contract_address: contractAddress });
-  console.log('inside get sevret 2');
-  console.log(record);
-  if (!record) {
-    throw new Error('Secret not found for contract address');
-  }
-  console.log('inside get sevret 3');
-  console.log('inside get sevret 4');
-  const decryptedSecret = decryptSecret(record.shared_secret, record.iv, record.tag);
-  console.log('inside get sevret 5');
-  return decryptedSecret;
-};
-
-app.post('/storeKeyAddress', async (req: Request, res: Response): Promise<void> => {
-  console.log(`encryption key: ${ENCRYPTION_KEY}`);
-  const { contract_address, shared_secret } = req.body;
-
-  if (!contract_address || !shared_secret) {
-    res.status(400).json({ message: 'Missing contract_address or shared_secret' });
-  }
-
-  try {
-    // Save or update the secret
-    const existing = await ContractSecret.findOne({ contract_address });
-
-    if (existing) {
-      res.status(400).json({ message: 'already inserted key for this address' });
-    } else {
-      const iv = crypto.randomBytes(12); // Initialization vector
-      const cipher = crypto.createCipheriv('aes-256-gcm', Buffer.from(ENCRYPTION_KEY!, 'hex'), iv);
-
-      let encrypted = cipher.update(shared_secret, 'utf8', 'hex');
-      encrypted += cipher.final('hex');
-      const tag = cipher.getAuthTag().toString('hex');
-      console.log(encrypted);
-
-      const newEntry = new ContractSecret({
-        contract_address,
-        shared_secret: encrypted,
-        iv: iv.toString('hex'),
-        tag,
-      });
-
-      await newEntry.save();
-
-      res.json({ message: 'Stored new contract secret.' });
-    }
-  } catch (error) {
-    console.error('Error saving to MongoDB:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
 app.post('/login', async (req: Request, res: Response): Promise<void> => {
   const { username, password } = req.body.subject;
 
@@ -950,7 +800,7 @@ app.post('/login', async (req: Request, res: Response): Promise<void> => {
     const user = await User.findOne({ username, password });
 
     if (user) {
-      res.status(200).json({ message: 'User found.', isOrganizer: user.isOrganizer });
+      res.status(200).json({ message: 'User found.' });
     } else {
       res.status(404).json({ message: 'User not found.' });
     }
@@ -996,47 +846,6 @@ async function deriveSharedSecret(privateKey: CryptoKey, theirPublicKey: CryptoK
   return new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: theirPublicKey }, privateKey, 256));
 }
 
-app.post('/exchange', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { ecdhPub, ecdsaPub, signature } = req.body;
-    const userECDSAPub = await importKey(ecdsaPub, 'ECDSA');
-    const userECDHPubRaw = base64ToArrayBuffer(ecdhPub);
-
-    const valid = await crypto.subtle.verify(
-      { name: 'ECDSA', hash: 'SHA-256' },
-      userECDSAPub,
-      base64ToArrayBuffer(signature),
-      userECDHPubRaw,
-    );
-
-    if (!valid) res.status(400).json({ error: 'Invalid signature' });
-    universityKeys = await generateUniversityKeys();
-    const universityECDHPubRaw = await crypto.subtle.exportKey('spki', universityKeys.ecdh.publicKey);
-    const signatureBack = await signData(universityKeys.ecdsa.privateKey, universityECDHPubRaw);
-    const userECDHPubKey = await crypto.subtle.importKey(
-      'spki',
-      userECDHPubRaw,
-      { name: 'ECDH', namedCurve: 'P-256' },
-      true,
-      [],
-    );
-
-    // const userECDHPub = await importKey(ecdhPub, 'ECDH');
-    const sharedSecret = await deriveSharedSecret(universityKeys.ecdh.privateKey, userECDHPubKey);
-    const sharedSecretHex = Buffer.from(sharedSecret).toString('hex');
-
-    console.log('Derived shared secret (hex):', sharedSecretHex);
-    res.json({
-      ecdhPub: arrayBufferToBase64(universityECDHPubRaw),
-      ecdsaPub: await exportKeyBase64(universityKeys.ecdsa.publicKey),
-      signature: signatureBack,
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
 // app.use(
 //   cors({
 //     origin: 'http://localhost',
@@ -1047,6 +856,14 @@ app.post('/exchange', async (req: Request, res: Response): Promise<void> => {
 const PORT = 3000;
 
 // Start the server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
+
+  console.log('starting run...');
+  const config = new TestnetRemoteConfig();
+  config.setNetworkId();
+  logger = await createLogger(config.logDir);
+  console.log('1 before run');
+  await run(config, logger);
+  console.log('2 after run');
 });

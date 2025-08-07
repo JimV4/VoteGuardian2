@@ -46,8 +46,8 @@ export const witnesses = {
         privateState.secretKey,
     ],
     find_voter_public_key: ({ privateState, ledger }, item) => [
-        createVoteGuardianPrivateState(privateState.secretKey, ledger.eligibleVoters.findPathForLeaf(item)),
-        ledger.eligibleVoters.findPathForLeaf(item),
+        createVoteGuardianPrivateState(privateState.secretKey, ledger.eligible_voters.findPathForLeaf(item)),
+        ledger.eligible_voters.findPathForLeaf(item),
     ],
 };
 //# sourceMappingURL=witnesses.js.map
