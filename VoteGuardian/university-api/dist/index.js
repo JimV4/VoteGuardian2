@@ -151,11 +151,11 @@ const mainLoop = async (providers, rli, logger) => {
     const secretKeyBytes = new Uint8Array(32);
     const secretKey = toHex(secretKeyBytes);
     let eligibleVoters = [
-        new Uint8Array([1, 2, 3]),
-        new Uint8Array([4, 5, 6]),
-        new Uint8Array([7, 8, 9]),
-        new Uint8Array([10, 11, 12]),
-        new Uint8Array([13, 14, 15]),
+        new Uint8Array(32),
+        new Uint8Array(32),
+        new Uint8Array(32),
+        new Uint8Array(32),
+        new Uint8Array(32),
     ];
     const contractAddressFile = path.resolve(process.cwd(), 'contract_address.txt');
     const contractAddress = fs.readFileSync(contractAddressFile, 'utf8').trim();

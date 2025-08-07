@@ -34,16 +34,6 @@ const App: React.FC = () => {
   return (
     <Box sx={{ background: '#000', minHeight: '100vh' }}>
       <MainLayout>
-        {/* {VoteGuardianDeployments.map((VoteGuardianDeployment, idx) => (
-          <div data-testid={`VoteGuardian-${idx}`} key={`VoteGuardian-${idx}`}>
-            {isOrganizer === 'yes' && (
-              <VoteGuardian voteGuardianDeployment$={VoteGuardianDeployment} isOrganizer={isOrganizer} />
-            )}
-            {isOrganizer === 'no' && (
-              <VoteGuardianVoter voteGuardianDeployment$={VoteGuardianDeployment} isOrganizer={isOrganizer} />
-            )}
-          </div>
-        ))} */}
         {VoteGuardianDeployments.length > 0 && (
           <div data-testid="VoteGuardian-0">
             {isOrganizer === 'yes' && (
