@@ -6,6 +6,7 @@
 import { PrivateStateProvider, type MidnightProviders } from '@midnight-ntwrk/midnight-js-types';
 import { type FoundContract } from '@midnight-ntwrk/midnight-js-contracts';
 import type { VoteGuardianPrivateState, Contract, Witnesses, Ledger } from '@midnight-ntwrk/vote-guardian-contract';
+import { Voting } from './Voting';
 export declare function inMemoryPrivateStateProvider<PSI extends string = string, PS = any>(): PrivateStateProvider<PSI, PS>;
 /**
  * The private states consumed throughout the application.
@@ -64,4 +65,5 @@ export type VoteGuardianDerivedState = {
     readonly votingStates: Ledger['voting_states'];
     readonly votingNulifiers: Ledger['voting_nulifiers'];
     readonly votingOrganizers: Ledger['voting_organizers'];
+    readonly votingList: Voting[];
 };

@@ -114,7 +114,6 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       // ...and combine them to produce the required derived state.
       (ledgerState, privateState) => {
         return {
-          // voteState: VOTE_STATE,
           votings: ledgerState.votings,
           votingOptions: ledgerState.voting_options,
           votingResults: ledgerState.voting_results,

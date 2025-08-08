@@ -15,6 +15,7 @@ import type {
   Ledger,
 } from '@midnight-ntwrk/vote-guardian-contract';
 import { ContractAddress, SigningKey } from '@midnight-ntwrk/compact-runtime';
+import { Voting } from './Voting';
 
 export function inMemoryPrivateStateProvider<PSI extends string = string, PS = any>(): PrivateStateProvider<PSI, PS> {
   const btStateStore: Map<PSI, PS> = new Map();
@@ -83,8 +84,7 @@ export type PrivateStates = {
  *
  * @public
  */
-// ο τύπος Contract έρχεται από το αρχείο index.d.cts. Ο τύπος VoteGuardianPrivateState από το αρχείο witnesses.ts και ο
-// τύπος Witnesses έρχεται από το αρχείο index.d.cts
+
 export type VoteGuardianContract = Contract<VoteGuardianPrivateState, Witnesses<VoteGuardianPrivateState>>;
 
 /**
@@ -99,7 +99,6 @@ export type VoteGuardianCircuitKeys = Exclude<keyof VoteGuardianContract['impure
  *
  * @public
  */
-// Ο τύπος MidnightProviders έρχεται από τη βιβλιοθήκη
 export type VoteGuardianProviders = MidnightProviders<
   VoteGuardianCircuitKeys,
   'voteGuardianPrivateState',
@@ -118,12 +117,6 @@ export type DeployedVoteGuardianContract = FoundContract<VoteGuardianContract>;
  * A type that represents the derived combination of public (or ledger), and private state.
  */
 export type VoteGuardianDerivedState = {
-  // ο τύπος VOTE_STATE έρχεται από το αρχείο index.d.cts
-  // readonly voteState: VOTE_STATE;
-
-  // Τα αντίστοιχα πεδία πα΄ίρνουν τους τύπους τους από τους αντίστοιχους τύπους του Ledger, το οποίο γίνεται defined
-  // στο contract/index.d.cts και γίνεται import εδώ πέρα
-  // readonly votersMap: Ledger['votersMap'];
   readonly votings: Ledger['votings'];
   readonly votingOptions: Ledger['voting_options'];
   readonly votingResults: Ledger['voting_results'];
@@ -132,13 +125,5 @@ export type VoteGuardianDerivedState = {
   readonly votingNulifiers: Ledger['voting_nulifiers'];
   readonly votingOrganizers: Ledger['voting_organizers'];
 
-  /**
-   * A readonly flag that determines if the current message was posted by the current user.
-   *
-   * @remarks
-   * The `poster` property of the public (or ledger) state is the public key of the message poster, while
-   * the `secretKey` property of {@link VoteGuardianPrivateState} is the secret key of the current user. If
-   * `poster` corresponds to `secretKey`, then `isOwner` is `true`.
-   */
-  // readonly isOwner: boolean;
+  readonly votingList: Voting[];
 };

@@ -7,6 +7,7 @@ import { Contract, createVoteGuardianPrivateState, ledger, witnesses, } from '@m
 import * as utils from './utils/index.js';
 import { deployContract, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { combineLatest, map, tap, from } from 'rxjs';
+import { Voting } from './Voting.js';
 /** @internal */
 // ο τύπος Contract έρχεται από το αρχείο index.d.cts. Το witnesses έρχεται από το αρχείο witnesses.ts
 const VoteGuardianContractInstance = new Contract(witnesses);
@@ -68,14 +69,48 @@ export class VoteGuardianAPI {
         // ...and combine them to produce the required derived state.
         (ledgerState, privateState) => {
             return {
-                // voteState: VOTE_STATE,
                 votings: ledgerState.votings,
                 votingOptions: ledgerState.voting_options,
                 votingResults: ledgerState.voting_results,
                 votingStates: ledgerState.voting_states,
                 votingNulifiers: ledgerState.voting_nulifiers,
                 votingOrganizers: ledgerState.voting_organizers,
-                eligibleVoters: ledgerState.eligible_voters
+                eligibleVoters: ledgerState.eligible_voters,
+                votingList: (() => {
+                    const list = [];
+                    for (const [votingId, _question] of ledgerState.votings) {
+                        try {
+                            const votingQuestion = ledgerState.votings.lookup(votingId);
+                            const votingOrganizer = ledgerState.voting_organizers.lookup(votingId);
+                            const votingState = ledgerState.voting_states.lookup(votingId);
+                            // Voting Options
+                            const optionsMap = ledgerState.voting_options.lookup(votingId);
+                            let votingOptions = new Map();
+                            for (const [optionId, optionText] of optionsMap) {
+                                votingOptions.set(optionId, optionText);
+                            }
+                            // Voting Results
+                            const resultMap = ledgerState.voting_results.lookup(votingId);
+                            let votingResults = new Map();
+                            for (const [optionId] of optionsMap) {
+                                if (resultMap.member(optionId)) {
+                                    const count = resultMap.lookup(optionId).read();
+                                    votingResults.set(optionId, count);
+                                }
+                                else {
+                                    // Option exists but no votes yet
+                                    votingResults.set(optionId, BigInt(0));
+                                }
+                            }
+                            const voting = new Voting(votingId, votingOrganizer, votingQuestion, votingOptions, votingResults, votingState);
+                            list.push(voting);
+                        }
+                        catch (e) {
+                            console.error('Failed to build Voting instance for ID', votingId, e);
+                        }
+                    }
+                    return list;
+                })(),
             };
         });
     }
@@ -255,7 +290,7 @@ export class VoteGuardianAPI {
                         },
                     ],
                 }),
-                args: [eligibleVoterPublicKeys]
+                args: [eligibleVoterPublicKeys],
             });
             logger?.info('Passed deploy contract');
             logger?.trace({

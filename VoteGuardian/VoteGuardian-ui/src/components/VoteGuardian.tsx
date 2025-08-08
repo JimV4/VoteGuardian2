@@ -34,6 +34,8 @@ import { DeployOrJoin } from './DeployOrJoin';
 import { EditComponent } from './EditComponent';
 import crypto from 'crypto';
 import { webcrypto } from 'crypto';
+import { useNavigate } from 'react-router-dom';
+import { toHex } from '@midnight-ntwrk/midnight-js-utils';
 
 const subtle = window.crypto.subtle;
 
@@ -84,29 +86,15 @@ async function deriveSharedSecret(privateKey: CryptoKey, theirPublicKey: CryptoK
   return new Uint8Array(await subtle.deriveBits({ name: 'ECDH', public: theirPublicKey }, privateKey, 256));
 }
 
-/**
- * Provides the UI for a deployed bulletin voteGuardian contract; allowing messages to be posted or removed
- * following the rules enforced by the underlying Compact contract.
- *
- * @remarks
- * With no `voteGuardianDeployment$` observable, the component will render a UI that allows the user to create
- * or join bulletin voteGuardians. It requires a `<DeployedVoteGuardianProvider />` to be in scope in order to manage
- * these additional voteGuardians. It does this by invoking the `resolve(...)` method on the currently in-
- * scope `DeployedVoteGuardianContext`.
- *
- * When a `voteGuardianDeployment$` observable is received, the component begins by rendering a skeletal view of
- * itself, along with a loading background. It does this until the voteGuardian deployment receives a
- * `DeployedVoteGuardianAPI` instance, upon which it will then subscribe to its `state$` observable in order
- * to start receiving the changes in the bulletin voteGuardian state (i.e., when a user posts a new message).
- */
 export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardianDeployment$ }) => {
   const voteGuardianApiProvider = useDeployedVoteGuardianContext();
   const [voteGuardianDeployment, setVoteGuardianDeployment] = useState<VoteGuardianDeployment>();
   const [deployedVoteGuardianAPI, setDeployedVoteGuardianAPI] = useState<DeployedVoteGuardianAPI>();
-  const [messagePrompt, setMessagePrompt] = useState<string>();
   const [isWorking, setIsWorking] = useState(!!voteGuardianDeployment$);
   const [errorMessage, setErrorMessage] = useState<string>();
   const [voteGuardianState, setVoteGuardianState] = useState<VoteGuardianDerivedState>();
+
+  const navigate = useNavigate();
 
   // Subscribes to the `voteGuardianDeployment$` observable so that we can receive updates on the deployment.
   useEffect(() => {
@@ -161,34 +149,55 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
   }, [deployedVoteGuardianAPI]);
 
   return (
-    <div style={{ transform: 'scale(1.2)', transformOrigin: 'top left' }}>
-      <Card
-        sx={{ position: 'relative', width: 460, maxHeight: 495, minWidth: 460, minHeight: 495, overflowY: 'auto' }}
-        color="primary"
-      >
-        <Backdrop
-          sx={{
-            position: 'absolute',
-            color: '#fff',
-            width: '100%', // Full width of the Card
-            height: '100%',
-            zIndex: (theme) => theme.zIndex.drawer + 1,
-          }}
-          open={isWorking}
-        >
-          <CircularProgress data-testid="vote-guardian-working-indicator" />
-        </Backdrop>
-        <Backdrop
-          sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-          open={!!errorMessage}
-        >
-          <StopIcon fontSize="large" />
-          <Typography component="div" data-testid="vote-guardian-error-message">
-            {errorMessage}
-          </Typography>
-        </Backdrop>
-      </Card>
-    </div>
+    <CardContent>
+      {voteGuardianState?.votingList?.length ? (
+        <Stack spacing={2}>
+          {voteGuardianState.votingList.map((voting) => (
+            <Card key={toHex(voting.votingId)} variant="outlined" sx={{ p: 1 }}>
+              <CardHeader
+                title={
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ cursor: 'pointer', color: 'primary.main' }}
+                    onClick={() => navigate(`/voting/${toHex(voting.votingId)}`)} // ⬅️ navigate to voting page
+                  >
+                    Voting ID: {toHex(voting.votingId)}
+                  </Typography>
+                }
+                subheader={
+                  <Typography variant="body2" color="text.secondary">
+                    {voting.votingQuestion}
+                  </Typography>
+                }
+              />
+            </Card>
+          ))}
+          <Backdrop
+            sx={{
+              position: 'absolute',
+              color: '#fff',
+              width: '100%', // Full width of the Card
+              height: '100%',
+              zIndex: (theme) => theme.zIndex.drawer + 1,
+            }}
+            open={isWorking}
+          >
+            <CircularProgress data-testid="vote-guardian-working-indicator" />
+          </Backdrop>
+          <Backdrop
+            sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+            open={!!errorMessage}
+          >
+            <StopIcon fontSize="large" />
+            <Typography component="div" data-testid="vote-guardian-error-message">
+              {errorMessage}
+            </Typography>
+          </Backdrop>
+        </Stack>
+      ) : (
+        <Typography>No votings available.</Typography>
+      )}
+    </CardContent>
   );
 };
 
