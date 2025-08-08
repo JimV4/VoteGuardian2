@@ -5,8 +5,7 @@ import { useDeployedVoteGuardianContext } from './hooks';
 import { type VoteGuardianDeployment } from './contexts';
 import { type Observable } from 'rxjs';
 import { useLocation } from 'react-router-dom';
-import { VoteGuardianVoter } from './components/VoteGuardianVoter';
-import { DhSecretKeyProvider } from './contexts/DhSecretKeyContext';
+
 /**
  * The root bulletin VoteGuardian application component.
  *
@@ -36,20 +35,15 @@ const App: React.FC = () => {
       <MainLayout>
         {VoteGuardianDeployments.length > 0 && (
           <div data-testid="VoteGuardian-0">
-            {isOrganizer === 'yes' && (
-              <VoteGuardian voteGuardianDeployment$={VoteGuardianDeployments[0]} isOrganizer={isOrganizer} />
-            )}
-            {isOrganizer === 'no' && (
-              <VoteGuardianVoter voteGuardianDeployment$={VoteGuardianDeployments[0]} isOrganizer={isOrganizer} />
-            )}
+            <VoteGuardian voteGuardianDeployment$={VoteGuardianDeployments[0]} />
           </div>
         )}
-        {VoteGuardianDeployments.length === 0 && (
+        {/* {VoteGuardianDeployments.length === 0 && (
           <div data-testid="VoteGuardian-start">
             {isOrganizer === 'yes' && <VoteGuardian isOrganizer={isOrganizer} />}
             {isOrganizer === 'no' && <VoteGuardianVoter isOrganizer={isOrganizer} />}
           </div>
-        )}
+        )} */}
       </MainLayout>
     </Box>
   );

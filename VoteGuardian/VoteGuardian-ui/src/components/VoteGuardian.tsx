@@ -45,7 +45,6 @@ const serverUrl = process.env.REACT_APP_API_URL;
 export interface VoteGuardianProps {
   /** The observable bulletin voteGuardian deployment. */
   voteGuardianDeployment$?: Observable<VoteGuardianDeployment>;
-  isOrganizer: string;
 }
 
 function base64ToArrayBuffer(base64: string): ArrayBuffer {

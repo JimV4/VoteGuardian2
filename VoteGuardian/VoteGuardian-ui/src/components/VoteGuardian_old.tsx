@@ -43,7 +43,6 @@ const serverUrl = process.env.REACT_APP_API_URL;
 export interface VoteGuardianProps {
   /** The observable bulletin voteGuardian deployment. */
   voteGuardianDeployment$?: Observable<VoteGuardianDeployment>;
-  isOrganizer: string;
 }
 
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
@@ -99,7 +98,7 @@ async function deriveSharedSecret(privateKey: CryptoKey, theirPublicKey: CryptoK
  * `DeployedVoteGuardianAPI` instance, upon which it will then subscribe to its `state$` observable in order
  * to start receiving the changes in the bulletin voteGuardian state (i.e., when a user posts a new message).
  */
-export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardianDeployment$, isOrganizer }) => {
+export const VoteGuardiandd: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardianDeployment$, isOrganizer }) => {
   const voteGuardianApiProvider = useDeployedVoteGuardianContext();
   const [voteGuardianDeployment, setVoteGuardianDeployment] = useState<VoteGuardianDeployment>();
   const [deployedVoteGuardianAPI, setDeployedVoteGuardianAPI] = useState<DeployedVoteGuardianAPI>();
