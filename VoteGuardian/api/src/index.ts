@@ -27,6 +27,7 @@ import * as utils from './utils/index.js';
 import { deployContract, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { combineLatest, map, tap, from, type Observable } from 'rxjs';
 import { toHex } from '@midnight-ntwrk/midnight-js-utils';
+import { Voting } from './Voting.js';
 
 /** @internal */
 // ο τύπος Contract έρχεται από το αρχείο index.d.cts. Το witnesses έρχεται από το αρχείο witnesses.ts
@@ -112,7 +113,6 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       ],
       // ...and combine them to produce the required derived state.
       (ledgerState, privateState) => {
-
         return {
           // voteState: VOTE_STATE,
           votings: ledgerState.votings,
@@ -121,7 +121,52 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
           votingStates: ledgerState.voting_states,
           votingNulifiers: ledgerState.voting_nulifiers,
           votingOrganizers: ledgerState.voting_organizers,
-          eligibleVoters: ledgerState.eligible_voters
+          eligibleVoters: ledgerState.eligible_voters,
+          votingList: (() => {
+            const list: Voting[] = [];
+            for (const [votingId, _question] of ledgerState.votings) {
+              try {
+                const votingQuestion = ledgerState.votings.lookup(votingId);
+                const votingOrganizer = ledgerState.voting_organizers.lookup(votingId);
+                const votingState = ledgerState.voting_states.lookup(votingId);
+
+                // Voting Options
+                const optionsMap = ledgerState.voting_options.lookup(votingId);
+
+                let votingOptions = new Map<string, string>();
+                for (const [optionId, optionText] of optionsMap) {
+                  votingOptions.set(optionId, optionText);
+                }
+
+                // Voting Results
+                const resultMap = ledgerState.voting_results.lookup(votingId);
+
+                let votingResults = new Map<string, bigint>();
+                for (const [optionId] of optionsMap) {
+                  if (resultMap.member(optionId)) {
+                    const count = resultMap.lookup(optionId).read();
+                    votingResults.set(optionId, count);
+                  } else {
+                    // Option exists but no votes yet
+                    votingResults.set(optionId, BigInt(0));
+                  }
+                }
+                const voting = new Voting(
+                  votingId,
+                  votingOrganizer,
+                  votingQuestion,
+                  votingOptions,
+                  votingResults,
+                  votingState,
+                );
+
+                list.push(voting);
+              } catch (e) {
+                console.error('Failed to build Voting instance for ID', votingId, e);
+              }
+            }
+            return list;
+          })(),
         };
       },
     );
@@ -138,7 +183,6 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
    */
   readonly state$: Observable<VoteGuardianDerivedState>;
 
- 
   async add_option(voting_id: Uint8Array, vote_option: string, index: string): Promise<void> {
     try {
       this.logger?.info(`added option: ${vote_option}`);
@@ -305,7 +349,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
     providers: VoteGuardianProviders,
     secretKey: string,
     eligibleVoterPublicKeys: Uint8Array[],
-    logger?: Logger
+    logger?: Logger,
   ): Promise<VoteGuardianAPI | null> {
     try {
       logger?.info('deployContract');
@@ -316,20 +360,17 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       const DeployedVoteGuardianContract = await deployContract(providers, {
         privateStateId: 'voteGuardianPrivateState',
         contract: VoteGuardianContractInstance,
-        initialPrivateState: createVoteGuardianPrivateState(
-          utils.hexToBytes(secretKey),
-          {
-            leaf: new Uint8Array(32),
-            path: [
-              {
-                sibling: { field: BigInt(0) },
-                goes_left: false,
-              },
-            ],
-          }
-        ),
-        args: [eligibleVoterPublicKeys]
-     });
+        initialPrivateState: createVoteGuardianPrivateState(utils.hexToBytes(secretKey), {
+          leaf: new Uint8Array(32),
+          path: [
+            {
+              sibling: { field: BigInt(0) },
+              goes_left: false,
+            },
+          ],
+        }),
+        args: [eligibleVoterPublicKeys],
+      });
 
       logger?.info('Passed deploy contract');
 
