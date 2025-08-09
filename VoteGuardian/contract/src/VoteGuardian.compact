@@ -8,8 +8,9 @@ export ledger count: Counter;
 // Public key of the university
 export ledger university_public_key: Bytes<32>;
 
-export ledger votings: Map<Bytes<32>, Opaque<"string">>;                // Map with the votings ids and the question of each voting
+export ledger votings: Set<Bytes<32>>;                // Map with the votings ids and the question of each voting
 export ledger voting_options: Map<Bytes<32>, Map<Opaque<"string">, Opaque<"string">>>; // Map with the options of each question of each voting;
+export ledger voting_questions: Map<Bytes<32>, Opaque<"string">>;
 export ledger voting_results: Map<Bytes<32>, Map<Opaque<"string">, Counter>>;        // Map with a list of votes for each voting
 export ledger eligible_voters: HistoricMerkleTree<5, Bytes<32>>;      // Merkle tree of eligible voters
 export ledger voting_states: Map<Bytes<32>, VOTE_STATE>;                // Map with the state of each voting
@@ -19,11 +20,13 @@ export ledger voting_organizers: Map<Bytes<32>, Bytes<32>>;        // Map with t
 // Constructor initializes the ADTs and predefines eligible voters
 constructor(eligible_voter_public_keys: Vector<5, Bytes<32>>) {
     university_public_key = disclose(public_key(local_secret_key()));
+    votings.resetToDefault();
     voting_options.resetToDefault(); 
     voting_results.resetToDefault();
     voting_states.resetToDefault();
     voting_nulifiers.resetToDefault();
     voting_organizers.resetToDefault();
+    voting_questions.resetToDefault();
 
     for (const v of disclose(eligible_voter_public_keys)) {
         eligible_voters.insert(v);
@@ -57,7 +60,7 @@ circuit voting_belongs_to_organizer(voting_id: Bytes<32>, organizer_public_key: 
 }
 
 
-export circuit create_voting(voting_question: Opaque<"string">): [] {
+export circuit create_voting(): [] {
     const organizer_public_key = disclose(public_key(local_secret_key()));
 
     assert (university_public_key == organizer_public_key,
@@ -69,9 +72,21 @@ export circuit create_voting(voting_question: Opaque<"string">): [] {
     const voting_id = disclose(generate_voting_id(count, local_secret_key()));
 
     voting_organizers.insert(voting_id, organizer_public_key);
-    votings.insert(voting_id, disclose(voting_question));
+    votings.insert(voting_id);
     voting_states.insert(voting_id, VOTE_STATE.open);
     count.increment(1);
+}
+
+export circuit edit_question(voting_id: Bytes<32>, voting_question: Opaque<"string">): [] {
+    const organizer_public_key = disclose(public_key(local_secret_key()));
+    
+    assert (prove_eligibility(),
+        "Not authorized");
+
+    assert (voting_organizers.lookup(disclose(voting_id)) == organizer_public_key,
+        "Not authorized");   
+
+    voting_questions.insert(disclose(voting_id), disclose(voting_question));
 }
 
 export circuit add_option(voting_id: Bytes<32>, vote_option: Opaque<"string">, i: Opaque<"string">): [] {
@@ -96,12 +111,12 @@ export circuit close_voting(voting_id: Bytes<32>): [] {
     assert (voting_organizers.lookup(disclose(voting_id)) == organizer_public_key,
         "Not authorized");       
 
-    const current_voting_state = voting_states.lookup(organizer_public_key);
+    const current_voting_state = voting_states.lookup(disclose(voting_id));
 
     assert (current_voting_state == VOTE_STATE.open,
         "Voting phase is not open or has already closed");
     
-    voting_states.insert(organizer_public_key, VOTE_STATE.closed);
+    voting_states.insert(disclose(voting_id), VOTE_STATE.closed);
 }
 
 export circuit open_voting(voting_id: Bytes<32>): [] {
@@ -113,12 +128,12 @@ export circuit open_voting(voting_id: Bytes<32>): [] {
     assert (voting_organizers.lookup(disclose(voting_id)) == organizer_public_key,
         "Not authorized");       
 
-    const current_voting_state = voting_states.lookup(organizer_public_key);
+    const current_voting_state = voting_states.lookup(disclose(voting_id));
 
     assert (current_voting_state == VOTE_STATE.closed,
         "Voting phase is not closed or has already opened");
     
-    voting_states.insert(organizer_public_key, VOTE_STATE.open);
+    voting_states.insert(disclose(voting_id), VOTE_STATE.open);
 }
 
 

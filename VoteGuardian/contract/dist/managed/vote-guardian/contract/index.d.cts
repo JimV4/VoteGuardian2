@@ -14,7 +14,9 @@ export type Witnesses<T> = {
 }
 
 export type ImpureCircuits<T> = {
-  create_voting(context: __compactRuntime.CircuitContext<T>,
+  create_voting(context: __compactRuntime.CircuitContext<T>): __compactRuntime.CircuitResults<T, []>;
+  edit_question(context: __compactRuntime.CircuitContext<T>,
+                voting_id_0: Uint8Array,
                 voting_question_0: string): __compactRuntime.CircuitResults<T, []>;
   add_option(context: __compactRuntime.CircuitContext<T>,
              voting_id_0: Uint8Array,
@@ -33,7 +35,9 @@ export type PureCircuits = {
 }
 
 export type Circuits<T> = {
-  create_voting(context: __compactRuntime.CircuitContext<T>,
+  create_voting(context: __compactRuntime.CircuitContext<T>): __compactRuntime.CircuitResults<T, []>;
+  edit_question(context: __compactRuntime.CircuitContext<T>,
+                voting_id_0: Uint8Array,
                 voting_question_0: string): __compactRuntime.CircuitResults<T, []>;
   add_option(context: __compactRuntime.CircuitContext<T>,
              voting_id_0: Uint8Array,
@@ -54,9 +58,8 @@ export type Ledger = {
   votings: {
     isEmpty(): boolean;
     size(): bigint;
-    member(key_0: Uint8Array): boolean;
-    lookup(key_0: Uint8Array): string;
-    [Symbol.iterator](): Iterator<[Uint8Array, string]>
+    member(elem_0: Uint8Array): boolean;
+    [Symbol.iterator](): Iterator<Uint8Array>
   };
   voting_options: {
     isEmpty(): boolean;
@@ -69,6 +72,13 @@ export type Ledger = {
       lookup(key_1: string): string;
       [Symbol.iterator](): Iterator<[string, string]>
     }
+  };
+  voting_questions: {
+    isEmpty(): boolean;
+    size(): bigint;
+    member(key_0: Uint8Array): boolean;
+    lookup(key_0: Uint8Array): string;
+    [Symbol.iterator](): Iterator<[Uint8Array, string]>
   };
   voting_results: {
     isEmpty(): boolean;

@@ -47,7 +47,8 @@ export interface DeployedVoteGuardianAPI {
   cast_vote: (voting_id: Uint8Array, encrypted_vote: string) => Promise<void>;
   close_voting: (voting_id: Uint8Array) => Promise<void>;
   open_voting: (voting_id: Uint8Array) => Promise<void>;
-  create_voting: (vote_question: string) => Promise<void>;
+  edit_question: (voting_id: Uint8Array, vote_question: string) => Promise<void>;
+  create_voting: () => Promise<void>;
   add_option: (voting_id: Uint8Array, vote_option: string, index: string) => Promise<void>;
 }
 
@@ -115,6 +116,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       (ledgerState, privateState) => {
         return {
           votings: ledgerState.votings,
+          votingQuestions: ledgerState.voting_questions,
           votingOptions: ledgerState.voting_options,
           votingResults: ledgerState.voting_results,
           votingStates: ledgerState.voting_states,
@@ -123,9 +125,9 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
           eligibleVoters: ledgerState.eligible_voters,
           votingList: (() => {
             const list: Voting[] = [];
-            for (const [votingId, _question] of ledgerState.votings) {
+            for (const votingId of ledgerState.votings) {
               try {
-                const votingQuestion = ledgerState.votings.lookup(votingId);
+                const votingQuestion = ledgerState.voting_questions.lookup(votingId);
                 const votingOrganizer = ledgerState.voting_organizers.lookup(votingId);
                 const votingState = ledgerState.voting_states.lookup(votingId);
 
@@ -181,6 +183,31 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
    * and private state data.
    */
   readonly state$: Observable<VoteGuardianDerivedState>;
+
+  async create_voting(): Promise<void> {
+    try {
+      const txData = await this.deployedContract.callTx.create_voting();
+
+      this.logger?.trace({
+        transactionAdded: {
+          circuit: 'create_voting',
+          txHash: txData.public.txHash,
+          blockHeight: txData.public.blockHeight,
+        },
+      });
+    } catch (error) {
+      console.log('eeeeeeeeeeeeeeee');
+      console.log((error as Error).message);
+      console.log((error as Error).stack);
+      console.log(error);
+      // Log the full exception, including stack trace if available.
+      this.logger?.error('Error casting a vote', {
+        message: (error as Error).message,
+        stack: (error as Error).stack,
+        details: error, // Capture additional details if the error is a custom object.
+      });
+    }
+  }
 
   async add_option(voting_id: Uint8Array, vote_option: string, index: string): Promise<void> {
     try {
@@ -289,14 +316,14 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
     });
   }
 
-  async create_voting(vote_question: string): Promise<void> {
+  async edit_question(voting_id: Uint8Array, vote_question: string): Promise<void> {
     try {
       this.logger?.info(`vote question: ${vote_question}`);
-      const txData = await this.deployedContract.callTx.create_voting(vote_question);
+      const txData = await this.deployedContract.callTx.edit_question(voting_id, vote_question);
 
       this.logger?.trace({
         transactionAdded: {
-          circuit: 'create_voting',
+          circuit: 'edit_question',
           txHash: txData.public.txHash,
           blockHeight: txData.public.blockHeight,
         },

@@ -11,7 +11,6 @@ import ReactDOM from 'react-dom/client';
 import { ThemeProvider } from '@mui/material';
 import { setNetworkId, NetworkId } from '@midnight-ntwrk/midnight-js-network-id';
 import App from './App';
-import { LoginComponent } from './components/LoginComponent';
 import CssBaseline from '@mui/material/CssBaseline';
 import { theme } from './config/theme';
 import '@midnight-ntwrk/dapp-connector-api';
@@ -20,6 +19,7 @@ import { DeployedVoteGuardianProvider } from './contexts';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { MainLayout } from './components';
 import { DhSecretKeyProvider } from './contexts/DhSecretKeyContext';
+import { JoinContract } from './components/JoinContract';
 
 const networkId = import.meta.env.VITE_NETWORK_ID as NetworkId;
 // Ensure that the network IDs are set within the Midnight libraries.
@@ -40,24 +40,14 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       <BrowserRouter>
         <Routes>
           <Route
-            path="/login"
-            element={
-              <MainLayout>
-                <LoginComponent />
-              </MainLayout>
-            }
-          />
-          <Route
             path="/home"
             element={
-              <DhSecretKeyProvider>
-                <DeployedVoteGuardianProvider logger={logger}>
-                  <App />
-                </DeployedVoteGuardianProvider>
-              </DhSecretKeyProvider>
+              <DeployedVoteGuardianProvider logger={logger}>
+                <App />
+              </DeployedVoteGuardianProvider>
             }
           />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

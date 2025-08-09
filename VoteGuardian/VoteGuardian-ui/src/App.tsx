@@ -1,10 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Box } from '@mui/material';
 import { MainLayout, VoteGuardian } from './components';
 import { useDeployedVoteGuardianContext } from './hooks';
 import { type VoteGuardianDeployment } from './contexts';
 import { type Observable } from 'rxjs';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { JoinContract } from './components/JoinContract';
+import { ContractAddress } from '@midnight-ntwrk/compact-runtime';
+import { Voting } from '@midnight-ntwrk/vote-guardian-api/dist/Voting';
 
 /**
  * The root bulletin VoteGuardian application component.
@@ -19,6 +23,8 @@ const App: React.FC = () => {
   const VoteGuardianApiProvider = useDeployedVoteGuardianContext();
   const [VoteGuardianDeployments, setVoteGuardianDeployments] = useState<Array<Observable<VoteGuardianDeployment>>>([]);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     const subscription = VoteGuardianApiProvider.voteGuardianDeployments$.subscribe(setVoteGuardianDeployments);
 
@@ -27,23 +33,39 @@ const App: React.FC = () => {
     };
   }, [VoteGuardianApiProvider]);
 
-  const location = useLocation();
-  const isOrganizer = location.state?.isOrganizer;
-  console.log(isOrganizer);
+  const onJoinVoteGuardian = useCallback(
+    (contractAddress: ContractAddress, secretKey: string) => {
+      VoteGuardianApiProvider.resolve(contractAddress, secretKey);
+      navigate('/home/votings');
+    },
+    [VoteGuardianApiProvider, navigate],
+  );
+
   return (
     <Box sx={{ background: '#000', minHeight: '100vh' }}>
       <MainLayout>
-        {VoteGuardianDeployments.length > 0 && (
-          <div data-testid="VoteGuardian-0">
-            <VoteGuardian voteGuardianDeployment$={VoteGuardianDeployments[0]} />
-          </div>
-        )}
-        {/* {VoteGuardianDeployments.length === 0 && (
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<JoinContract onJoinVoteGuardianCallback={onJoinVoteGuardian} />} />
+            <Route
+              path="/votings"
+              element={
+                VoteGuardianDeployments.length > 0 && (
+                  <div data-testid="VoteGuardian-0">
+                    <VoteGuardian voteGuardianDeployment$={VoteGuardianDeployments[0]} />
+                  </div>
+                )
+              }
+            />
+            <Route path="/votings/:votingId" element={<Voting />} />
+            {/* {VoteGuardianDeployments.length === 0 && (
           <div data-testid="VoteGuardian-start">
             {isOrganizer === 'yes' && <VoteGuardian isOrganizer={isOrganizer} />}
             {isOrganizer === 'no' && <VoteGuardianVoter isOrganizer={isOrganizer} />}
           </div>
         )} */}
+          </Routes>
+        </BrowserRouter>
       </MainLayout>
     </Box>
   );

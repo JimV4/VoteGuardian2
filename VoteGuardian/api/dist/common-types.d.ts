@@ -59,6 +59,7 @@ export type DeployedVoteGuardianContract = FoundContract<VoteGuardianContract>;
  */
 export type VoteGuardianDerivedState = {
     readonly votings: Ledger['votings'];
+    readonly votingQuestions: Ledger['voting_questions'];
     readonly votingOptions: Ledger['voting_options'];
     readonly votingResults: Ledger['voting_results'];
     readonly eligibleVoters: Ledger['eligible_voters'];

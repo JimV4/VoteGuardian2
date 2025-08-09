@@ -4,6 +4,24 @@
       "name": "create_voting",
       "pure": false,
       "arguments": [
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "edit_question",
+      "pure": false,
+      "arguments": [
+        {
+          "name": "voting_id",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
         {
           "name": "voting_question",
           "type": {

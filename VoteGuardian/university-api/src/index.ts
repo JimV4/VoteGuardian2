@@ -572,7 +572,7 @@ export const run = async (config: Config, logger: Logger, dockerEnv?: DockerComp
 
         // provider για τα zk proofs. Δίνει το path όπου βρίσκονται τα keys και τα circuits
         zkConfigProvider: new NodeZkConfigProvider<
-          'cast_vote' | 'close_voting' | 'create_voting' | 'add_option' | 'open_voting'
+          'cast_vote' | 'close_voting' | 'create_voting' | 'add_option' | 'open_voting' | 'edit_question'
         >(config.zkConfigPath),
         proofProvider: httpClientProofProvider(config.proofServer),
         walletProvider: walletAndMidnightProvider,
