@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Box } from '@mui/material';
-import { MainLayout, VoteGuardian } from './components';
+import { MainLayout, VoteGuardian, Voting } from './components';
 import { useDeployedVoteGuardianContext } from './hooks';
 import { type VoteGuardianDeployment } from './contexts';
 import { type Observable } from 'rxjs';
@@ -8,7 +8,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { JoinContract } from './components/JoinContract';
 import { ContractAddress } from '@midnight-ntwrk/compact-runtime';
-import { Voting } from '@midnight-ntwrk/vote-guardian-api/dist/Voting';
 
 /**
  * The root bulletin VoteGuardian application component.
@@ -57,7 +56,10 @@ const App: React.FC = () => {
                 )
               }
             />
-            <Route path="/votings/:votingId" element={<Voting />} />
+            <Route
+              path="/votings/:votingId"
+              element={<Voting voteGuardianDeployment$={VoteGuardianDeployments[0]} />}
+            />
             {/* {VoteGuardianDeployments.length === 0 && (
           <div data-testid="VoteGuardian-start">
             {isOrganizer === 'yes' && <VoteGuardian isOrganizer={isOrganizer} />}

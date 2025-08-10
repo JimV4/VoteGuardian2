@@ -158,7 +158,11 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                   <Typography
                     variant="subtitle2"
                     sx={{ cursor: 'pointer', color: 'primary.main' }}
-                    onClick={() => navigate(`/voting/${toHex(voting.votingId)}`)} // ⬅️ navigate to voting page
+                    onClick={() =>
+                      navigate(`/voting/${toHex(voting.votingId)}`, {
+                        state: voting,
+                      })
+                    }
                   >
                     Voting ID: {toHex(voting.votingId)}
                   </Typography>
