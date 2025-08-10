@@ -35,7 +35,7 @@ const App: React.FC = () => {
   const onJoinVoteGuardian = useCallback(
     (contractAddress: ContractAddress, secretKey: string) => {
       VoteGuardianApiProvider.resolve(contractAddress, secretKey);
-      navigate('/home/votings');
+      navigate('/home/viewCreate');
     },
     [VoteGuardianApiProvider, navigate],
   );
@@ -56,6 +56,7 @@ const App: React.FC = () => {
                 )
               }
             />
+            <Route path="/viewCreate" element={ViewVotingsCreateVoting} />
             <Route
               path="/votings/:votingId"
               element={<Voting voteGuardianDeployment$={VoteGuardianDeployments[0]} />}
