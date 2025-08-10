@@ -38,17 +38,9 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <CssBaseline />
     <ThemeProvider theme={theme}>
       <BrowserRouter>
-        <Routes>
-          <Route
-            path="/home"
-            element={
-              <DeployedVoteGuardianProvider logger={logger}>
-                <App />
-              </DeployedVoteGuardianProvider>
-            }
-          />
-          <Route path="*" element={<Navigate to="/home" replace />} />
-        </Routes>
+        <DeployedVoteGuardianProvider logger={logger}>
+          <App />
+        </DeployedVoteGuardianProvider>
       </BrowserRouter>
     </ThemeProvider>
   </React.StrictMode>,

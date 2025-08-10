@@ -27,12 +27,7 @@ import { VoteGuardianDerivedState, type DeployedVoteGuardianAPI } from '@midnigh
 import { useDeployedVoteGuardianContext } from '../hooks';
 import { type VoteGuardianDeployment } from '../contexts';
 import { type Observable } from 'rxjs';
-import { VOTE_STATE } from '@midnight-ntwrk/vote-guardian-contract';
-import { EmptyCardContent } from './VoteGuardian.EmptyCardContent';
-import { utils } from '@midnight-ntwrk/vote-guardian-api';
-import { DeployOrJoin } from './DeployOrJoin';
-import { EditComponent } from './EditComponent';
-import crypto from 'crypto';
+
 import { webcrypto } from 'crypto';
 import { useNavigate } from 'react-router-dom';
 import { toHex } from '@midnight-ntwrk/midnight-js-utils';

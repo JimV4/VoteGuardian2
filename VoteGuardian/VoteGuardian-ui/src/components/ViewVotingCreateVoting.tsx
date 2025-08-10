@@ -23,7 +23,7 @@ export const ViewVotingsCreateVoting: React.FC<Readonly<ViewVotingsCreateVotingP
   const [deployedVoteGuardianAPI, setDeployedVoteGuardianAPI] = useState<DeployedVoteGuardianAPI>();
   const [voteGuardianState, setVoteGuardianState] = useState<VoteGuardianDerivedState>();
 
-  const [isWorking, setIsWorking] = useState(!!voteGuardianDeployment$);
+  const [isWorking, setIsWorking] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
   const navigate = useNavigate();
 
@@ -31,6 +31,7 @@ export const ViewVotingsCreateVoting: React.FC<Readonly<ViewVotingsCreateVotingP
     setIsWorking(true);
     try {
       if (deployedVoteGuardianAPI) {
+        console.log('before vreate');
         setIsWorking(true);
         await deployedVoteGuardianAPI.create_voting();
         navigate('/votings');

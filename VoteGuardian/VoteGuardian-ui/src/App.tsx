@@ -8,6 +8,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { JoinContract } from './components/JoinContract';
 import { ContractAddress } from '@midnight-ntwrk/compact-runtime';
+import { ViewVotingsCreateVoting } from './components/ViewVotingCreateVoting';
 
 /**
  * The root bulletin VoteGuardian application component.
@@ -21,6 +22,7 @@ import { ContractAddress } from '@midnight-ntwrk/compact-runtime';
 const App: React.FC = () => {
   const VoteGuardianApiProvider = useDeployedVoteGuardianContext();
   const [VoteGuardianDeployments, setVoteGuardianDeployments] = useState<Array<Observable<VoteGuardianDeployment>>>([]);
+  const [voteGuardianDeployment$, setVoteGuardianDeployment$] = useState<Observable<VoteGuardianDeployment>>();
 
   const navigate = useNavigate();
 
@@ -34,8 +36,10 @@ const App: React.FC = () => {
 
   const onJoinVoteGuardian = useCallback(
     (contractAddress: ContractAddress, secretKey: string) => {
-      VoteGuardianApiProvider.resolve(contractAddress, secretKey);
-      navigate('/home/viewCreate');
+      console.log(`address: ${contractAddress}`);
+      const deployment$ = VoteGuardianApiProvider.resolve(contractAddress, secretKey);
+      setVoteGuardianDeployment$(deployment$);
+      navigate('/viewCreate');
     },
     [VoteGuardianApiProvider, navigate],
   );
@@ -43,32 +47,22 @@ const App: React.FC = () => {
   return (
     <Box sx={{ background: '#000', minHeight: '100vh' }}>
       <MainLayout>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<JoinContract onJoinVoteGuardianCallback={onJoinVoteGuardian} />} />
-            <Route
-              path="/votings"
-              element={
-                VoteGuardianDeployments.length > 0 && (
-                  <div data-testid="VoteGuardian-0">
-                    <VoteGuardian voteGuardianDeployment$={VoteGuardianDeployments[0]} />
-                  </div>
-                )
-              }
-            />
-            <Route path="/viewCreate" element={ViewVotingsCreateVoting} />
-            <Route
-              path="/votings/:votingId"
-              element={<Voting voteGuardianDeployment$={VoteGuardianDeployments[0]} />}
-            />
-            {/* {VoteGuardianDeployments.length === 0 && (
-          <div data-testid="VoteGuardian-start">
-            {isOrganizer === 'yes' && <VoteGuardian isOrganizer={isOrganizer} />}
-            {isOrganizer === 'no' && <VoteGuardianVoter isOrganizer={isOrganizer} />}
-          </div>
-        )} */}
-          </Routes>
-        </BrowserRouter>
+        <Routes>
+          <Route path="/" element={<JoinContract onJoinVoteGuardianCallback={onJoinVoteGuardian} />} />
+          <Route
+            path="/votings"
+            element={
+              <div data-testid="VoteGuardian-0">
+                <VoteGuardian voteGuardianDeployment$={voteGuardianDeployment$} />
+              </div>
+            }
+          />
+          <Route
+            path="/viewCreate"
+            element={<ViewVotingsCreateVoting voteGuardianDeployment$={voteGuardianDeployment$} />}
+          />
+          <Route path="/votings/:votingId" element={<Voting voteGuardianDeployment$={voteGuardianDeployment$} />} />
+        </Routes>
       </MainLayout>
     </Box>
   );

@@ -123,8 +123,6 @@ export interface DeployedVoteGuardianAPIProvider {
 
   getWalletPublicKey: () => Promise<string>;
 
-  displayPublicPaymentMap: (contractAddress: ContractAddress) => Promise<void>;
-
   setPrivateStateSecretKey: (newSecretKey: string) => Promise<void>;
 }
 
@@ -149,6 +147,8 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
     this.voteGuardianDeployments$ = this.#voteGuardianDeploymentsSubject;
   }
 
+  // displayPublicPaymentMap: (contractAddress: ContractAddress) => Promise<void>;
+
   /** @inheritdoc */
   readonly voteGuardianDeployments$: Observable<Array<Observable<VoteGuardianDeployment>>>;
 
@@ -172,10 +172,11 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
     if (contractAddress) {
       console.log('joinC');
       void this.joinDeployment(deployment, contractAddress, secretKey!);
-    } else {
-      console.log('deployC');
-      void this.deployDeployment(deployment, secretKey!);
     }
+    // } else {
+    //   console.log('deployC');
+    //   void this.deployDeployment(deployment, secretKey!);
+    // }
 
     this.#voteGuardianDeploymentsSubject.next([...deployments, deployment]);
 
@@ -204,20 +205,6 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
 
       if (existingPrivateState) {
         await providers.privateStateProvider.set('voteGuardianPrivateState', newPrivateState);
-      }
-    }
-  }
-
-  async displayPublicPaymentMap(contractAddress: ContractAddress): Promise<void> {
-    const providers = await this.getProviders();
-    const ledgerState = await getVoteGuardianLedgerState(providers, contractAddress);
-    if (providers !== undefined) {
-      if (ledgerState == null) {
-        console.log('no ledger state');
-      } else {
-        for (const [key, value] of ledgerState.mapPublicPayment) {
-          console.log(`Public Payment Key: ${toHex(key)}. Public Key: ${toHex(value)}.`);
-        }
       }
     }
   }
@@ -257,57 +244,57 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
     return this.#initializedProviders ?? (this.#initializedProviders = initializeProviders(this.logger));
   }
 
-  private async deployDeployment(
-    deployment: BehaviorSubject<VoteGuardianDeployment>,
-    secretKey: string,
-  ): Promise<void> {
-    try {
-      console.log('here2 deploy');
-      console.log(`secretKey: ${secretKey}`);
-      const providers = await this.getProviders();
-      const api = await VoteGuardianAPI.deploy(providers, secretKey, this.logger);
+  // private async deployDeployment(
+  //   deployment: BehaviorSubject<VoteGuardianDeployment>,
+  //   secretKey: string,
+  // ): Promise<void> {
+  //   try {
+  //     console.log('here2 deploy');
+  //     console.log(`secretKey: ${secretKey}`);
+  //     const providers = await this.getProviders();
+  //     const api = await VoteGuardianAPI.deploy(providers, secretKey, this.logger);
 
-      if (api == null) {
-        throw new Error();
-      } else {
-        console.log(api.deployedContractAddress);
-        deployment.next({
-          status: 'deployed',
-          api,
-        });
-        // Send request to the server with the pair address, secret key
-        try {
-          const response = await fetch('http://localhost:3000/storeKeyAddress', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              contract_address: api.deployedContractAddress,
-              shared_secret: secretKey,
-            }),
-          });
+  //     if (api == null) {
+  //       throw new Error();
+  //     } else {
+  //       console.log(api.deployedContractAddress);
+  //       deployment.next({
+  //         status: 'deployed',
+  //         api,
+  //       });
+  //       // Send request to the server with the pair address, secret key
+  //       try {
+  //         const response = await fetch('http://localhost:3000/storeKeyAddress', {
+  //           method: 'POST',
+  //           headers: {
+  //             'Content-Type': 'application/json',
+  //           },
+  //           body: JSON.stringify({
+  //             contract_address: api.deployedContractAddress,
+  //             shared_secret: secretKey,
+  //           }),
+  //         });
 
-          if (response.ok) {
-            const data = await response.json();
-          } else {
-            const error = await response.json();
-          }
-        } catch (err) {
-          console.error(err);
-        }
-        // End request
+  //         if (response.ok) {
+  //           const data = await response.json();
+  //         } else {
+  //           const error = await response.json();
+  //         }
+  //       } catch (err) {
+  //         console.error(err);
+  //       }
+  //       // End request
 
-        await this.setPrivateStateSecretKey(secretKey);
-      }
-    } catch (error: unknown) {
-      console.error('Deployment failed:', error);
-      deployment.next({
-        status: 'failed',
-        error: error instanceof Error ? error : new Error(String(error)),
-      });
-    }
-  }
+  //       await this.setPrivateStateSecretKey(secretKey);
+  //     }
+  //   } catch (error: unknown) {
+  //     console.error('Deployment failed:', error);
+  //     deployment.next({
+  //       status: 'failed',
+  //       error: error instanceof Error ? error : new Error(String(error)),
+  //     });
+  //   }
+  // }
 
   private async joinDeployment(
     deployment: BehaviorSubject<VoteGuardianDeployment>,
