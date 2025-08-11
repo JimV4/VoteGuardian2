@@ -27,6 +27,7 @@ constructor(eligible_voter_public_keys: Vector<5, Bytes<32>>) {
     voting_nulifiers.resetToDefault();
     voting_organizers.resetToDefault();
     voting_questions.resetToDefault();
+    count.increment(1);
 
     for (const v of disclose(eligible_voter_public_keys)) {
         eligible_voters.insert(v);
@@ -63,7 +64,7 @@ circuit voting_belongs_to_organizer(voting_id: Bytes<32>, organizer_public_key: 
 export circuit create_voting(): [] {
     const organizer_public_key = disclose(public_key(local_secret_key()));
 
-    assert (university_public_key == organizer_public_key,
+    assert (university_public_key != organizer_public_key,
         "University cannot create votings");
 
     assert (prove_eligibility(), 

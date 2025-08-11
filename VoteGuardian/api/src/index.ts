@@ -123,51 +123,52 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
           votingNulifiers: ledgerState.voting_nulifiers,
           votingOrganizers: ledgerState.voting_organizers,
           eligibleVoters: ledgerState.eligible_voters,
-          votingList: (() => {
-            const list: Voting[] = [];
-            for (const votingId of ledgerState.votings) {
-              try {
-                const votingQuestion = ledgerState.voting_questions.lookup(votingId);
-                const votingOrganizer = ledgerState.voting_organizers.lookup(votingId);
-                const votingState = ledgerState.voting_states.lookup(votingId);
+          votingList: [],
+          // votingList: (() => {
+          //   const list: Voting[] = [];
+          //   for (const votingId of ledgerState.votings) {
+          //     try {
+          //       const votingQuestion = ledgerState.voting_questions.lookup(votingId);
+          //       const votingOrganizer = ledgerState.voting_organizers.lookup(votingId);
+          //       const votingState = ledgerState.voting_states.lookup(votingId);
 
-                // Voting Options
-                const optionsMap = ledgerState.voting_options.lookup(votingId);
+          //       // Voting Options
+          //       const optionsMap = ledgerState.voting_options.lookup(votingId);
 
-                let votingOptions = new Map<string, string>();
-                for (const [optionId, optionText] of optionsMap) {
-                  votingOptions.set(optionId, optionText);
-                }
+          //       let votingOptions = new Map<string, string>();
+          //       for (const [optionId, optionText] of optionsMap) {
+          //         votingOptions.set(optionId, optionText);
+          //       }
 
-                // Voting Results
-                const resultMap = ledgerState.voting_results.lookup(votingId);
+          //       // Voting Results
+          //       const resultMap = ledgerState.voting_results.lookup(votingId);
 
-                let votingResults = new Map<string, bigint>();
-                for (const [optionId] of optionsMap) {
-                  if (resultMap.member(optionId)) {
-                    const count = resultMap.lookup(optionId).read();
-                    votingResults.set(optionId, count);
-                  } else {
-                    // Option exists but no votes yet
-                    votingResults.set(optionId, BigInt(0));
-                  }
-                }
-                const voting = new Voting(
-                  votingId,
-                  votingOrganizer,
-                  votingQuestion,
-                  votingOptions,
-                  votingResults,
-                  votingState,
-                );
+          //       let votingResults = new Map<string, bigint>();
+          //       for (const [optionId] of optionsMap) {
+          //         if (resultMap.member(optionId)) {
+          //           const count = resultMap.lookup(optionId).read();
+          //           votingResults.set(optionId, count);
+          //         } else {
+          //           // Option exists but no votes yet
+          //           votingResults.set(optionId, BigInt(0));
+          //         }
+          //       }
+          //       const voting = new Voting(
+          //         votingId,
+          //         votingOrganizer,
+          //         votingQuestion,
+          //         votingOptions,
+          //         votingResults,
+          //         votingState,
+          //       );
 
-                list.push(voting);
-              } catch (e) {
-                console.error('Failed to build Voting instance for ID', votingId, e);
-              }
-            }
-            return list;
-          })(),
+          //       list.push(voting);
+          //     } catch (e) {
+          //       console.error('Failed to build Voting instance for ID', votingId, e);
+          //     }
+          //   }
+          //   return list;
+          // })(),
         };
       },
     );
@@ -186,7 +187,9 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
 
   async create_voting(): Promise<void> {
     try {
+      console.log('before create voting inside api');
       const txData = await this.deployedContract.callTx.create_voting();
+      console.log('after create voting inside api');
 
       this.logger?.trace({
         transactionAdded: {

@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { Observable } from 'rxjs';
 import { VoteGuardianDeployment } from '../contexts';
 import { DeployedVoteGuardianAPI, VoteGuardianDerivedState } from '@midnight-ntwrk/vote-guardian-api';
+import { useDeployedVoteGuardianContext } from '../hooks';
 
 const subtle = window.crypto.subtle;
 
@@ -22,10 +23,32 @@ export const ViewVotingsCreateVoting: React.FC<Readonly<ViewVotingsCreateVotingP
   const [voteGuardianDeployment, setVoteGuardianDeployment] = useState<VoteGuardianDeployment>();
   const [deployedVoteGuardianAPI, setDeployedVoteGuardianAPI] = useState<DeployedVoteGuardianAPI>();
   const [voteGuardianState, setVoteGuardianState] = useState<VoteGuardianDerivedState>();
+  const [secretKey, setSecretKey] = useState<string>();
 
+  const voteGuardianApiProvider = useDeployedVoteGuardianContext();
   const [isWorking, setIsWorking] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
   const navigate = useNavigate();
+
+  const onDisplaySecretKey = async (): Promise<void> => {
+    try {
+      console.log('display');
+      if (secretKey !== undefined) {
+        setSecretKey(undefined);
+      } else {
+        if (deployedVoteGuardianAPI) {
+          setIsWorking(true);
+          const key = await voteGuardianApiProvider.displaySecretKey();
+          console.log(key);
+          setSecretKey(key);
+        }
+      }
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : String(error));
+    } finally {
+      setIsWorking(false);
+    }
+  };
 
   const onCreateVoting = useCallback(async () => {
     setIsWorking(true);
@@ -34,6 +57,7 @@ export const ViewVotingsCreateVoting: React.FC<Readonly<ViewVotingsCreateVotingP
         console.log('before vreate');
         setIsWorking(true);
         await deployedVoteGuardianAPI.create_voting();
+        console.log('after vreate');
         navigate('/votings');
       }
     } catch (error: unknown) {
@@ -42,6 +66,19 @@ export const ViewVotingsCreateVoting: React.FC<Readonly<ViewVotingsCreateVotingP
       setIsWorking(false);
     }
   }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking]);
+
+  // Subscribes to the `voteGuardianDeployment$` observable so that we can receive updates on the deployment.
+  useEffect(() => {
+    if (!voteGuardianDeployment$) {
+      return;
+    }
+
+    const subscription = voteGuardianDeployment$.subscribe(setVoteGuardianDeployment);
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [voteGuardianDeployment$]);
 
   // Subscribes to the `state$` observable on a `DeployedVoteGuardianAPI` if we receive one, allowing the
   // component to receive updates to the change in contract state; otherwise we update the UI to
@@ -107,6 +144,26 @@ export const ViewVotingsCreateVoting: React.FC<Readonly<ViewVotingsCreateVotingP
         >
           Create Voting
         </Button>
+        {/* DISPLAY SECRET KEY */}
+
+        <Button variant="contained" color="primary" size="medium" onClick={onDisplaySecretKey}>
+          {secretKey !== undefined ? 'Hide secret key' : 'Display secret key'}
+        </Button>
+        {secretKey !== undefined && (
+          <Typography
+            color="black"
+            sx={{
+              wordBreak: 'break-all', // breaks long words (like secret keys)
+              whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
+              width: '100%', // ensures it uses the full container width
+              textAlign: 'center', // optional, for better visual balance
+            }}
+          >
+            {secretKey}
+          </Typography>
+        )}
+        {/* END DISPLAY SECRET KEY */}
+
         <Backdrop
           sx={{
             position: 'absolute',

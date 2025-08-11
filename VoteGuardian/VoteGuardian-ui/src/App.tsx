@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Box } from '@mui/material';
+import { Box, Card } from '@mui/material';
 import { MainLayout, VoteGuardian, Voting } from './components';
 import { useDeployedVoteGuardianContext } from './hooks';
 import { type VoteGuardianDeployment } from './contexts';
@@ -47,22 +47,27 @@ const App: React.FC = () => {
   return (
     <Box sx={{ background: '#000', minHeight: '100vh' }}>
       <MainLayout>
-        <Routes>
-          <Route path="/" element={<JoinContract onJoinVoteGuardianCallback={onJoinVoteGuardian} />} />
-          <Route
-            path="/votings"
-            element={
-              <div data-testid="VoteGuardian-0">
-                <VoteGuardian voteGuardianDeployment$={voteGuardianDeployment$} />
-              </div>
-            }
-          />
-          <Route
-            path="/viewCreate"
-            element={<ViewVotingsCreateVoting voteGuardianDeployment$={voteGuardianDeployment$} />}
-          />
-          <Route path="/votings/:votingId" element={<Voting voteGuardianDeployment$={voteGuardianDeployment$} />} />
-        </Routes>
+        <Card
+          sx={{ position: 'relative', width: 460, maxHeight: 495, minWidth: 460, minHeight: 495, overflowY: 'auto' }}
+          color="primary"
+        >
+          <Routes>
+            <Route path="/" element={<JoinContract onJoinVoteGuardianCallback={onJoinVoteGuardian} />} />
+            <Route
+              path="/votings"
+              element={
+                <div data-testid="VoteGuardian-0">
+                  <VoteGuardian voteGuardianDeployment$={voteGuardianDeployment$} />
+                </div>
+              }
+            />
+            <Route
+              path="/viewCreate"
+              element={<ViewVotingsCreateVoting voteGuardianDeployment$={voteGuardianDeployment$} />}
+            />
+            <Route path="/votings/:votingId" element={<Voting voteGuardianDeployment$={voteGuardianDeployment$} />} />
+          </Routes>
+        </Card>
       </MainLayout>
     </Box>
   );

@@ -150,13 +150,31 @@ function uint8ArrayToString(uint8Array) {
 const mainLoop = async (providers, rli, logger) => {
     const secretKeyBytes = new Uint8Array(32);
     const secretKey = toHex(secretKeyBytes);
-    let eligibleVoters = [
-        new Uint8Array(32),
-        new Uint8Array(32),
-        new Uint8Array(32),
-        new Uint8Array(32),
-        new Uint8Array(32),
-    ];
+    function uint8ArrayToHex(uint8Array) {
+        return Array.from(uint8Array)
+            .map((b) => b.toString(16).padStart(2, '0'))
+            .join('');
+    }
+    // Generate 5 random 32-byte Uint8Arrays
+    const initialRandomValues = Array.from({ length: 5 }, () => {
+        const arr = new Uint8Array(32);
+        crypto.getRandomValues(arr);
+        return arr;
+    });
+    // Hash function using Web Crypto
+    async function sha256(input) {
+        const hashBuffer = await crypto.subtle.digest('SHA-256', input);
+        return new Uint8Array(hashBuffer);
+    }
+    const eligibleVoters = [];
+    for (const randomValue of initialRandomValues) {
+        const hash = await sha256(randomValue);
+        eligibleVoters.push(hash);
+    }
+    console.log('Initial random values (hex):');
+    console.log(initialRandomValues.map(uint8ArrayToHex));
+    console.log('\nSHA-256 hashes (hex):');
+    console.log(eligibleVoters.map(uint8ArrayToHex));
     const contractAddressFile = path.resolve(process.cwd(), 'contract_address.txt');
     const contractAddress = fs.readFileSync(contractAddressFile, 'utf8').trim();
     let VoteGuardianApi;

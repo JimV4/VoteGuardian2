@@ -144,27 +144,30 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
 
   return (
     <CardContent>
-      {voteGuardianState?.votingList?.length ? (
+      {voteGuardianState?.votings?.size ? (
         <Stack spacing={2}>
-          {voteGuardianState.votingList.map((voting) => (
-            <Card key={toHex(voting.votingId)} variant="outlined" sx={{ p: 1 }}>
+          {Array.from(voteGuardianState.votings).map((votingId) => (
+            <Card key={toHex(votingId)} variant="outlined" sx={{ p: 1 }}>
               <CardHeader
                 title={
                   <Typography
                     variant="subtitle2"
                     sx={{ cursor: 'pointer', color: 'primary.main' }}
                     onClick={() =>
-                      navigate(`/voting/${toHex(voting.votingId)}`, {
-                        state: voting,
-                      })
+                      // navigate(`/voting/${toHex(votingId)}`, {
+                      //   state: voting,
+                      // })
+                      navigate(`/voting/${toHex(votingId)}`)
                     }
                   >
-                    Voting ID: {toHex(voting.votingId)}
+                    Voting ID: {toHex(votingId)}
                   </Typography>
                 }
                 subheader={
                   <Typography variant="body2" color="text.secondary">
-                    {voting.votingQuestion}
+                    {voteGuardianState.votingQuestions?.isEmpty?.()
+                      ? 'No question yet'
+                      : (voteGuardianState.votingQuestions?.lookup?.(votingId) ?? 'No question yet')}
                   </Typography>
                 }
               />

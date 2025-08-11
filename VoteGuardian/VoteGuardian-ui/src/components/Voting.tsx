@@ -22,11 +22,20 @@ import { type VoteGuardianDeployment } from '../contexts';
 import { type Observable } from 'rxjs';
 import { VOTE_STATE } from '@midnight-ntwrk/vote-guardian-contract';
 import { useNavigate } from 'react-router-dom';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 
 const subtle = window.crypto.subtle;
 
 const serverUrl = process.env.REACT_APP_API_URL;
+
+function hexToUint8Array(hex: string): Uint8Array {
+  if (hex.length % 2 !== 0) throw new Error('Hex string must have even length');
+  const arr = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    arr[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+  }
+  return arr;
+}
 
 export interface VotingProps {
   voteGuardianDeployment$?: Observable<VoteGuardianDeployment>;
@@ -47,6 +56,10 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
 
   const location = useLocation();
   const voting = location.state;
+
+  const { votingId } = useParams();
+
+  const votingIdBytes = hexToUint8Array(votingId!);
 
   // const [onHome, setOnHome] = useState(true);
   const [credentials, setCredentials] = useState({ username: '', password: '' });
@@ -73,8 +86,8 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
         return;
       }
 
-      const optionMapLength = voteGuardianState?.votingOptions.lookup(voting.votingId)
-        ? Array.from(voteGuardianState.votingOptions.lookup(voting.votingId)).length
+      const optionMapLength = voteGuardianState?.votingOptions.lookup(votingIdBytes)
+        ? Array.from(voteGuardianState.votingOptions.lookup(votingIdBytes)).length
         : 0;
       if (whatIsEditing === 'option') {
         setOptionCounter((prevCounter) => prevCounter + 1);
@@ -84,9 +97,9 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
           setIsWorking(true);
 
           if (whatIsEditing === 'option') {
-            await deployedVoteGuardianAPI.add_option(voting.votingId, messagePrompt, optionMapLength.toString());
+            await deployedVoteGuardianAPI.add_option(votingIdBytes, messagePrompt, optionMapLength.toString());
           } else if (whatIsEditing === 'question') {
-            await deployedVoteGuardianAPI.edit_question(voting.votingId, messagePrompt);
+            await deployedVoteGuardianAPI.edit_question(votingIdBytes, messagePrompt);
           }
         }
       } catch (error: unknown) {
@@ -159,10 +172,10 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
         if (deployedVoteGuardianAPI) {
           setIsWorking(true);
           if (state === 'open') {
-            await deployedVoteGuardianAPI.close_voting(voting.votingId);
+            await deployedVoteGuardianAPI.close_voting(votingIdBytes);
             setVotingState('closed');
           } else {
-            await deployedVoteGuardianAPI.open_voting(voting.votingId);
+            await deployedVoteGuardianAPI.open_voting(votingIdBytes);
             setVotingState('open');
           }
         }
@@ -260,8 +273,8 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
               return <Typography>No votes yet.</Typography>;
             }
 
-            const resultsForVoting = voteGuardianState.votingResults.lookup(voting.votingId);
-            const optionsForVoting = voteGuardianState.votingOptions.lookup(voting.votingId);
+            const resultsForVoting = voteGuardianState.votingResults.lookup(votingIdBytes);
+            const optionsForVoting = voteGuardianState.votingOptions.lookup(votingIdBytes);
 
             if (!resultsForVoting || !optionsForVoting) {
               return <Typography>No votes yet.</Typography>;
@@ -310,15 +323,15 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
               </IconButton>
               {whatIsEditing === 'question' && (
                 <Typography color="black">
-                  Question: {voteGuardianState?.votingQuestions.lookup(voting.votingId) || 'No question yet'}
+                  Question: {voteGuardianState?.votingQuestions.lookup(votingIdBytes) || 'No question yet'}
                 </Typography>
               )}
 
               {whatIsEditing === 'option' &&
-                (voteGuardianState?.votingOptions.lookup(voting.votingId) &&
-                Array.from(voteGuardianState.votingOptions.lookup(voting.votingId) as Iterable<[string, string]>)
-                  .length > 0 ? (
-                  Array.from(voteGuardianState.votingOptions.lookup(voting.votingId) as Iterable<[string, string]>).map(
+                (voteGuardianState?.votingOptions.lookup(votingIdBytes) &&
+                Array.from(voteGuardianState.votingOptions.lookup(votingIdBytes) as Iterable<[string, string]>).length >
+                  0 ? (
+                  Array.from(voteGuardianState.votingOptions.lookup(votingIdBytes) as Iterable<[string, string]>).map(
                     ([key, value]) => (
                       <Typography key={key} data-testid="vote-guardian-option" minHeight={20} color="black">
                         {Number(key) + 1}. {value}
@@ -400,7 +413,7 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
                 <Typography color="primary">
                   Vote State is{' '}
                   {voteGuardianState
-                    ? voteGuardianState.votingStates.lookup(voting.votingId) === VOTE_STATE.open
+                    ? voteGuardianState.votingStates.lookup(votingIdBytes) === VOTE_STATE.open
                       ? 'open'
                       : 'closed'
                     : 'No State'}
@@ -415,13 +428,11 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
                       size="medium"
                       onClick={() =>
                         handleVoteState(
-                          voteGuardianState.votingStates.lookup(voting.votingId) === VOTE_STATE.open
-                            ? 'open'
-                            : 'closed',
+                          voteGuardianState.votingStates.lookup(votingIdBytes) === VOTE_STATE.open ? 'open' : 'closed',
                         ).catch(console.error)
                       }
                     >
-                      {voteGuardianState.votingStates.lookup(voting.votingId) === VOTE_STATE.open
+                      {voteGuardianState.votingStates.lookup(votingIdBytes) === VOTE_STATE.open
                         ? 'CLOSE VOTING'
                         : 'OPEN VOTING'}
                     </Button>

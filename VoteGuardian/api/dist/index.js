@@ -7,7 +7,6 @@ import { Contract, createVoteGuardianPrivateState, ledger, witnesses, } from '@m
 import * as utils from './utils/index.js';
 import { deployContract, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { combineLatest, map, tap, from } from 'rxjs';
-import { Voting } from './Voting.js';
 /** @internal */
 // ο τύπος Contract έρχεται από το αρχείο index.d.cts. Το witnesses έρχεται από το αρχείο witnesses.ts
 const VoteGuardianContractInstance = new Contract(witnesses);
@@ -77,41 +76,47 @@ export class VoteGuardianAPI {
                 votingNulifiers: ledgerState.voting_nulifiers,
                 votingOrganizers: ledgerState.voting_organizers,
                 eligibleVoters: ledgerState.eligible_voters,
-                votingList: (() => {
-                    const list = [];
-                    for (const votingId of ledgerState.votings) {
-                        try {
-                            const votingQuestion = ledgerState.voting_questions.lookup(votingId);
-                            const votingOrganizer = ledgerState.voting_organizers.lookup(votingId);
-                            const votingState = ledgerState.voting_states.lookup(votingId);
-                            // Voting Options
-                            const optionsMap = ledgerState.voting_options.lookup(votingId);
-                            let votingOptions = new Map();
-                            for (const [optionId, optionText] of optionsMap) {
-                                votingOptions.set(optionId, optionText);
-                            }
-                            // Voting Results
-                            const resultMap = ledgerState.voting_results.lookup(votingId);
-                            let votingResults = new Map();
-                            for (const [optionId] of optionsMap) {
-                                if (resultMap.member(optionId)) {
-                                    const count = resultMap.lookup(optionId).read();
-                                    votingResults.set(optionId, count);
-                                }
-                                else {
-                                    // Option exists but no votes yet
-                                    votingResults.set(optionId, BigInt(0));
-                                }
-                            }
-                            const voting = new Voting(votingId, votingOrganizer, votingQuestion, votingOptions, votingResults, votingState);
-                            list.push(voting);
-                        }
-                        catch (e) {
-                            console.error('Failed to build Voting instance for ID', votingId, e);
-                        }
-                    }
-                    return list;
-                })(),
+                votingList: [],
+                // votingList: (() => {
+                //   const list: Voting[] = [];
+                //   for (const votingId of ledgerState.votings) {
+                //     try {
+                //       const votingQuestion = ledgerState.voting_questions.lookup(votingId);
+                //       const votingOrganizer = ledgerState.voting_organizers.lookup(votingId);
+                //       const votingState = ledgerState.voting_states.lookup(votingId);
+                //       // Voting Options
+                //       const optionsMap = ledgerState.voting_options.lookup(votingId);
+                //       let votingOptions = new Map<string, string>();
+                //       for (const [optionId, optionText] of optionsMap) {
+                //         votingOptions.set(optionId, optionText);
+                //       }
+                //       // Voting Results
+                //       const resultMap = ledgerState.voting_results.lookup(votingId);
+                //       let votingResults = new Map<string, bigint>();
+                //       for (const [optionId] of optionsMap) {
+                //         if (resultMap.member(optionId)) {
+                //           const count = resultMap.lookup(optionId).read();
+                //           votingResults.set(optionId, count);
+                //         } else {
+                //           // Option exists but no votes yet
+                //           votingResults.set(optionId, BigInt(0));
+                //         }
+                //       }
+                //       const voting = new Voting(
+                //         votingId,
+                //         votingOrganizer,
+                //         votingQuestion,
+                //         votingOptions,
+                //         votingResults,
+                //         votingState,
+                //       );
+                //       list.push(voting);
+                //     } catch (e) {
+                //       console.error('Failed to build Voting instance for ID', votingId, e);
+                //     }
+                //   }
+                //   return list;
+                // })(),
             };
         });
     }
@@ -126,7 +131,9 @@ export class VoteGuardianAPI {
     state$;
     async create_voting() {
         try {
+            console.log('before create voting inside api');
             const txData = await this.deployedContract.callTx.create_voting();
+            console.log('after create voting inside api');
             this.logger?.trace({
                 transactionAdded: {
                     circuit: 'create_voting',
