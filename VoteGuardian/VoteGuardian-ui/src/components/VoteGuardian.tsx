@@ -157,7 +157,7 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                       // navigate(`/voting/${toHex(votingId)}`, {
                       //   state: voting,
                       // })
-                      navigate(`/voting/${toHex(votingId)}`)
+                      navigate(`/votings/${toHex(votingId)}`)
                     }
                   >
                     Voting ID: {toHex(votingId)}
@@ -165,9 +165,11 @@ export const VoteGuardian: React.FC<Readonly<VoteGuardianProps>> = ({ voteGuardi
                 }
                 subheader={
                   <Typography variant="body2" color="text.secondary">
-                    {voteGuardianState.votingQuestions?.isEmpty?.()
+                    {voteGuardianState?.votingQuestions?.isEmpty?.()
                       ? 'No question yet'
-                      : (voteGuardianState.votingQuestions?.lookup?.(votingId) ?? 'No question yet')}
+                      : voteGuardianState?.votingQuestions?.member?.(votingId)
+                        ? voteGuardianState.votingQuestions.lookup(votingId)
+                        : 'No question yet'}
                   </Typography>
                 }
               />

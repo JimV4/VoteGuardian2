@@ -158,6 +158,7 @@ export class VoteGuardianAPI {
     async add_option(voting_id, vote_option, index) {
         try {
             this.logger?.info(`added option: ${vote_option}`);
+            this.logger?.info(`added index: ${index}`);
             const txData = await this.deployedContract.callTx.add_option(voting_id, vote_option, index);
             this.logger?.trace({
                 transactionAdded: {

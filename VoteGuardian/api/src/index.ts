@@ -215,6 +215,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
   async add_option(voting_id: Uint8Array, vote_option: string, index: string): Promise<void> {
     try {
       this.logger?.info(`added option: ${vote_option}`);
+      this.logger?.info(`added index: ${index}`);
       const txData = await this.deployedContract.callTx.add_option(voting_id, vote_option, index);
 
       this.logger?.trace({

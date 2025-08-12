@@ -170,13 +170,13 @@ class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.originalState != undefined && contextOrig_0.transactionContext != undefined))
           __compactRuntime.type_error('edit_question',
                                       'argument 1 (as invoked from Typescript)',
-                                      'VoteGuardian.compact line 81 char 1',
+                                      'VoteGuardian.compact line 83 char 1',
                                       'CircuitContext',
                                       contextOrig_0)
         if (!(voting_id_0.buffer instanceof ArrayBuffer && voting_id_0.BYTES_PER_ELEMENT === 1 && voting_id_0.length === 32))
           __compactRuntime.type_error('edit_question',
                                       'argument 1 (argument 2 as invoked from Typescript)',
-                                      'VoteGuardian.compact line 81 char 1',
+                                      'VoteGuardian.compact line 83 char 1',
                                       'Bytes<32>',
                                       voting_id_0)
         const context = { ...contextOrig_0 };
@@ -206,13 +206,13 @@ class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.originalState != undefined && contextOrig_0.transactionContext != undefined))
           __compactRuntime.type_error('add_option',
                                       'argument 1 (as invoked from Typescript)',
-                                      'VoteGuardian.compact line 93 char 1',
+                                      'VoteGuardian.compact line 95 char 1',
                                       'CircuitContext',
                                       contextOrig_0)
         if (!(voting_id_0.buffer instanceof ArrayBuffer && voting_id_0.BYTES_PER_ELEMENT === 1 && voting_id_0.length === 32))
           __compactRuntime.type_error('add_option',
                                       'argument 1 (argument 2 as invoked from Typescript)',
-                                      'VoteGuardian.compact line 93 char 1',
+                                      'VoteGuardian.compact line 95 char 1',
                                       'Bytes<32>',
                                       voting_id_0)
         const context = { ...contextOrig_0 };
@@ -241,13 +241,13 @@ class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.originalState != undefined && contextOrig_0.transactionContext != undefined))
           __compactRuntime.type_error('close_voting',
                                       'argument 1 (as invoked from Typescript)',
-                                      'VoteGuardian.compact line 106 char 1',
+                                      'VoteGuardian.compact line 109 char 1',
                                       'CircuitContext',
                                       contextOrig_0)
         if (!(voting_id_0.buffer instanceof ArrayBuffer && voting_id_0.BYTES_PER_ELEMENT === 1 && voting_id_0.length === 32))
           __compactRuntime.type_error('close_voting',
                                       'argument 1 (argument 2 as invoked from Typescript)',
-                                      'VoteGuardian.compact line 106 char 1',
+                                      'VoteGuardian.compact line 109 char 1',
                                       'Bytes<32>',
                                       voting_id_0)
         const context = { ...contextOrig_0 };
@@ -274,13 +274,13 @@ class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.originalState != undefined && contextOrig_0.transactionContext != undefined))
           __compactRuntime.type_error('open_voting',
                                       'argument 1 (as invoked from Typescript)',
-                                      'VoteGuardian.compact line 123 char 1',
+                                      'VoteGuardian.compact line 126 char 1',
                                       'CircuitContext',
                                       contextOrig_0)
         if (!(voting_id_0.buffer instanceof ArrayBuffer && voting_id_0.BYTES_PER_ELEMENT === 1 && voting_id_0.length === 32))
           __compactRuntime.type_error('open_voting',
                                       'argument 1 (argument 2 as invoked from Typescript)',
-                                      'VoteGuardian.compact line 123 char 1',
+                                      'VoteGuardian.compact line 126 char 1',
                                       'Bytes<32>',
                                       voting_id_0)
         const context = { ...contextOrig_0 };
@@ -308,13 +308,13 @@ class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.originalState != undefined && contextOrig_0.transactionContext != undefined))
           __compactRuntime.type_error('cast_vote',
                                       'argument 1 (as invoked from Typescript)',
-                                      'VoteGuardian.compact line 142 char 1',
+                                      'VoteGuardian.compact line 145 char 1',
                                       'CircuitContext',
                                       contextOrig_0)
         if (!(voting_id_0.buffer instanceof ArrayBuffer && voting_id_0.BYTES_PER_ELEMENT === 1 && voting_id_0.length === 32))
           __compactRuntime.type_error('cast_vote',
                                       'argument 1 (argument 2 as invoked from Typescript)',
-                                      'VoteGuardian.compact line 142 char 1',
+                                      'VoteGuardian.compact line 145 char 1',
                                       'Bytes<32>',
                                       voting_id_0)
         const context = { ...contextOrig_0 };
@@ -910,6 +910,42 @@ class Contract {
                                                                             alignment: _descriptor_5.alignment() }).encode() } },
                      { ins: { cached: false, n: 1 } },
                      { ins: { cached: true, n: 1 } }]);
+    Contract._query(context,
+                    partialProofData,
+                    [
+                     { idx: { cached: false,
+                              pushPath: true,
+                              path: [
+                                     { tag: 'value',
+                                       value: { value: _descriptor_16.toValue(3n),
+                                                alignment: _descriptor_16.alignment() } }] } },
+                     { push: { storage: false,
+                               value: __compactRuntime.StateValue.newCell({ value: _descriptor_0.toValue(voting_id_0),
+                                                                            alignment: _descriptor_0.alignment() }).encode() } },
+                     { push: { storage: true,
+                               value: __compactRuntime.StateValue.newMap(
+                                        new __compactRuntime.StateMap()
+                                      ).encode() } },
+                     { ins: { cached: false, n: 1 } },
+                     { ins: { cached: true, n: 1 } }]);
+    Contract._query(context,
+                    partialProofData,
+                    [
+                     { idx: { cached: false,
+                              pushPath: true,
+                              path: [
+                                     { tag: 'value',
+                                       value: { value: _descriptor_16.toValue(5n),
+                                                alignment: _descriptor_16.alignment() } }] } },
+                     { push: { storage: false,
+                               value: __compactRuntime.StateValue.newCell({ value: _descriptor_0.toValue(voting_id_0),
+                                                                            alignment: _descriptor_0.alignment() }).encode() } },
+                     { push: { storage: true,
+                               value: __compactRuntime.StateValue.newMap(
+                                        new __compactRuntime.StateMap()
+                                      ).encode() } },
+                     { ins: { cached: false, n: 1 } },
+                     { ins: { cached: true, n: 1 } }]);
     const tmp_0 = 1n;
     Contract._query(context,
                     partialProofData,
@@ -1014,10 +1050,10 @@ class Contract {
                                        value: { value: _descriptor_0.toValue(voting_id_0),
                                                 alignment: _descriptor_0.alignment() } }] } },
                      { push: { storage: false,
-                               value: __compactRuntime.StateValue.newCell({ value: _descriptor_2.toValue(i_0),
+                               value: __compactRuntime.StateValue.newCell({ value: _descriptor_2.toValue(vote_option_0),
                                                                             alignment: _descriptor_2.alignment() }).encode() } },
                      { push: { storage: true,
-                               value: __compactRuntime.StateValue.newCell({ value: _descriptor_2.toValue(vote_option_0),
+                               value: __compactRuntime.StateValue.newCell({ value: _descriptor_2.toValue(i_0),
                                                                             alignment: _descriptor_2.alignment() }).encode() } },
                      { ins: { cached: false, n: 1 } },
                      { ins: { cached: true, n: 2 } }]);

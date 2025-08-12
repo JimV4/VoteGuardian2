@@ -85,10 +85,15 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
       if (!messagePrompt) {
         return;
       }
+      const size =
+        typeof voteGuardianState?.votingOptions?.size === 'function'
+          ? Number(voteGuardianState.votingOptions.size()) // call it
+          : Number(voteGuardianState?.votingOptions?.size ?? 0); // or get the value
 
-      const optionMapLength = voteGuardianState?.votingOptions.lookup(votingIdBytes)
-        ? Array.from(voteGuardianState.votingOptions.lookup(votingIdBytes)).length
-        : 0;
+      const optionMapLength =
+        size > 0 && voteGuardianState?.votingOptions?.member(votingIdBytes)
+          ? Array.from(voteGuardianState.votingOptions.lookup(votingIdBytes) ?? []).length
+          : 0;
       if (whatIsEditing === 'option') {
         setOptionCounter((prevCounter) => prevCounter + 1);
       }
@@ -242,297 +247,306 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
 
   return (
     <div style={{ transform: 'scale(1.2)', transformOrigin: 'top left' }}>
-      <Card
+      {/* <Card
         sx={{ position: 'relative', width: 460, maxHeight: 495, minWidth: 460, minHeight: 495, overflowY: 'auto' }}
         color="primary"
+      > */}
+      <Backdrop
+        sx={{
+          position: 'absolute',
+          color: '#fff',
+          width: '100%', // Full width of the Card
+          height: '100%',
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+        }}
+        open={isWorking}
       >
-        <Backdrop
-          sx={{
-            position: 'absolute',
-            color: '#fff',
-            width: '100%', // Full width of the Card
-            height: '100%',
-            zIndex: (theme) => theme.zIndex.drawer + 1,
-          }}
-          open={isWorking}
-        >
-          <CircularProgress data-testid="vote-guardian-working-indicator" />
-        </Backdrop>
-        <Backdrop
-          sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-          open={!!errorMessage}
-        >
-          <StopIcon fontSize="large" />
-          <Typography component="div" data-testid="vote-guardian-error-message">
-            {errorMessage}
-          </Typography>
-        </Backdrop>
-        {showResults &&
-          (() => {
-            if (voteGuardianState == undefined) {
-              return <Typography>No votes yet.</Typography>;
-            }
+        <CircularProgress data-testid="vote-guardian-working-indicator" />
+      </Backdrop>
+      <Backdrop
+        sx={{ position: 'absolute', color: '#ff0000', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={!!errorMessage}
+      >
+        <StopIcon fontSize="large" />
+        <Typography component="div" data-testid="vote-guardian-error-message">
+          {errorMessage}
+        </Typography>
+      </Backdrop>
+      {showResults &&
+        (() => {
+          if (voteGuardianState == undefined) {
+            return <Typography>No votes yet.</Typography>;
+          }
 
-            const resultsForVoting = voteGuardianState.votingResults.lookup(votingIdBytes);
-            const optionsForVoting = voteGuardianState.votingOptions.lookup(votingIdBytes);
+          const resultsForVoting = voteGuardianState.votingResults.lookup(votingIdBytes);
+          const optionsForVoting = voteGuardianState.votingOptions.lookup(votingIdBytes);
 
-            if (!resultsForVoting || !optionsForVoting) {
-              return <Typography>No votes yet.</Typography>;
-            }
+          if (!resultsForVoting || !optionsForVoting) {
+            return <Typography>No votes yet.</Typography>;
+          }
 
-            const optionsArray = Array.from(optionsForVoting as Iterable<[string, string]>);
+          const optionsArray = Array.from(optionsForVoting as Iterable<[string, string]>);
 
-            const entries = optionsArray.map(([optionKey, optionLabel]) => {
-              const count = resultsForVoting.member(optionKey) ? resultsForVoting.lookup(optionKey).read() : BigInt(0);
-              return [optionLabel, count] as [string, bigint];
-            });
+          const entries = optionsArray.map(([optionKey, optionLabel]) => {
+            const count = resultsForVoting.member(optionKey) ? resultsForVoting.lookup(optionKey).read() : BigInt(0);
+            return [optionLabel, count] as [string, bigint];
+          });
 
-            if (entries.length === 0) {
-              return <Typography>No votes yet.</Typography>;
-            }
+          if (entries.length === 0) {
+            return <Typography>No votes yet.</Typography>;
+          }
 
-            return (
-              <Stack spacing={2} alignItems="center">
-                {entries.map(([label, count]) => (
-                  <Typography key={label} data-testid="vote-guardian-option" minHeight={20} color="black">
-                    {label}: {count.toString()}
-                  </Typography>
-                ))}
-              </Stack>
-            );
-          })()}
-        {isEditing && whatIsEditing != null && (
-          <div
-            className="w-full"
-            style={{
-              position: 'relative',
-              padding: 16,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              // minHeight: '100vh', // ensures vertical centering even on tall screens
-            }}
-          >
+          return (
             <Stack spacing={2} alignItems="center">
-              <IconButton
-                sx={{ position: 'absolute', top: 8, left: 8, mb: 2 }}
-                aria-label="back"
-                onClick={handleClickBackArrow}
-              >
-                <ArrowBackIcon />
-              </IconButton>
-              {whatIsEditing === 'question' && (
-                <Typography color="black">
-                  Question: {voteGuardianState?.votingQuestions.lookup(votingIdBytes) || 'No question yet'}
+              {entries.map(([label, count]) => (
+                <Typography key={label} data-testid="vote-guardian-option" minHeight={20} color="black">
+                  {label}: {count.toString()}
                 </Typography>
-              )}
+              ))}
+            </Stack>
+          );
+        })()}
+      {isEditing && whatIsEditing != null && (
+        <div
+          className="w-full"
+          style={{
+            position: 'relative',
+            padding: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            // minHeight: '100vh', // ensures vertical centering even on tall screens
+          }}
+        >
+          <Stack spacing={2} alignItems="center">
+            <IconButton
+              sx={{ position: 'absolute', top: 8, left: 8, mb: 2 }}
+              aria-label="back"
+              onClick={handleClickBackArrow}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            {whatIsEditing === 'question' && (
+              <Typography variant="body2" color="text.secondary">
+                {voteGuardianState!.votingQuestions?.isEmpty?.()
+                  ? 'No question yet'
+                  : (voteGuardianState!.votingQuestions?.lookup?.(votingIdBytes) ?? 'No question yet')}
+              </Typography>
+            )}
 
-              {whatIsEditing === 'option' &&
-                (voteGuardianState?.votingOptions.lookup(votingIdBytes) &&
-                Array.from(voteGuardianState.votingOptions.lookup(votingIdBytes) as Iterable<[string, string]>).length >
-                  0 ? (
-                  Array.from(voteGuardianState.votingOptions.lookup(votingIdBytes) as Iterable<[string, string]>).map(
-                    ([key, value]) => (
+            {whatIsEditing === 'option' &&
+              (voteGuardianState?.votingOptions?.isEmpty?.() ? (
+                <Typography data-testid="vote-guardian-option" color="black">
+                  No options yet.
+                </Typography>
+              ) : (
+                (() => {
+                  const optionsIterable = voteGuardianState?.votingOptions?.lookup?.(votingIdBytes);
+                  const options = optionsIterable ? Array.from(optionsIterable as Iterable<[string, string]>) : [];
+
+                  return options.length > 0 ? (
+                    options.map(([key, value]) => (
                       <Typography key={key} data-testid="vote-guardian-option" minHeight={20} color="black">
                         {Number(key) + 1}. {value}
                       </Typography>
-                    ),
-                  )
-                ) : (
-                  <Typography data-testid="vote-guardian-option" color="black">
-                    No options yet.
-                  </Typography>
-                ))}
-              <Button variant="contained" color="primary" size="medium" onClick={handleEditClickInside}>
-                Edit
-              </Button>
-
-              {showPrompt && (
-                <>
-                  <TextField
-                    id="message-prompt2"
-                    data-testid="vote-guardian-add-question-prompt"
-                    variant="outlined"
-                    focused
-                    // fullWidth
-                    // multiline
-                    minRows={6}
-                    maxRows={6}
-                    placeholder=""
-                    size="small"
-                    color="primary"
-                    inputProps={{ style: { color: 'black' } }}
-                    onChange={(e) => {
-                      setMessagePrompt(e.target.value);
-                    }}
-                  />
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size="medium"
-                    onClick={() => {
-                      onAdd(whatIsEditing);
-                    }}
-                  >
-                    Add
-                  </Button>
-                </>
-              )}
-            </Stack>
-          </div>
-        )}
-
-        {!isEditing && !showResults && (
-          <>
-            {voteGuardianDeployment$ && !isEditing && (
-              <React.Fragment>
-                <CardHeader
-                  avatar={<Skeleton variant="circular" width={20} height={20} />}
-                  title={
-                    <Typography
-                      color="primary"
-                      sx={{
-                        wordBreak: 'break-all',
-                        whiteSpace: 'pre-wrap',
-                        width: '100%',
-                      }}
-                    >
-                      {deployedVoteGuardianAPI?.deployedContractAddress ?? 'Loading...'}
+                    ))
+                  ) : (
+                    <Typography data-testid="vote-guardian-option" color="black">
+                      No options yet.
                     </Typography>
-                  }
-                  action={
-                    deployedVoteGuardianAPI?.deployedContractAddress ? (
-                      <IconButton title="Copy contract address" onClick={onCopyContractAddress}>
-                        <CopyIcon fontSize="small" />
-                      </IconButton>
-                    ) : (
-                      <Skeleton variant="circular" width={20} height={20} />
-                    )
-                  }
+                  );
+                })()
+              ))}
+            <Button variant="contained" color="primary" size="medium" onClick={handleEditClickInside}>
+              Edit
+            </Button>
+
+            {showPrompt && (
+              <>
+                <TextField
+                  id="message-prompt2"
+                  data-testid="vote-guardian-add-question-prompt"
+                  variant="outlined"
+                  focused
+                  // fullWidth
+                  // multiline
+                  minRows={6}
+                  maxRows={6}
+                  placeholder=""
+                  size="small"
+                  color="primary"
+                  inputProps={{ style: { color: 'black' } }}
+                  onChange={(e) => {
+                    setMessagePrompt(e.target.value);
+                  }}
                 />
-                <Typography color="primary">
-                  Vote State is{' '}
-                  {voteGuardianState
-                    ? voteGuardianState.votingStates.lookup(votingIdBytes) === VOTE_STATE.open
-                      ? 'open'
-                      : 'closed'
-                    : 'No State'}
-                </Typography>
-
-                <Stack spacing={2} alignItems="center">
-                  {/* // VOTE STATE */}
-                  {voteGuardianState && (
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      size="medium"
-                      onClick={() =>
-                        handleVoteState(
-                          voteGuardianState.votingStates.lookup(votingIdBytes) === VOTE_STATE.open ? 'open' : 'closed',
-                        ).catch(console.error)
-                      }
-                    >
-                      {voteGuardianState.votingStates.lookup(votingIdBytes) === VOTE_STATE.open
-                        ? 'CLOSE VOTING'
-                        : 'OPEN VOTING'}
-                    </Button>
-                  )}
-
-                  {/* END VOTE STATE */}
-
-                  {/*  VOTING QUESTION */}
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size="medium"
-                    onClick={() => {
-                      handleEditClick('question');
-                    }}
-                  >
-                    Question
-                  </Button>
-
-                  {/* END VOTING QUESTION */}
-
-                  {/*  VOTING OPTIONS */}
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size="medium"
-                    onClick={() => {
-                      handleEditClick('option');
-                    }}
-                  >
-                    Options
-                  </Button>
-                  {/* END VOTING OPTIONS */}
-
-                  {/* VOTERS */}
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size="medium"
-                    onClick={() => {
-                      handleEditClick('voters');
-                    }}
-                  >
-                    Voters
-                  </Button>
-                  {/* END VOTERS */}
-
-                  {/* DISPLAY SECRET KEY */}
-
-                  <Button variant="contained" color="primary" size="medium" onClick={onDisplaySecretKey}>
-                    {secretKey !== undefined ? 'Hide secret key' : 'Display secret key'}
-                  </Button>
-                  {secretKey !== undefined && (
-                    <Typography
-                      color="black"
-                      sx={{
-                        wordBreak: 'break-all', // breaks long words (like secret keys)
-                        whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
-                        width: '100%', // ensures it uses the full container width
-                        textAlign: 'center', // optional, for better visual balance
-                      }}
-                    >
-                      {secretKey}
-                    </Typography>
-                  )}
-                  {/* END DISPLAY SECRET KEY */}
-
-                  {/* DISPLAY WALLET PUBLIC KEY */}
-
-                  <Button variant="contained" color="primary" size="medium" onClick={onDisplayWalletPublicKey}>
-                    {walletPublicKey !== undefined ? 'Hide wallet public key' : 'Display wallet public key'}
-                  </Button>
-                  {walletPublicKey !== undefined && (
-                    <Typography
-                      color="black"
-                      sx={{
-                        wordBreak: 'break-all', // breaks long words (like secret keys)
-                        whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
-                        width: '100%', // ensures it uses the full container width
-                        textAlign: 'center', // optional, for better visual balance
-                      }}
-                    >
-                      {walletPublicKey}
-                    </Typography>
-                  )}
-                  {/* END DISPLAY WALLET PUBLIC KEY */}
-
-                  {/* END DISPLAY WALLET PUBLIC KEY MAP */}
-
-                  {/* SHOW RESULTS */}
-                  <Button variant="contained" color="primary" size="medium" onClick={onShowResults}>
-                    SHOW RESULTS
-                  </Button>
-                  {/* END SHOW RESULTS */}
-                </Stack>
-              </React.Fragment>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="medium"
+                  onClick={() => {
+                    onAdd(whatIsEditing);
+                  }}
+                >
+                  Add
+                </Button>
+              </>
             )}
-          </>
-        )}
-      </Card>
+          </Stack>
+        </div>
+      )}
+
+      {!isEditing && !showResults && (
+        <>
+          {voteGuardianDeployment$ && !isEditing && (
+            <React.Fragment>
+              <CardHeader
+                avatar={<Skeleton variant="circular" width={20} height={20} />}
+                title={
+                  <Typography
+                    color="primary"
+                    sx={{
+                      wordBreak: 'break-all',
+                      whiteSpace: 'pre-wrap',
+                      width: '100%',
+                    }}
+                  >
+                    {deployedVoteGuardianAPI?.deployedContractAddress ?? 'Loading...'}
+                  </Typography>
+                }
+                action={
+                  deployedVoteGuardianAPI?.deployedContractAddress ? (
+                    <IconButton title="Copy contract address" onClick={onCopyContractAddress}>
+                      <CopyIcon fontSize="small" />
+                    </IconButton>
+                  ) : (
+                    <Skeleton variant="circular" width={20} height={20} />
+                  )
+                }
+              />
+              <Typography color="primary">
+                Vote State is{' '}
+                {voteGuardianState
+                  ? voteGuardianState.votingStates.lookup(votingIdBytes) === VOTE_STATE.open
+                    ? 'open'
+                    : 'closed'
+                  : 'No State'}
+              </Typography>
+
+              <Stack spacing={2} alignItems="center">
+                {/* // VOTE STATE */}
+                {voteGuardianState && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="medium"
+                    onClick={() =>
+                      handleVoteState(
+                        voteGuardianState.votingStates.lookup(votingIdBytes) === VOTE_STATE.open ? 'open' : 'closed',
+                      ).catch(console.error)
+                    }
+                  >
+                    {voteGuardianState.votingStates.lookup(votingIdBytes) === VOTE_STATE.open
+                      ? 'CLOSE VOTING'
+                      : 'OPEN VOTING'}
+                  </Button>
+                )}
+
+                {/* END VOTE STATE */}
+
+                {/*  VOTING QUESTION */}
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="medium"
+                  onClick={() => {
+                    handleEditClick('question');
+                  }}
+                >
+                  Question
+                </Button>
+
+                {/* END VOTING QUESTION */}
+
+                {/*  VOTING OPTIONS */}
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="medium"
+                  onClick={() => {
+                    handleEditClick('option');
+                  }}
+                >
+                  Options
+                </Button>
+                {/* END VOTING OPTIONS */}
+
+                {/* VOTERS */}
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="medium"
+                  onClick={() => {
+                    handleEditClick('voters');
+                  }}
+                >
+                  Voters
+                </Button>
+                {/* END VOTERS */}
+
+                {/* DISPLAY SECRET KEY */}
+
+                <Button variant="contained" color="primary" size="medium" onClick={onDisplaySecretKey}>
+                  {secretKey !== undefined ? 'Hide secret key' : 'Display secret key'}
+                </Button>
+                {secretKey !== undefined && (
+                  <Typography
+                    color="black"
+                    sx={{
+                      wordBreak: 'break-all', // breaks long words (like secret keys)
+                      whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
+                      width: '100%', // ensures it uses the full container width
+                      textAlign: 'center', // optional, for better visual balance
+                    }}
+                  >
+                    {secretKey}
+                  </Typography>
+                )}
+                {/* END DISPLAY SECRET KEY */}
+
+                {/* DISPLAY WALLET PUBLIC KEY */}
+
+                <Button variant="contained" color="primary" size="medium" onClick={onDisplayWalletPublicKey}>
+                  {walletPublicKey !== undefined ? 'Hide wallet public key' : 'Display wallet public key'}
+                </Button>
+                {walletPublicKey !== undefined && (
+                  <Typography
+                    color="black"
+                    sx={{
+                      wordBreak: 'break-all', // breaks long words (like secret keys)
+                      whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
+                      width: '100%', // ensures it uses the full container width
+                      textAlign: 'center', // optional, for better visual balance
+                    }}
+                  >
+                    {walletPublicKey}
+                  </Typography>
+                )}
+                {/* END DISPLAY WALLET PUBLIC KEY */}
+
+                {/* END DISPLAY WALLET PUBLIC KEY MAP */}
+
+                {/* SHOW RESULTS */}
+                <Button variant="contained" color="primary" size="medium" onClick={onShowResults}>
+                  SHOW RESULTS
+                </Button>
+                {/* END SHOW RESULTS */}
+              </Stack>
+            </React.Fragment>
+          )}
+        </>
+      )}
+      {/* </Card> */}
     </div>
   );
 };

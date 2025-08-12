@@ -75,6 +75,8 @@ export circuit create_voting(): [] {
     voting_organizers.insert(voting_id, organizer_public_key);
     votings.insert(voting_id);
     voting_states.insert(voting_id, VOTE_STATE.open);
+    voting_options.insert(voting_id, default<Map<Opaque<"string">, Opaque<"string">>>);
+    voting_results.insert(voting_id, default<Map<Opaque<"string">, Counter>>);
     count.increment(1);
 }
 
@@ -99,7 +101,8 @@ export circuit add_option(voting_id: Bytes<32>, vote_option: Opaque<"string">, i
     assert (voting_organizers.lookup(disclose(voting_id)) == organizer_public_key,
         "Not authorized");   
 
-    voting_options.lookup(disclose(voting_id)).insert(disclose(i), disclose(vote_option));
+    voting_options.lookup(disclose(voting_id)).insert(disclose(vote_option), disclose(i));
+
 }
 
 
@@ -162,7 +165,9 @@ export circuit cast_vote(voting_id: Bytes<32>, vote_option: Opaque<"string">): [
         "Not a valid option!");
 
     const vote = voting_options.lookup(disclose(voting_id)).lookup(disclose(vote_option));
+
     voting_results.lookup(disclose(voting_id)).lookup(disclose(vote)).increment(1);
+
 }
 
 
