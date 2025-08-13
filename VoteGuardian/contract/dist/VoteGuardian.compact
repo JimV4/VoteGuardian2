@@ -102,6 +102,7 @@ export circuit add_option(voting_id: Bytes<32>, vote_option: Opaque<"string">, i
         "Not authorized");   
 
     voting_options.lookup(disclose(voting_id)).insert(disclose(vote_option), disclose(i));
+    voting_results.lookup(disclose(voting_id)).insert(disclose(vote_option), default<Counter>);
 
 }
 

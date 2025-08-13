@@ -11,6 +11,9 @@ import {
   TextField,
   Button,
   Stack,
+  FormControlLabel,
+  RadioGroup,
+  Radio,
 } from '@mui/material';
 
 import CopyIcon from '@mui/icons-material/ContentPasteOutlined';
@@ -53,6 +56,7 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
   const [optionCounter, setOptionCounter] = useState(0);
   const [secretKey, setSecretKey] = useState<string>();
   const [walletPublicKey, setWalletPublicKey] = useState<string>();
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
   const location = useLocation();
   const voting = location.state;
@@ -64,7 +68,7 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
   // const [onHome, setOnHome] = useState(true);
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [isEditing, setIsEditing] = useState(false);
-  const [whatIsEditing, setWhatIsEditing] = useState<'question' | 'option' | 'voters' | null>(null);
+  const [whatIsEditing, setWhatIsEditing] = useState<'question' | 'option' | 'voters' | 'cast' | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
   const [votingState, setVotingState] = useState<'open' | 'closed' | null>(null);
@@ -81,7 +85,7 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
   };
 
   const onAdd = useCallback(
-    async (whatIsEditing: 'question' | 'option' | 'voters') => {
+    async (whatIsEditing: 'question' | 'option' | 'voters' | 'cast', voteOption?: string) => {
       if (!messagePrompt) {
         return;
       }
@@ -105,6 +109,8 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
             await deployedVoteGuardianAPI.add_option(votingIdBytes, messagePrompt, optionMapLength.toString());
           } else if (whatIsEditing === 'question') {
             await deployedVoteGuardianAPI.edit_question(votingIdBytes, messagePrompt);
+          } else if (whatIsEditing === 'cast') {
+            await deployedVoteGuardianAPI.cast_vote(votingIdBytes, voteOption!);
           }
         }
       } catch (error: unknown) {
@@ -124,7 +130,7 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
   };
 
-  const handleEditClick = (type: 'question' | 'option' | 'voters'): void => {
+  const handleEditClick = (type: 'question' | 'option' | 'voters' | 'cast'): void => {
     setIsEditing(true);
     setWhatIsEditing(type);
   };
@@ -274,7 +280,15 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
       </Backdrop>
       {showResults &&
         (() => {
-          if (voteGuardianState == undefined) {
+          if (!voteGuardianState) {
+            return <Typography>No votes yet.</Typography>;
+          }
+
+          // Check if this votingIdBytes exists in both results and options
+          const hasResults = voteGuardianState.votingResults?.member?.(votingIdBytes);
+          const hasOptions = voteGuardianState.votingOptions?.member?.(votingIdBytes);
+
+          if (!hasResults || !hasOptions) {
             return <Typography>No votes yet.</Typography>;
           }
 
@@ -289,7 +303,7 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
 
           const entries = optionsArray.map(([optionKey, optionLabel]) => {
             const count = resultsForVoting.member(optionKey) ? resultsForVoting.lookup(optionKey).read() : BigInt(0);
-            return [optionLabel, count] as [string, bigint];
+            return [optionKey, count] as [string, bigint];
           });
 
           if (entries.length === 0) {
@@ -345,9 +359,9 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
                   const options = optionsIterable ? Array.from(optionsIterable as Iterable<[string, string]>) : [];
 
                   return options.length > 0 ? (
-                    options.map(([key, value]) => (
+                    options.map(([key, value], index) => (
                       <Typography key={key} data-testid="vote-guardian-option" minHeight={20} color="black">
-                        {Number(key) + 1}. {value}
+                        {Number(value) + 1}. {key}
                       </Typography>
                     ))
                   ) : (
@@ -396,6 +410,75 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
         </div>
       )}
 
+      {/* Gia na pshfhsei */}
+      {isEditing && whatIsEditing != null && (
+        <div
+          className="w-full"
+          style={{
+            position: 'relative',
+            padding: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            // minHeight: '100vh', // ensures vertical centering even on tall screens
+          }}
+        >
+          <Stack spacing={2} alignItems="center">
+            <IconButton
+              sx={{ position: 'absolute', top: 8, left: 8, mb: 2 }}
+              aria-label="back"
+              onClick={handleClickBackArrow}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            {whatIsEditing === 'question' && (
+              <Typography variant="body2" color="text.secondary">
+                {voteGuardianState!.votingQuestions?.isEmpty?.()
+                  ? 'No question yet'
+                  : (voteGuardianState!.votingQuestions?.lookup?.(votingIdBytes) ?? 'No question yet')}
+              </Typography>
+            )}
+
+            {whatIsEditing === 'cast' &&
+              (() => {
+                const optionsIterable = voteGuardianState?.votingOptions?.lookup?.(votingIdBytes);
+                const options = optionsIterable ? Array.from(optionsIterable as Iterable<[string, string]>) : [];
+
+                return options.length > 0 ? (
+                  <RadioGroup value={selectedOption} onChange={(e) => setSelectedOption(e.target.value)}>
+                    {options.map(([key, value], index) => (
+                      <FormControlLabel
+                        key={key}
+                        value={key}
+                        control={<Radio />}
+                        label={
+                          <Typography data-testid="vote-guardian-option" minHeight={20} color="black">
+                            {index + 1}. {key}
+                          </Typography>
+                        }
+                      />
+                    ))}
+                  </RadioGroup>
+                ) : (
+                  <Typography data-testid="vote-guardian-option" color="black">
+                    No options yet.
+                  </Typography>
+                );
+              })()}
+
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              onClick={() => selectedOption && onAdd('cast', selectedOption)}
+              disabled={!selectedOption}
+            >
+              Vote
+            </Button>
+          </Stack>
+        </div>
+      )}
+
       {!isEditing && !showResults && (
         <>
           {voteGuardianDeployment$ && !isEditing && (
@@ -426,7 +509,7 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
               />
               <Typography color="primary">
                 Vote State is{' '}
-                {voteGuardianState
+                {voteGuardianState && voteGuardianState.votingStates.member(votingIdBytes)
                   ? voteGuardianState.votingStates.lookup(votingIdBytes) === VOTE_STATE.open
                     ? 'open'
                     : 'closed'
@@ -534,6 +617,20 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
                 )}
                 {/* END DISPLAY WALLET PUBLIC KEY */}
 
+                {/* CAST A VOTE */}
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  // disabled={voteGuardianState?.voteState === VOTE_STATE.closed}
+                  onClick={() => {
+                    handleEditClick('cast');
+                  }}
+                >
+                  Cast a vote
+                </Button>
+                {/* END CAST A VOTE */}
+
                 {/* END DISPLAY WALLET PUBLIC KEY MAP */}
 
                 {/* SHOW RESULTS */}
@@ -550,12 +647,3 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
     </div>
   );
 };
-
-/** @internal */
-const toShortFormatContractAddress = (contractAddress: ContractAddress | undefined): JSX.Element | undefined =>
-  // Returns a new string made up of the first, and last, 8 characters of a given contract address.
-  contractAddress ? (
-    <span data-testid="vote-guardian-address">
-      0x{contractAddress?.replace(/^[A-Fa-f0-9]{6}([A-Fa-f0-9]{8}).*([A-Fa-f0-9]{8})$/g, '$1...$2')}
-    </span>
-  ) : undefined;
