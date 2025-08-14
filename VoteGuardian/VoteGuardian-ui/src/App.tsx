@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { JoinContract } from './components/JoinContract';
 import { ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import { ViewVotingsCreateVoting } from './components/ViewVotingCreateVoting';
+import { EditComponent } from './components/EditComponent';
 
 /**
  * The root bulletin VoteGuardian application component.
@@ -66,6 +67,10 @@ const App: React.FC = () => {
               element={<ViewVotingsCreateVoting voteGuardianDeployment$={voteGuardianDeployment$} />}
             />
             <Route path="/votings/:votingId" element={<Voting voteGuardianDeployment$={voteGuardianDeployment$} />} />
+            <Route
+              path="/votings/:votingId/:action"
+              element={<EditComponent voteGuardianDeployment$={voteGuardianDeployment$} />}
+            />
           </Routes>
         </Card>
       </MainLayout>

@@ -58,9 +58,6 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
   const [walletPublicKey, setWalletPublicKey] = useState<string>();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
-  const location = useLocation();
-  const voting = location.state;
-
   const { votingId } = useParams();
 
   const votingIdBytes = hexToUint8Array(votingId!);
@@ -72,10 +69,6 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
   const [showResults, setShowResults] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
   const [votingState, setVotingState] = useState<'open' | 'closed' | null>(null);
-
-  const handleClickBackArrow = (): void => {
-    navigate('/votings');
-  };
 
   const onShowResults = (): void => {
     setShowPrompt(false);
@@ -252,7 +245,7 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
   }, [deployedVoteGuardianAPI]);
 
   return (
-    <div style={{ transform: 'scale(1.2)', transformOrigin: 'top left' }}>
+    <Stack spacing={2} alignItems="center" sx={{ mt: 2 }}>
       {/* <Card
         sx={{ position: 'relative', width: 460, maxHeight: 495, minWidth: 460, minHeight: 495, overflowY: 'auto' }}
         color="primary"
@@ -320,164 +313,6 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
             </Stack>
           );
         })()}
-      {isEditing && whatIsEditing != null && (
-        <div
-          className="w-full"
-          style={{
-            position: 'relative',
-            padding: 16,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            // minHeight: '100vh', // ensures vertical centering even on tall screens
-          }}
-        >
-          <Stack spacing={2} alignItems="center">
-            <IconButton
-              sx={{ position: 'absolute', top: 8, left: 8, mb: 2 }}
-              aria-label="back"
-              onClick={handleClickBackArrow}
-            >
-              <ArrowBackIcon />
-            </IconButton>
-            {whatIsEditing === 'question' && (
-              <Typography variant="body2" color="text.secondary">
-                {voteGuardianState!.votingQuestions?.isEmpty?.()
-                  ? 'No question yet'
-                  : (voteGuardianState!.votingQuestions?.lookup?.(votingIdBytes) ?? 'No question yet')}
-              </Typography>
-            )}
-
-            {whatIsEditing === 'option' &&
-              (voteGuardianState?.votingOptions?.isEmpty?.() ? (
-                <Typography data-testid="vote-guardian-option" color="black">
-                  No options yet.
-                </Typography>
-              ) : (
-                (() => {
-                  const optionsIterable = voteGuardianState?.votingOptions?.lookup?.(votingIdBytes);
-                  const options = optionsIterable ? Array.from(optionsIterable as Iterable<[string, string]>) : [];
-
-                  return options.length > 0 ? (
-                    options.map(([key, value], index) => (
-                      <Typography key={key} data-testid="vote-guardian-option" minHeight={20} color="black">
-                        {Number(value) + 1}. {key}
-                      </Typography>
-                    ))
-                  ) : (
-                    <Typography data-testid="vote-guardian-option" color="black">
-                      No options yet.
-                    </Typography>
-                  );
-                })()
-              ))}
-            <Button variant="contained" color="primary" size="medium" onClick={handleEditClickInside}>
-              Edit
-            </Button>
-
-            {showPrompt && (
-              <>
-                <TextField
-                  id="message-prompt2"
-                  data-testid="vote-guardian-add-question-prompt"
-                  variant="outlined"
-                  focused
-                  // fullWidth
-                  // multiline
-                  minRows={6}
-                  maxRows={6}
-                  placeholder=""
-                  size="small"
-                  color="primary"
-                  inputProps={{ style: { color: 'black' } }}
-                  onChange={(e) => {
-                    setMessagePrompt(e.target.value);
-                  }}
-                />
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="medium"
-                  onClick={() => {
-                    onAdd(whatIsEditing);
-                  }}
-                >
-                  Add
-                </Button>
-              </>
-            )}
-          </Stack>
-        </div>
-      )}
-
-      {/* Gia na pshfhsei */}
-      {isEditing && whatIsEditing != null && (
-        <div
-          className="w-full"
-          style={{
-            position: 'relative',
-            padding: 16,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            // minHeight: '100vh', // ensures vertical centering even on tall screens
-          }}
-        >
-          <Stack spacing={2} alignItems="center">
-            <IconButton
-              sx={{ position: 'absolute', top: 8, left: 8, mb: 2 }}
-              aria-label="back"
-              onClick={handleClickBackArrow}
-            >
-              <ArrowBackIcon />
-            </IconButton>
-            {whatIsEditing === 'question' && (
-              <Typography variant="body2" color="text.secondary">
-                {voteGuardianState!.votingQuestions?.isEmpty?.()
-                  ? 'No question yet'
-                  : (voteGuardianState!.votingQuestions?.lookup?.(votingIdBytes) ?? 'No question yet')}
-              </Typography>
-            )}
-
-            {whatIsEditing === 'cast' &&
-              (() => {
-                const optionsIterable = voteGuardianState?.votingOptions?.lookup?.(votingIdBytes);
-                const options = optionsIterable ? Array.from(optionsIterable as Iterable<[string, string]>) : [];
-
-                return options.length > 0 ? (
-                  <RadioGroup value={selectedOption} onChange={(e) => setSelectedOption(e.target.value)}>
-                    {options.map(([key, value], index) => (
-                      <FormControlLabel
-                        key={key}
-                        value={key}
-                        control={<Radio />}
-                        label={
-                          <Typography data-testid="vote-guardian-option" minHeight={20} color="black">
-                            {index + 1}. {key}
-                          </Typography>
-                        }
-                      />
-                    ))}
-                  </RadioGroup>
-                ) : (
-                  <Typography data-testid="vote-guardian-option" color="black">
-                    No options yet.
-                  </Typography>
-                );
-              })()}
-
-            <Button
-              variant="contained"
-              color="primary"
-              size="small"
-              onClick={() => selectedOption && onAdd('cast', selectedOption)}
-              disabled={!selectedOption}
-            >
-              Vote
-            </Button>
-          </Stack>
-        </div>
-      )}
 
       {!isEditing && !showResults && (
         <>
@@ -537,45 +372,38 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
 
                 {/* END VOTE STATE */}
 
-                {/*  VOTING QUESTION */}
                 <Button
                   variant="contained"
                   color="primary"
                   size="medium"
                   onClick={() => {
-                    handleEditClick('question');
+                    navigate(`/votings/${votingId}/question`);
                   }}
                 >
                   Question
                 </Button>
 
-                {/* END VOTING QUESTION */}
-
-                {/*  VOTING OPTIONS */}
                 <Button
                   variant="contained"
                   color="primary"
                   size="medium"
                   onClick={() => {
-                    handleEditClick('option');
+                    navigate(`/votings/${votingId}/option`);
                   }}
                 >
                   Options
                 </Button>
-                {/* END VOTING OPTIONS */}
 
-                {/* VOTERS */}
                 <Button
                   variant="contained"
                   color="primary"
                   size="medium"
                   onClick={() => {
-                    handleEditClick('voters');
+                    navigate(`/votings/${votingId}/cast`);
                   }}
                 >
-                  Voters
+                  Vote
                 </Button>
-                {/* END VOTERS */}
 
                 {/* DISPLAY SECRET KEY */}
 
@@ -617,22 +445,6 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
                 )}
                 {/* END DISPLAY WALLET PUBLIC KEY */}
 
-                {/* CAST A VOTE */}
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  // disabled={voteGuardianState?.voteState === VOTE_STATE.closed}
-                  onClick={() => {
-                    handleEditClick('cast');
-                  }}
-                >
-                  Cast a vote
-                </Button>
-                {/* END CAST A VOTE */}
-
-                {/* END DISPLAY WALLET PUBLIC KEY MAP */}
-
                 {/* SHOW RESULTS */}
                 <Button variant="contained" color="primary" size="medium" onClick={onShowResults}>
                   SHOW RESULTS
@@ -644,6 +456,6 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
         </>
       )}
       {/* </Card> */}
-    </div>
+    </Stack>
   );
 };
