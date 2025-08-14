@@ -518,7 +518,7 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
 
               <Stack spacing={2} alignItems="center">
                 {/* // VOTE STATE */}
-                {voteGuardianState && (
+                {/* {voteGuardianState && (
                   <Button
                     variant="contained"
                     color="primary"
@@ -533,7 +533,7 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
                       ? 'CLOSE VOTING'
                       : 'OPEN VOTING'}
                   </Button>
-                )}
+                )} */}
 
                 {/* END VOTE STATE */}
 

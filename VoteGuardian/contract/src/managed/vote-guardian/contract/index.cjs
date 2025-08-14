@@ -1295,27 +1295,6 @@ class Contract {
                                                                      { popeq: { cached: true,
                                                                                 result: undefined } }]).value),
                             'Not a valid option!');
-    const vote_0 = _descriptor_2.fromValue(Contract._query(context,
-                                                           partialProofData,
-                                                           [
-                                                            { dup: { n: 0 } },
-                                                            { idx: { cached: false,
-                                                                     pushPath: false,
-                                                                     path: [
-                                                                            { tag: 'value',
-                                                                              value: { value: _descriptor_16.toValue(3n),
-                                                                                       alignment: _descriptor_16.alignment() } },
-                                                                            { tag: 'value',
-                                                                              value: { value: _descriptor_0.toValue(voting_id_0),
-                                                                                       alignment: _descriptor_0.alignment() } }] } },
-                                                            { idx: { cached: false,
-                                                                     pushPath: false,
-                                                                     path: [
-                                                                            { tag: 'value',
-                                                                              value: { value: _descriptor_2.toValue(vote_option_0),
-                                                                                       alignment: _descriptor_2.alignment() } }] } },
-                                                            { popeq: { cached: false,
-                                                                       result: undefined } }]).value);
     const tmp_0 = 1n;
     Contract._query(context,
                     partialProofData,
@@ -1330,7 +1309,7 @@ class Contract {
                                        value: { value: _descriptor_0.toValue(voting_id_0),
                                                 alignment: _descriptor_0.alignment() } },
                                      { tag: 'value',
-                                       value: { value: _descriptor_2.toValue(vote_0),
+                                       value: { value: _descriptor_2.toValue(vote_option_0),
                                                 alignment: _descriptor_2.alignment() } }] } },
                      { addi: { immediate: parseInt(__compactRuntime.valueToBigInt(
                                             { value: _descriptor_4.toValue(tmp_0),

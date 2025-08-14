@@ -165,9 +165,7 @@ export circuit cast_vote(voting_id: Bytes<32>, vote_option: Opaque<"string">): [
     assert (voting_options.lookup(disclose(voting_id)).member(disclose(vote_option)),
         "Not a valid option!");
 
-    const vote = voting_options.lookup(disclose(voting_id)).lookup(disclose(vote_option));
-
-    voting_results.lookup(disclose(voting_id)).lookup(disclose(vote)).increment(1);
+    voting_results.lookup(disclose(voting_id)).lookup(disclose(vote_option)).increment(1);
 
 }
 
