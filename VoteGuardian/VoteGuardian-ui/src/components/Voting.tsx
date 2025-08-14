@@ -353,22 +353,24 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
 
               <Stack spacing={2} alignItems="center">
                 {/* // VOTE STATE */}
-                {/* {voteGuardianState && (
+                {voteGuardianState?.votingStates && (
                   <Button
                     variant="contained"
                     color="primary"
                     size="medium"
                     onClick={() =>
                       handleVoteState(
-                        voteGuardianState.votingStates.lookup(votingIdBytes) === VOTE_STATE.open ? 'open' : 'closed',
+                        voteGuardianState?.votingStates?.lookup?.(votingIdBytes) === VOTE_STATE.open
+                          ? 'open'
+                          : 'closed',
                       ).catch(console.error)
                     }
                   >
-                    {voteGuardianState.votingStates.lookup(votingIdBytes) === VOTE_STATE.open
+                    {voteGuardianState?.votingStates?.lookup?.(votingIdBytes) === VOTE_STATE.open
                       ? 'CLOSE VOTING'
                       : 'OPEN VOTING'}
                   </Button>
-                )} */}
+                )}
 
                 {/* END VOTE STATE */}
 
