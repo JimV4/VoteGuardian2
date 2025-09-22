@@ -46,6 +46,8 @@ export const EditComponent: React.FC<Readonly<EditComponentProps>> = ({ voteGuar
   const { votingId, action } = useParams();
 
   const votingIdBytes = hexToUint8Array(votingId!);
+  console.log(votingIdBytes);
+  console.log(votingId);
   // Subscribes to the `voteGuardianDeployment$` observable so that we can receive updates on the deployment.
   useEffect(() => {
     if (!voteGuardianDeployment$) {
@@ -158,10 +160,34 @@ export const EditComponent: React.FC<Readonly<EditComponentProps>> = ({ voteGuar
         </Typography>
       </Backdrop>
       {(action === 'question' || action === 'cast') && (
+        // <Typography variant="body2" color="text.secondary">
+        //   {voteGuardianState?.votingQuestions?.isEmpty?.()
+        //     ? 'No question yet'
+        //     : (voteGuardianState?.votingQuestions?.lookup?.(votingIdBytes) ?? 'No question yet')}
+        // </Typography>
+        // <Typography variant="body2" color="text.secondary">
+        //   {voteGuardianState?.votingQuestions?.isEmpty?.()
+        //     ? 'No question yet'
+        //     : votingIdBytes
+        //       ? (voteGuardianState?.votingQuestions?.lookup?.(votingIdBytes) ?? 'No question yet')
+        //       : 'Invalid votingIdBytes'}{' '}
+        //   (id: {String(votingIdBytes)})
+        // </Typography>
         <Typography variant="body2" color="text.secondary">
-          {voteGuardianState?.votingQuestions?.isEmpty?.()
-            ? 'No question yet'
-            : (voteGuardianState?.votingQuestions?.lookup?.(votingIdBytes) ?? 'No question yet')}
+          {voteGuardianState == null
+            ? 'No voteGuardianState'
+            : (() => {
+                let questionText = 'No question yet';
+                if (!voteGuardianState.votingQuestions?.isEmpty?.() && votingIdBytes) {
+                  try {
+                    const result = voteGuardianState.votingQuestions.lookup(votingIdBytes);
+                    questionText = result ?? 'No question yet';
+                  } catch {
+                    questionText = 'No question yet';
+                  }
+                }
+                return questionText;
+              })()}
         </Typography>
       )}
 
