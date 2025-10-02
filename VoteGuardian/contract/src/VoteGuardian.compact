@@ -182,8 +182,14 @@ export circuit publish_vote(voting_id: Bytes<32>): [] {
     assert (prove_eligibility(), 
         "Not authorized!");   
 
+    const publish_voting_nullifier = disclose(publish_nullifier(local_secret_key(), voting_id));
+
+    // Έλεγχος αν ο nullifier για τον τρέχον χρήστη ανήκει στο σύνολο. Αν ανήκει σημαίνει ότι έχει ήδη ψηφίσει
+    assert (!publish_nullifier.member(publish_voting_nullifier),
+        "Already published the vote for this voting");    
+
     assert (hashed_votes.member(disclose(secret_vote(voting_id))),
-    "Vote not correct!");     
+        "Vote not correct!");     
 
     assert (voting_options.lookup(disclose(voting_id)).member(disclose(secret_vote(voting_id))),
         "Not a valid option!");
@@ -201,6 +207,11 @@ circuit public_key(sk: Bytes<32>): Bytes<32> {
 circuit nullifier (sk: Bytes<32>, voting_id: Bytes<32>): Bytes<32> {
    return persistentHash<Vector<3, Bytes<32>>>(
            [pad(32, "nulifier-domain"), voting_id as Bytes<32>, sk]);
+}
+
+circuit publish_nullifier (sk: Bytes<32>, voting_id: Bytes<32>): Bytes<32> {
+   return persistentHash<Vector<3, Bytes<32>>>(
+           [pad(32, "publish-nulifier-domain"), voting_id as Bytes<32>, sk]);
 }
 
 circuit generate_voting_id (count: Field, sk: Bytes<32>) : Bytes<32> {
