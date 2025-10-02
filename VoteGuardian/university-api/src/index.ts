@@ -136,7 +136,8 @@ export class TestnetRemoteConfig implements Config {
   indexerWS = 'wss://indexer-rs.testnet-02.midnight.network/api/v1/graphql/ws';
   node = 'https://rpc.testnet-02.midnight.network';
   // proofServer = 'http://127.0.0.1:6300';
-  proofServer = 'https://brick-towers-proof-server.testnet.midnight.solutions';
+  // proofServer = 'https://brick-towers-proof-server.testnet.midnight.solutions';
+  proofServer = 'http://127.0.0.1:6300';
 
   setNetworkId() {
     setNetworkId(NetworkId.TestNet);
