@@ -15,6 +15,7 @@ export ledger voting_results: Map<Bytes<32>, Map<Bytes<32>, Counter>>;        //
 export ledger eligible_voters: HistoricMerkleTree<5, Bytes<32>>;      // Merkle tree of eligible voters
 export ledger voting_states: Map<Bytes<32>, VOTE_STATE>;                // Map with the state of each voting
 export ledger voting_nulifiers: Set<Bytes<32>>;         // Unique tokens per voting per user to avoid double voting
+export ledger publish_voting_nulifiers: Set<Bytes<32>>;         // Unique tokens per voting per user to avoid double vote publishing
 export ledger voting_organizers: Map<Bytes<32>, Bytes<32>>;        // Map with the votings of each organizer
 export ledger hashed_votes: Set<Bytes<32>>;
 
@@ -46,10 +47,10 @@ witness find_voter_public_key(voter_public_key: Bytes<32>): MerkleTreePath<5, By
 witness secret_vote(voting_id: Bytes<32>): Bytes<32>; 
 
 circuit prove_eligibility(): Boolean {
-    const participant_public_key = disclose(public_key(local_secret_key()));
-    const path = disclose(find_voter_public_key(participant_public_key));
+    const participant_public_key = public_key(local_secret_key());
+    const path = find_voter_public_key(participant_public_key);
 
-    return disclose(eligible_voters.checkRoot(merkleTreePathRoot<5, Bytes<32>>(path)));
+    return eligible_voters.checkRoot(disclose(merkleTreePathRoot<5, Bytes<32>>(path)));
         
 }
 
@@ -185,7 +186,7 @@ export circuit publish_vote(voting_id: Bytes<32>): [] {
     const publish_voting_nullifier = disclose(publish_nullifier(local_secret_key(), voting_id));
 
     // Έλεγχος αν ο nullifier για τον τρέχον χρήστη ανήκει στο σύνολο. Αν ανήκει σημαίνει ότι έχει ήδη ψηφίσει
-    assert (!publish_nullifier.member(publish_voting_nullifier),
+    assert (!publish_voting_nulifiers.member(publish_voting_nullifier),
         "Already published the vote for this voting");    
 
     assert (hashed_votes.member(disclose(secret_vote(voting_id))),

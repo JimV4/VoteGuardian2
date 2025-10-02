@@ -174,7 +174,7 @@
     { "op": "constrain_bits", "var": 71, "bits": 248 },
     { "op": "load_imm", "imm": "7365637265742D766F74652D646F6D61696E" },
     { "op": "persistent_hash", "alignment": [{ "tag": "atom", "value": { "length": 32, "tag": "bytes" } }, { "tag": "atom", "value": { "length": 32, "tag": "bytes" } }, { "tag": "atom", "value": { "length": 32, "tag": "bytes" } }, { "tag": "atom", "value": { "length": 32, "tag": "bytes" } }], "inputs": [11, 72, 0, 1, 2, 3, 70, 71] },
-    { "op": "load_imm", "imm": "0A" },
+    { "op": "load_imm", "imm": "0B" },
     { "op": "declare_pub_input", "var": 66 },
     { "op": "declare_pub_input", "var": 4 },
     { "op": "declare_pub_input", "var": 4 },

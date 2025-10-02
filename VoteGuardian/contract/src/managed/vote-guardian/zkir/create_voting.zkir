@@ -130,7 +130,7 @@
     { "op": "load_imm", "imm": "67656E65726174655F6964" },
     { "op": "persistent_hash", "alignment": [{ "tag": "atom", "value": { "length": 32, "tag": "bytes" } }, { "tag": "atom", "value": { "length": 32, "tag": "bytes" } }, { "tag": "atom", "value": { "length": 32, "tag": "bytes" } }], "inputs": [13, 63, 61, 62, 59, 60] },
     { "op": "load_imm", "imm": "70" },
-    { "op": "load_imm", "imm": "09" },
+    { "op": "load_imm", "imm": "0A" },
     { "op": "declare_pub_input", "var": 66 },
     { "op": "declare_pub_input", "var": 0 },
     { "op": "declare_pub_input", "var": 0 },
