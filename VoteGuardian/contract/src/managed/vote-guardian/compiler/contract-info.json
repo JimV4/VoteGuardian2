@@ -50,8 +50,8 @@
         {
           "name": "vote_option",
           "type": {
-            "type-name": "Opaque",
-            "tsType": "string"
+            "type-name": "Bytes",
+            "length": 32
           }
         },
         {
@@ -118,8 +118,26 @@
         {
           "name": "vote_option",
           "type": {
-            "type-name": "Opaque",
-            "tsType": "string"
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "publish_vote",
+      "pure": false,
+      "arguments": [
+        {
+          "name": "voting_id",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
           }
         }
       ],

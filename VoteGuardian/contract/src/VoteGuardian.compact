@@ -9,13 +9,14 @@ export ledger count: Counter;
 export ledger university_public_key: Bytes<32>;
 
 export ledger votings: Set<Bytes<32>>;                // Map with the votings ids and the question of each voting
-export ledger voting_options: Map<Bytes<32>, Map<Opaque<"string">, Opaque<"string">>>; // Map with the options of each question of each voting;
+export ledger voting_options: Map<Bytes<32>, Map<Bytes<32>, Opaque<"string">>>; // Map with the options of each question of each voting;
 export ledger voting_questions: Map<Bytes<32>, Opaque<"string">>;
-export ledger voting_results: Map<Bytes<32>, Map<Opaque<"string">, Counter>>;        // Map with a list of votes for each voting
+export ledger voting_results: Map<Bytes<32>, Map<Bytes<32>, Counter>>;        // Map with a list of votes for each voting
 export ledger eligible_voters: HistoricMerkleTree<5, Bytes<32>>;      // Merkle tree of eligible voters
 export ledger voting_states: Map<Bytes<32>, VOTE_STATE>;                // Map with the state of each voting
 export ledger voting_nulifiers: Set<Bytes<32>>;         // Unique tokens per voting per user to avoid double voting
 export ledger voting_organizers: Map<Bytes<32>, Bytes<32>>;        // Map with the votings of each organizer
+export ledger hashed_votes: Set<Bytes<32>>;
 
 // Constructor initializes the ADTs and predefines eligible voters
 constructor(eligible_voter_public_keys: Vector<5, Bytes<32>>) {
@@ -27,6 +28,7 @@ constructor(eligible_voter_public_keys: Vector<5, Bytes<32>>) {
     voting_nulifiers.resetToDefault();
     voting_organizers.resetToDefault();
     voting_questions.resetToDefault();
+    hashed_votes.resetToDefault();
     count.increment(1);
 
     for (const v of disclose(eligible_voter_public_keys)) {
@@ -40,14 +42,14 @@ witness local_secret_key(): Bytes<32>;
 // Witness that prooves if a public_key is inside the Merkle Tree
 witness find_voter_public_key(voter_public_key: Bytes<32>): MerkleTreePath<5, Bytes<32>>;
 
+// Witness that holds the user's actual vote for a voting
+witness secret_vote(voting_id: Bytes<32>): Bytes<32>; 
+
 circuit prove_eligibility(): Boolean {
     const participant_public_key = disclose(public_key(local_secret_key()));
     const path = disclose(find_voter_public_key(participant_public_key));
 
-    if (eligible_voters.checkRoot(merkleTreePathRoot<5, Bytes<32>>(path)))
-        return true;
-    else 
-        return false;
+    return disclose(eligible_voters.checkRoot(merkleTreePathRoot<5, Bytes<32>>(path)));
         
 }
 
@@ -70,13 +72,13 @@ export circuit create_voting(): [] {
     assert (prove_eligibility(), 
         "Not authorized!");
 
-    const voting_id = disclose(generate_voting_id(count, local_secret_key()));
+    const voting_id = generate_voting_id(count, local_secret_key());
 
-    voting_organizers.insert(voting_id, organizer_public_key);
-    votings.insert(voting_id);
-    voting_states.insert(voting_id, VOTE_STATE.open);
-    voting_options.insert(voting_id, default<Map<Opaque<"string">, Opaque<"string">>>);
-    voting_results.insert(voting_id, default<Map<Opaque<"string">, Counter>>);
+    voting_organizers.insert(disclose(voting_id), organizer_public_key);
+    votings.insert(disclose(voting_id));
+    voting_states.insert(disclose(voting_id), VOTE_STATE.open);
+    voting_options.insert(disclose(voting_id), default<Map<Bytes<32>, Opaque<"string">>>);
+    voting_results.insert(disclose(voting_id), default<Map<Bytes<32>, Counter>>);
     count.increment(1);
 }
 
@@ -92,8 +94,8 @@ export circuit edit_question(voting_id: Bytes<32>, voting_question: Opaque<"stri
     voting_questions.insert(disclose(voting_id), disclose(voting_question));
 }
 
-export circuit add_option(voting_id: Bytes<32>, vote_option: Opaque<"string">, i: Opaque<"string">): [] {
-    const organizer_public_key = disclose(public_key(local_secret_key()));
+export circuit add_option(voting_id: Bytes<32>, vote_option: Bytes<32>, i: Opaque<"string">): [] {
+    const organizer_public_key = public_key(local_secret_key());
     
     assert (prove_eligibility(),
         "Not authorized");
@@ -108,7 +110,7 @@ export circuit add_option(voting_id: Bytes<32>, vote_option: Opaque<"string">, i
 
 
 export circuit close_voting(voting_id: Bytes<32>): [] {
-    const organizer_public_key = disclose(public_key(local_secret_key()));
+    const organizer_public_key = public_key(local_secret_key());
 
     assert (prove_eligibility(),
         "Not authorized");   
@@ -125,7 +127,7 @@ export circuit close_voting(voting_id: Bytes<32>): [] {
 }
 
 export circuit open_voting(voting_id: Bytes<32>): [] {
-    const organizer_public_key = disclose(public_key(local_secret_key()));
+    const organizer_public_key = public_key(local_secret_key());
 
     assert (prove_eligibility(),
         "Not authorized");    
@@ -143,7 +145,7 @@ export circuit open_voting(voting_id: Bytes<32>): [] {
 
 
 // Function to cast a vote, only accessible when voting is open and the voter hasn’t already voted
-export circuit cast_vote(voting_id: Bytes<32>, vote_option: Opaque<"string">): [] {
+export circuit cast_vote(voting_id: Bytes<32>, vote_option: Bytes<32>): [] {
     const current_voting_state = voting_states.lookup(disclose(voting_id));
 
     assert (current_voting_state == VOTE_STATE.open, 
@@ -160,12 +162,33 @@ export circuit cast_vote(voting_id: Bytes<32>, vote_option: Opaque<"string">): [
     assert (!voting_nulifiers.member(voting_nullifier),
         "Already voted for this voting");
 
-    voting_nulifiers.insert(voting_nullifier);
+    voting_nulifiers.insert(disclose(voting_nullifier));
+    const hashed_vote = hash_secret_vote(vote_option, voting_id, local_secret_key());
+    hashed_votes.insert(disclose(hashed_vote));
 
-    assert (voting_options.lookup(disclose(voting_id)).member(disclose(vote_option)),
+    // assert (voting_options.lookup(disclose(voting_id)).member(disclose(vote_option)),
+    //     "Not a valid option!");
+
+    // voting_results.lookup(disclose(voting_id)).lookup(disclose(vote_option)).increment(1);
+
+}
+
+export circuit publish_vote(voting_id: Bytes<32>): [] {
+    const current_voting_state = voting_states.lookup(disclose(voting_id));
+
+    assert (current_voting_state == VOTE_STATE.closed, 
+        "Voting is not closed");
+
+    assert (prove_eligibility(), 
+        "Not authorized!");   
+
+    assert (hashed_votes.member(disclose(secret_vote(voting_id))),
+    "Vote not correct!");     
+
+    assert (voting_options.lookup(disclose(voting_id)).member(disclose(secret_vote(voting_id))),
         "Not a valid option!");
 
-    voting_results.lookup(disclose(voting_id)).lookup(disclose(vote_option)).increment(1);
+    voting_results.lookup(disclose(voting_id)).lookup(disclose(secret_vote(voting_id))).increment(1);
 
 }
 
@@ -183,4 +206,14 @@ circuit nullifier (sk: Bytes<32>, voting_id: Bytes<32>): Bytes<32> {
 circuit generate_voting_id (count: Field, sk: Bytes<32>) : Bytes<32> {
     return persistentHash<Vector<3, Bytes<32>>>(
            [pad(32, "generate_id"), count as Bytes<32>, sk]);
+}
+
+circuit hash_secret_vote(
+    secret_vote: Bytes<32>, 
+    voting_id: Bytes<32>, 
+    secret_key: Bytes<32>
+): Bytes<32> {
+    return persistentHash<Vector<4, Bytes<32>>>(
+        [pad(32, "secret-vote-domain"), voting_id, secret_vote, secret_key]
+    );
 }
