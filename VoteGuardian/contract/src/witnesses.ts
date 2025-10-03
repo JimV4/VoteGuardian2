@@ -18,12 +18,18 @@ import { MerkleTreePath, WitnessContext } from '@midnight-ntwrk/compact-runtime'
 export type VoteGuardianPrivateState = {
   readonly secretKey: Uint8Array;
   voterPublicKeyPath: MerkleTreePath<Uint8Array>;
+  votesPerVotingMap: Map<Uint8Array, Uint8Array>;
 };
 
 // φτιάχνει objects τύπου VoteGuardianPrivateState
-export const createVoteGuardianPrivateState = (secretKey: Uint8Array, voterPublicKeyPath: MerkleTreePath<Uint8Array>) => ({
+export const createVoteGuardianPrivateState = (
+  secretKey: Uint8Array,
+  voterPublicKeyPath: MerkleTreePath<Uint8Array>,
+  votesPerVotingMap: Map<Uint8Array, Uint8Array>,
+) => ({
   secretKey,
   voterPublicKeyPath,
+  votesPerVotingMap,
 });
 
 /* **********************************************************************
@@ -73,7 +79,19 @@ export const witnesses = {
     { privateState, ledger }: WitnessContext<Ledger, VoteGuardianPrivateState>,
     item: Uint8Array,
   ): [VoteGuardianPrivateState, MerkleTreePath<Uint8Array>] => [
-    createVoteGuardianPrivateState(privateState.secretKey, ledger.eligible_voters.findPathForLeaf(item)!),
+    createVoteGuardianPrivateState(
+      privateState.secretKey,
+      ledger.eligible_voters.findPathForLeaf(item)!,
+      privateState.votesPerVotingMap,
+    ),
     ledger.eligible_voters.findPathForLeaf(item)!,
+  ],
+
+  secret_vote: (
+    { privateState, ledger }: WitnessContext<Ledger, VoteGuardianPrivateState>,
+    votingId: Uint8Array,
+  ): [VoteGuardianPrivateState, Uint8Array] => [
+    createVoteGuardianPrivateState(privateState.secretKey, privateState.voterPublicKeyPath, privateState.votesPerVotingMap),
+    privateState.votesPerVotingMap.get(votingId) ?? new Uint8Array([]),
   ],
 };

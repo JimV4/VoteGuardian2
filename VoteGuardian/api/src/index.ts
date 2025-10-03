@@ -50,6 +50,7 @@ export interface DeployedVoteGuardianAPI {
   edit_question: (voting_id: Uint8Array, vote_question: string) => Promise<void>;
   create_voting: () => Promise<void>;
   add_option: (voting_id: Uint8Array, vote_option: string, index: string) => Promise<void>;
+  publish_vote: (voting_id: Uint8Array) => Promise<void>;
 }
 
 /**
@@ -124,6 +125,9 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
           votingOrganizers: ledgerState.voting_organizers,
           eligibleVoters: ledgerState.eligible_voters,
           votingList: [],
+          publishVotingNulifiers: ledgerState.publish_voting_nulifiers,
+          hashedVotes: ledgerState.hashed_votes,
+
           // votingList: (() => {
           //   const list: Voting[] = [];
           //   for (const votingId of ledgerState.votings) {
@@ -173,6 +177,8 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       },
     );
   }
+  publish_vote: (voting_id: Uint8Array) => Promise<void>;
+  l: any;
 
   /**
    * Gets the address of the current deployed contract.
@@ -278,6 +284,32 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
           details: error, // Capture additional details if the error is a custom object.
         });
       }
+    }
+  }
+
+  async publish_vote(voting_id: Uint8Array): Promise<void> {
+    try {
+      this.logger?.info(`voting id: ${voting_id}`);
+      const txData = await this.deployedContract.callTx.publish_vote(voting_id);
+
+      this.logger?.trace({
+        transactionAdded: {
+          circuit: 'add_option',
+          txHash: txData.public.txHash,
+          blockHeight: txData.public.blockHeight,
+        },
+      });
+    } catch (error) {
+      console.log('eeeeeeeeeeeeeeee');
+      console.log((error as Error).message);
+      console.log((error as Error).stack);
+      console.log(error);
+      // Log the full exception, including stack trace if available.
+      this.logger?.error('Error casting a vote', {
+        message: (error as Error).message,
+        stack: (error as Error).stack,
+        details: error, // Capture additional details if the error is a custom object.
+      });
     }
   }
 

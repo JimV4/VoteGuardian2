@@ -30,6 +30,7 @@ constructor(eligible_voter_public_keys: Vector<5, Bytes<32>>) {
     voting_organizers.resetToDefault();
     voting_questions.resetToDefault();
     hashed_votes.resetToDefault();
+    publish_voting_nulifiers.resetToDefault();
     count.increment(1);
 
     for (const v of disclose(eligible_voter_public_keys)) {
@@ -164,7 +165,7 @@ export circuit cast_vote(voting_id: Bytes<32>, vote_option: Bytes<32>): [] {
         "Already voted for this voting");
 
     voting_nulifiers.insert(disclose(voting_nullifier));
-    const hashed_vote = hash_secret_vote(vote_option, voting_id, local_secret_key());
+    const hashed_vote = hash_secret_vote(secret_vote(voting_id), voting_id, local_secret_key());
     hashed_votes.insert(disclose(hashed_vote));
 
     // assert (voting_options.lookup(disclose(voting_id)).member(disclose(vote_option)),
