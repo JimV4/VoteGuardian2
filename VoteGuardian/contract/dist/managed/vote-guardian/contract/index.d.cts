@@ -11,6 +11,8 @@ export type Witnesses<T> = {
                                                                        goes_left: boolean
                                                                      }[]
                                                              }];
+  secret_vote(context: __compactRuntime.WitnessContext<Ledger, T>,
+              voting_id_0: Uint8Array): [T, Uint8Array];
 }
 
 export type ImpureCircuits<T> = {
@@ -20,15 +22,14 @@ export type ImpureCircuits<T> = {
                 voting_question_0: string): __compactRuntime.CircuitResults<T, []>;
   add_option(context: __compactRuntime.CircuitContext<T>,
              voting_id_0: Uint8Array,
-             vote_option_0: string,
-             i_0: string): __compactRuntime.CircuitResults<T, []>;
+             vote_option_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
   close_voting(context: __compactRuntime.CircuitContext<T>,
                voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
   open_voting(context: __compactRuntime.CircuitContext<T>,
               voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
-  cast_vote(context: __compactRuntime.CircuitContext<T>,
-            voting_id_0: Uint8Array,
-            vote_option_0: string): __compactRuntime.CircuitResults<T, []>;
+  cast_vote(context: __compactRuntime.CircuitContext<T>, voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
+  publish_vote(context: __compactRuntime.CircuitContext<T>,
+               voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
 }
 
 export type PureCircuits = {
@@ -41,15 +42,14 @@ export type Circuits<T> = {
                 voting_question_0: string): __compactRuntime.CircuitResults<T, []>;
   add_option(context: __compactRuntime.CircuitContext<T>,
              voting_id_0: Uint8Array,
-             vote_option_0: string,
-             i_0: string): __compactRuntime.CircuitResults<T, []>;
+             vote_option_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
   close_voting(context: __compactRuntime.CircuitContext<T>,
                voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
   open_voting(context: __compactRuntime.CircuitContext<T>,
               voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
-  cast_vote(context: __compactRuntime.CircuitContext<T>,
-            voting_id_0: Uint8Array,
-            vote_option_0: string): __compactRuntime.CircuitResults<T, []>;
+  cast_vote(context: __compactRuntime.CircuitContext<T>, voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
+  publish_vote(context: __compactRuntime.CircuitContext<T>,
+               voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
 }
 
 export type Ledger = {
@@ -68,9 +68,8 @@ export type Ledger = {
     lookup(key_0: Uint8Array): {
       isEmpty(): boolean;
       size(): bigint;
-      member(key_1: string): boolean;
-      lookup(key_1: string): string;
-      [Symbol.iterator](): Iterator<[string, string]>
+      member(elem_0: Uint8Array): boolean;
+      [Symbol.iterator](): Iterator<Uint8Array>
     }
   };
   voting_questions: {
@@ -87,8 +86,8 @@ export type Ledger = {
     lookup(key_0: Uint8Array): {
       isEmpty(): boolean;
       size(): bigint;
-      member(key_1: string): boolean;
-      lookup(key_1: string): { read(): bigint }
+      member(key_1: Uint8Array): boolean;
+      lookup(key_1: Uint8Array): { read(): bigint }
     }
   };
   eligible_voters: {
@@ -113,12 +112,24 @@ export type Ledger = {
     member(elem_0: Uint8Array): boolean;
     [Symbol.iterator](): Iterator<Uint8Array>
   };
+  publish_voting_nulifiers: {
+    isEmpty(): boolean;
+    size(): bigint;
+    member(elem_0: Uint8Array): boolean;
+    [Symbol.iterator](): Iterator<Uint8Array>
+  };
   voting_organizers: {
     isEmpty(): boolean;
     size(): bigint;
     member(key_0: Uint8Array): boolean;
     lookup(key_0: Uint8Array): Uint8Array;
     [Symbol.iterator](): Iterator<[Uint8Array, Uint8Array]>
+  };
+  hashed_votes: {
+    isEmpty(): boolean;
+    size(): bigint;
+    member(elem_0: Uint8Array): boolean;
+    [Symbol.iterator](): Iterator<Uint8Array>
   };
 }
 

@@ -19,13 +19,14 @@ import {
 import CopyIcon from '@mui/icons-material/ContentPasteOutlined';
 import StopIcon from '@mui/icons-material/HighlightOffOutlined';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { VoteGuardianDerivedState, type DeployedVoteGuardianAPI } from '@midnight-ntwrk/vote-guardian-api';
+import { VoteGuardianDerivedState, type DeployedVoteGuardianAPI, utils } from '@midnight-ntwrk/vote-guardian-api';
 import { useDeployedVoteGuardianContext } from '../hooks';
 import { type VoteGuardianDeployment } from '../contexts';
 import { type Observable } from 'rxjs';
 import { VOTE_STATE } from '@midnight-ntwrk/vote-guardian-contract';
 import { useNavigate } from 'react-router-dom';
 import { useLocation, useParams } from 'react-router-dom';
+// import { console } from 'inspector';
 
 const subtle = window.crypto.subtle;
 
@@ -55,6 +56,7 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
   const [isWorking, setIsWorking] = useState(!!voteGuardianDeployment$);
   const [optionCounter, setOptionCounter] = useState(0);
   const [secretKey, setSecretKey] = useState<string>();
+  const [vote, setVote] = useState<string>();
   const [walletPublicKey, setWalletPublicKey] = useState<string>();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
@@ -77,56 +79,57 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
     setShowResults(true);
   };
 
-  const onAdd = useCallback(
-    async (whatIsEditing: 'question' | 'option' | 'voters' | 'cast', voteOption?: string) => {
-      if (!messagePrompt) {
-        return;
-      }
-      const size =
-        typeof voteGuardianState?.votingOptions?.size === 'function'
-          ? Number(voteGuardianState.votingOptions.size()) // call it
-          : Number(voteGuardianState?.votingOptions?.size ?? 0); // or get the value
+  // const onAdd = useCallback(
+  //   async (whatIsEditing: 'question' | 'option' | 'voters' | 'cast', voteOption?: string) => {
+  //     if (!messagePrompt) {
+  //       return;
+  //     }
+  //     const size =
+  //       typeof voteGuardianState?.votingOptions?.size === 'function'
+  //         ? Number(voteGuardianState.votingOptions.size()) // call it
+  //         : Number(voteGuardianState?.votingOptions?.size ?? 0); // or get the value
 
-      const optionMapLength =
-        size > 0 && voteGuardianState?.votingOptions?.member(votingIdBytes)
-          ? Array.from(voteGuardianState.votingOptions.lookup(votingIdBytes) ?? []).length
-          : 0;
-      if (whatIsEditing === 'option') {
-        setOptionCounter((prevCounter) => prevCounter + 1);
-      }
-      try {
-        if (deployedVoteGuardianAPI) {
-          setIsWorking(true);
+  //     const optionMapLength =
+  //       size > 0 && voteGuardianState?.votingOptions?.member(votingIdBytes)
+  //         ? Array.from(voteGuardianState.votingOptions.lookup(votingIdBytes) ?? []).length
+  //         : 0;
+  //     if (whatIsEditing === 'option') {
+  //       setOptionCounter((prevCounter) => prevCounter + 1);
+  //     }
+  //     try {
+  //       if (deployedVoteGuardianAPI) {
+  //         setIsWorking(true);
 
-          if (whatIsEditing === 'option') {
-            await deployedVoteGuardianAPI.add_option(votingIdBytes, messagePrompt, optionMapLength.toString());
-          } else if (whatIsEditing === 'question') {
-            await deployedVoteGuardianAPI.edit_question(votingIdBytes, messagePrompt);
-          } else if (whatIsEditing === 'cast') {
-            await deployedVoteGuardianAPI.cast_vote(votingIdBytes, voteOption!);
-          }
-        }
-      } catch (error: unknown) {
-        setErrorMessage(error instanceof Error ? error.message : String(error));
-      } finally {
-        setIsWorking(false);
-      }
-    },
-    [deployedVoteGuardianAPI, setErrorMessage, setIsWorking, messagePrompt],
-  );
+  //         if (whatIsEditing === 'option') {
+  //           let messagePromtUint8: Uint8Array = new TextEncoder().encode(messagePrompt);
+  //           await deployedVoteGuardianAPI.add_option(votingIdBytes, messagePromtUint8, optionMapLength.toString());
+  //         } else if (whatIsEditing === 'question') {
+  //           await deployedVoteGuardianAPI.edit_question(votingIdBytes, messagePrompt);
+  //         } else if (whatIsEditing === 'cast') {
+  //           await deployedVoteGuardianAPI.cast_vote(votingIdBytes, voteOption!);
+  //         }
+  //       }
+  //     } catch (error: unknown) {
+  //       setErrorMessage(error instanceof Error ? error.message : String(error));
+  //     } finally {
+  //       setIsWorking(false);
+  //     }
+  //   },
+  //   [deployedVoteGuardianAPI, setErrorMessage, setIsWorking, messagePrompt],
+  // );
 
-  const handleEditClickInside = (): void => {
-    setShowPrompt((prev) => !prev);
-  };
+  // const handleEditClickInside = (): void => {
+  //   setShowPrompt((prev) => !prev);
+  // };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setCredentials({ ...credentials, [e.target.name]: e.target.value });
-  };
+  // const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  //   setCredentials({ ...credentials, [e.target.name]: e.target.value });
+  // };
 
-  const handleEditClick = (type: 'question' | 'option' | 'voters' | 'cast'): void => {
-    setIsEditing(true);
-    setWhatIsEditing(type);
-  };
+  // const handleEditClick = (type: 'question' | 'option' | 'voters' | 'cast'): void => {
+  //   setIsEditing(true);
+  //   setWhatIsEditing(type);
+  // };
 
   const onDisplaySecretKey = async (): Promise<void> => {
     try {
@@ -140,6 +143,29 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
           console.log(key);
           setSecretKey(key);
           setMessagePrompt(key);
+        }
+      }
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : String(error));
+    } finally {
+      setIsWorking(false);
+    }
+  };
+
+  const onDisplayVote = async (): Promise<void> => {
+    try {
+      console.log('display vote');
+      if (vote !== undefined) {
+        setVote(undefined);
+      } else {
+        if (deployedVoteGuardianAPI) {
+          setIsWorking(true);
+          console.log(votingIdBytes);
+          console.log(votingId!);
+          const vote = await voteGuardianApiProvider.getVoteForVoting(votingId!);
+          console.log(vote);
+          setVote(vote);
+          setMessagePrompt(vote);
         }
       }
     } catch (error: unknown) {
@@ -182,6 +208,22 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
             await deployedVoteGuardianAPI.open_voting(votingIdBytes);
             setVotingState('open');
           }
+        }
+      } catch (error: unknown) {
+        setErrorMessage(error instanceof Error ? error.message : String(error));
+      } finally {
+        setIsWorking(false);
+      }
+    },
+    [deployedVoteGuardianAPI, setErrorMessage, setIsWorking],
+  );
+
+  const handlePublishVote = useCallback(
+    async (votingId: Uint8Array) => {
+      try {
+        if (deployedVoteGuardianAPI) {
+          setIsWorking(true);
+          await deployedVoteGuardianAPI.publish_vote(votingId);
         }
       } catch (error: unknown) {
         setErrorMessage(error instanceof Error ? error.message : String(error));
@@ -292,11 +334,11 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
             return <Typography>No votes yet.</Typography>;
           }
 
-          const optionsArray = Array.from(optionsForVoting as Iterable<[string, string]>);
+          const optionsArray = Array.from(optionsForVoting as Iterable<[Uint8Array]>);
 
-          const entries = optionsArray.map(([optionKey, optionLabel]) => {
+          const entries = optionsArray.map(([optionKey]) => {
             const count = resultsForVoting.member(optionKey) ? resultsForVoting.lookup(optionKey).read() : BigInt(0);
-            return [optionKey, count] as [string, bigint];
+            return [utils.fromBytes32(optionKey), count] as [string, bigint];
           });
 
           if (entries.length === 0) {
@@ -426,6 +468,26 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
                   </Typography>
                 )}
                 {/* END DISPLAY SECRET KEY */}
+
+                {/* DISPLAY VOTE */}
+
+                <Button variant="contained" color="primary" size="medium" onClick={onDisplayVote}>
+                  {vote !== undefined ? 'Hide vote' : 'Display vote'}
+                </Button>
+                {vote !== undefined && (
+                  <Typography
+                    color="black"
+                    sx={{
+                      wordBreak: 'break-all', // breaks long words (like secret keys)
+                      whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
+                      width: '100%', // ensures it uses the full container width
+                      textAlign: 'center', // optional, for better visual balance
+                    }}
+                  >
+                    {vote}
+                  </Typography>
+                )}
+                {/* END DISPLAY VOTE */}
 
                 {/* DISPLAY WALLET PUBLIC KEY */}
 

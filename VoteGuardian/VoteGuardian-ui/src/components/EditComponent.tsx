@@ -17,6 +17,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useParams } from 'react-router-dom';
+import { useDeployedVoteGuardianContext } from '../hooks';
 
 function hexToUint8Array(hex: string): Uint8Array {
   if (hex.length % 2 !== 0) throw new Error('Hex string must have even length');
@@ -34,6 +35,7 @@ export interface EditComponentProps {
 export const EditComponent: React.FC<Readonly<EditComponentProps>> = ({ voteGuardianDeployment$ }) => {
   const [showPrompt, setShowPrompt] = useState(false);
   const [voteGuardianDeployment, setVoteGuardianDeployment] = useState<VoteGuardianDeployment>();
+  const voteGuardianApiProvider = useDeployedVoteGuardianContext();
   const [deployedVoteGuardianAPI, setDeployedVoteGuardianAPI] = useState<DeployedVoteGuardianAPI>();
   const [isWorking, setIsWorking] = useState(!!voteGuardianDeployment$);
   const [errorMessage, setErrorMessage] = useState<string>();
@@ -120,11 +122,16 @@ export const EditComponent: React.FC<Readonly<EditComponentProps>> = ({ voteGuar
           setIsWorking(true);
 
           if (action === 'option') {
-            await deployedVoteGuardianAPI.add_option(votingIdBytes, messagePrompt!, optionMapLength.toString());
+            let messagePromtUint8: Uint8Array = utils.toBytes32(messagePrompt!);
+            await deployedVoteGuardianAPI.add_option(votingIdBytes, messagePromtUint8!);
           } else if (action === 'question') {
             await deployedVoteGuardianAPI.edit_question(votingIdBytes, messagePrompt!);
           } else if (action === 'cast') {
-            await deployedVoteGuardianAPI.cast_vote(votingIdBytes, voteOption!);
+            const voteOptionUint8 = utils.toBytes32(voteOption!);
+            console.log(`option bytes: ${voteOptionUint8}`);
+            console.log(`option str: ${voteOption}`);
+            await voteGuardianApiProvider.setPrivateStateVote(votingId!, voteOption!);
+            await deployedVoteGuardianAPI.cast_vote(votingIdBytes);
           }
         }
       } catch (error: unknown) {
@@ -199,14 +206,19 @@ export const EditComponent: React.FC<Readonly<EditComponentProps>> = ({ voteGuar
         ) : (
           (() => {
             const optionsIterable = voteGuardianState?.votingOptions?.lookup?.(votingIdBytes);
-            const options = optionsIterable ? Array.from(optionsIterable as Iterable<[string, string]>) : [];
+            const options = optionsIterable ? Array.from(optionsIterable as Iterable<Uint8Array>) : [];
 
             return options.length > 0 ? (
-              options.map(([key, value], index) => (
-                <Typography key={key} data-testid="vote-guardian-option" minHeight={20} color="black">
-                  {Number(value) + 1}. {key}
-                </Typography>
-              ))
+              options.map((key, index) => {
+                // Convert Uint8Array → readable string
+                const keyStr = utils.fromBytes32(key);
+
+                return (
+                  <Typography key={keyStr} data-testid="vote-guardian-option" minHeight={20} color="black">
+                    {index + 1}. {keyStr}
+                  </Typography>
+                );
+              })
             ) : (
               <Typography data-testid="vote-guardian-option" color="black">
                 No options yet.
@@ -218,23 +230,28 @@ export const EditComponent: React.FC<Readonly<EditComponentProps>> = ({ voteGuar
       {action === 'cast' &&
         (() => {
           const optionsIterable = voteGuardianState?.votingOptions?.lookup?.(votingIdBytes);
-          const options = optionsIterable ? Array.from(optionsIterable as Iterable<[string, string]>) : [];
+          const options = optionsIterable ? Array.from(optionsIterable as Iterable<Uint8Array>) : [];
 
           return options.length > 0 ? (
             <>
               <RadioGroup value={selectedOption} onChange={(e) => setSelectedOption(e.target.value)}>
-                {options.map(([key, value], index) => (
-                  <FormControlLabel
-                    key={key}
-                    value={key}
-                    control={<Radio />}
-                    label={
-                      <Typography data-testid="vote-guardian-option" minHeight={20} color="black">
-                        {index + 1}. {key}
-                      </Typography>
-                    }
-                  />
-                ))}
+                {options.map((keyBytes, index) => {
+                  // Decode each Uint8Array to a readable UTF-8 string
+                  const keyStr = utils.fromBytes32(keyBytes);
+
+                  return (
+                    <FormControlLabel
+                      key={keyStr}
+                      value={keyStr}
+                      control={<Radio />}
+                      label={
+                        <Typography data-testid="vote-guardian-option" minHeight={20} color="black">
+                          {index + 1}. {keyStr}
+                        </Typography>
+                      }
+                    />
+                  );
+                })}
               </RadioGroup>
 
               <Button

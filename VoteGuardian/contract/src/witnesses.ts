@@ -5,6 +5,7 @@
 
 import { Ledger, ledger } from './managed/vote-guardian/contract/index.cjs';
 import { MerkleTreePath, WitnessContext } from '@midnight-ntwrk/compact-runtime';
+import { toHex } from '@midnight-ntwrk/midnight-js-utils';
 
 /* **********************************************************************
  * The only hidden state needed by the VoteGuardian contract is
@@ -18,14 +19,14 @@ import { MerkleTreePath, WitnessContext } from '@midnight-ntwrk/compact-runtime'
 export type VoteGuardianPrivateState = {
   readonly secretKey: Uint8Array;
   voterPublicKeyPath: MerkleTreePath<Uint8Array>;
-  votesPerVotingMap: Map<Uint8Array, Uint8Array>;
+  votesPerVotingMap: Map<String, String>;
 };
 
 // φτιάχνει objects τύπου VoteGuardianPrivateState
 export const createVoteGuardianPrivateState = (
   secretKey: Uint8Array,
   voterPublicKeyPath: MerkleTreePath<Uint8Array>,
-  votesPerVotingMap: Map<Uint8Array, Uint8Array>,
+  votesPerVotingMap: Map<String, String>,
 ) => ({
   secretKey,
   voterPublicKeyPath,
@@ -60,6 +61,15 @@ export const createVoteGuardianPrivateState = (
  * only the binding for the privateState in scope.
  */
 
+function toBytes32FromString(str?: String): Uint8Array {
+  const bytes32 = new Uint8Array(32);
+  if (str) {
+    const primitive = str.valueOf(); // convert String object → primitive string
+    bytes32.set(new TextEncoder().encode(primitive).subarray(0, 32));
+  }
+  return bytes32;
+}
+
 // Από την στιγμή που έχω μόνο έναν witness στο contract τότε έχω μόνο ένα πεδίο σε αυτό το object. Αν είχα κι άλλο
 // witness στο VoteGuardian.compact τότε θα υπήρχε αντίστοιχα κι άλλο πεδίο στο object με το ίδιο όνομα
 export const witnesses = {
@@ -92,6 +102,6 @@ export const witnesses = {
     votingId: Uint8Array,
   ): [VoteGuardianPrivateState, Uint8Array] => [
     createVoteGuardianPrivateState(privateState.secretKey, privateState.voterPublicKeyPath, privateState.votesPerVotingMap),
-    privateState.votesPerVotingMap.get(votingId) ?? new Uint8Array([]),
+    toBytes32FromString(privateState.votesPerVotingMap.get(toHex(votingId))?.toString()),
   ],
 };

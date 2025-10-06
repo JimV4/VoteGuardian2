@@ -89,7 +89,7 @@
     { "op": "assert", "cond": 48 },
     { "op": "declare_pub_input", "var": 41 },
     { "op": "pi_skip", "guard": 2, "count": 1 },
-    { "op": "load_imm", "imm": "09" },
+    { "op": "load_imm", "imm": "0A" },
     { "op": "declare_pub_input", "var": 42 },
     { "op": "declare_pub_input", "var": 2 },
     { "op": "declare_pub_input", "var": 2 },

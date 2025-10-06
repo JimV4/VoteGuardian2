@@ -13,12 +13,13 @@ import { type Observable } from 'rxjs';
 export interface DeployedVoteGuardianAPI {
     readonly deployedContractAddress: ContractAddress;
     readonly state$: Observable<VoteGuardianDerivedState>;
-    cast_vote: (voting_id: Uint8Array, encrypted_vote: string) => Promise<void>;
+    cast_vote: (voting_id: Uint8Array) => Promise<void>;
     close_voting: (voting_id: Uint8Array) => Promise<void>;
     open_voting: (voting_id: Uint8Array) => Promise<void>;
     edit_question: (voting_id: Uint8Array, vote_question: string) => Promise<void>;
     create_voting: () => Promise<void>;
-    add_option: (voting_id: Uint8Array, vote_option: string, index: string) => Promise<void>;
+    add_option: (voting_id: Uint8Array, vote_option: Uint8Array) => Promise<void>;
+    publish_vote: (voting_id: Uint8Array) => Promise<void>;
 }
 /**
  * Provides an implementation of {@link DeployedVoteGuardianAPI} by adapting a deployed Vote Guardian
@@ -51,7 +52,7 @@ export declare class VoteGuardianAPI implements DeployedVoteGuardianAPI {
      */
     readonly state$: Observable<VoteGuardianDerivedState>;
     create_voting(): Promise<void>;
-    add_option(voting_id: Uint8Array, vote_option: string, index: string): Promise<void>;
+    add_option(voting_id: Uint8Array, vote_option: Uint8Array): Promise<void>;
     /**
      * Attempts to caste a vote .
      *
@@ -60,7 +61,8 @@ export declare class VoteGuardianAPI implements DeployedVoteGuardianAPI {
      * @remarks
      * This method can fail during local circuit execution if the voting is not open or the user has already voted.
      */
-    cast_vote(voting_id: Uint8Array, encrypted_vote: string): Promise<void>;
+    cast_vote(voting_id: Uint8Array): Promise<void>;
+    publish_vote(voting_id: Uint8Array): Promise<void>;
     /**
      * Attempts to caste a vote .
      *
@@ -97,6 +99,8 @@ export declare class VoteGuardianAPI implements DeployedVoteGuardianAPI {
      * {@link DeployedVoteGuardianContract}; or rejects with an error.
      */
     static join(providers: VoteGuardianProviders, contractAddress: ContractAddress, secretKey: string, logger?: Logger): Promise<VoteGuardianAPI>;
+    private static getPrivateStateMerklePath;
+    private static getPrivateStateVotesMap;
 }
 /**
  * A namespace that represents the exports from the `'utils'` sub-package.

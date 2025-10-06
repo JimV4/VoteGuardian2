@@ -42,6 +42,17 @@ export function stringToUint8Array(input) {
     const encoder = new TextEncoder();
     return encoder.encode(input);
 }
+export function fromBytes32(bytes32) {
+    // Remove trailing zero bytes (padding)
+    const trimmed = bytes32.subarray(0, bytes32.findLastIndex((b) => b !== 0) + 1);
+    return new TextDecoder().decode(trimmed);
+}
+export function toBytes32(str) {
+    const encoded = new TextEncoder().encode(str);
+    const bytes32 = new Uint8Array(32);
+    bytes32.set(encoded.subarray(0, 32)); // copy up to 32 bytes
+    return bytes32;
+}
 // export function hash_secret_key(secretKey: string): Uint8Array {
 //   const hashSHA256 = (data: string) => {
 //     return crypto.createHash('sha256').update(data, 'hex').digest('hex');

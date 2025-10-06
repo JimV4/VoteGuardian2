@@ -53,13 +53,6 @@
             "type-name": "Bytes",
             "length": 32
           }
-        },
-        {
-          "name": "i",
-          "type": {
-            "type-name": "Opaque",
-            "tsType": "string"
-          }
         }
       ],
       "result-type": {
@@ -110,13 +103,6 @@
       "arguments": [
         {
           "name": "voting_id",
-          "type": {
-            "type-name": "Bytes",
-            "length": 32
-          }
-        },
-        {
-          "name": "vote_option",
           "type": {
             "type-name": "Bytes",
             "length": 32

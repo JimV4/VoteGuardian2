@@ -77,6 +77,8 @@ export class VoteGuardianAPI {
                 votingOrganizers: ledgerState.voting_organizers,
                 eligibleVoters: ledgerState.eligible_voters,
                 votingList: [],
+                publishVotingNulifiers: ledgerState.publish_voting_nulifiers,
+                hashedVotes: ledgerState.hashed_votes,
                 // votingList: (() => {
                 //   const list: Voting[] = [];
                 //   for (const votingId of ledgerState.votings) {
@@ -155,11 +157,11 @@ export class VoteGuardianAPI {
             });
         }
     }
-    async add_option(voting_id, vote_option, index) {
+    async add_option(voting_id, vote_option) {
         try {
             this.logger?.info(`added option: ${vote_option}`);
-            this.logger?.info(`added index: ${index}`);
-            const txData = await this.deployedContract.callTx.add_option(voting_id, vote_option, index);
+            // this.logger?.info(`added index: ${index}`);
+            const txData = await this.deployedContract.callTx.add_option(voting_id, vote_option);
             this.logger?.trace({
                 transactionAdded: {
                     circuit: 'add_option',
@@ -189,10 +191,10 @@ export class VoteGuardianAPI {
      * @remarks
      * This method can fail during local circuit execution if the voting is not open or the user has already voted.
      */
-    async cast_vote(voting_id, encrypted_vote) {
+    async cast_vote(voting_id) {
         try {
-            this.logger?.info(`casted votee: ${encrypted_vote}`);
-            const txData = await this.deployedContract.callTx.cast_vote(voting_id, encrypted_vote);
+            // this.logger?.info(`casted votee: ${encrypted_vote}`);
+            const txData = await this.deployedContract.callTx.cast_vote(voting_id);
             this.logger?.trace({
                 transactionAdded: {
                     circuit: 'cast_vote',
@@ -208,6 +210,10 @@ export class VoteGuardianAPI {
             // console.log(error);
             if (err.message.includes('type error')) {
                 this.logger?.info('You are not authorized to vote! 2');
+                this.logger?.info(err);
+                console.log(error.message);
+                console.log(error.stack);
+                console.log(error);
             }
             else {
                 console.log(error.message);
@@ -220,6 +226,31 @@ export class VoteGuardianAPI {
                     details: error, // Capture additional details if the error is a custom object.
                 });
             }
+        }
+    }
+    async publish_vote(voting_id) {
+        try {
+            this.logger?.info(`voting id: ${voting_id}`);
+            const txData = await this.deployedContract.callTx.publish_vote(voting_id);
+            this.logger?.trace({
+                transactionAdded: {
+                    circuit: 'add_option',
+                    txHash: txData.public.txHash,
+                    blockHeight: txData.public.blockHeight,
+                },
+            });
+        }
+        catch (error) {
+            console.log('eeeeeeeeeeeeeeee');
+            console.log(error.message);
+            console.log(error.stack);
+            console.log(error);
+            // Log the full exception, including stack trace if available.
+            this.logger?.error('Error casting a vote', {
+                message: error.message,
+                stack: error.stack,
+                details: error, // Capture additional details if the error is a custom object.
+            });
         }
     }
     /**
@@ -322,7 +353,7 @@ export class VoteGuardianAPI {
                             goes_left: false,
                         },
                     ],
-                }),
+                }, new Map()),
                 args: [eligibleVoterPublicKeys],
             });
             logger?.info('Passed deploy contract');
@@ -362,6 +393,8 @@ export class VoteGuardianAPI {
                 contractAddress,
             },
         });
+        const privateStateMerklePath = await this.getPrivateStateMerklePath(providers);
+        const privateStateVotersMap = await this.getPrivateStateVotesMap(providers);
         const deployedVoteGuardianContract = await findDeployedContract(providers, {
             contractAddress,
             contract: VoteGuardianContractInstance,
@@ -370,15 +403,7 @@ export class VoteGuardianAPI {
             // initialPrivateState: createVoteGuardianPrivateState(utils.hexToBytes(secretKey)),
             initialPrivateState: 
             // (await providers.privateStateProvider.get('voteGuardianPrivateState')) ??
-            createVoteGuardianPrivateState(utils.hexToBytes(secretKey), {
-                leaf: new Uint8Array(32),
-                path: [
-                    {
-                        sibling: { field: BigInt(0) },
-                        goes_left: false,
-                    },
-                ],
-            }),
+            createVoteGuardianPrivateState(utils.hexToBytes(secretKey), privateStateMerklePath, privateStateVotersMap),
         });
         logger?.trace({
             contractJoined: {
@@ -386,6 +411,27 @@ export class VoteGuardianAPI {
             },
         });
         return new VoteGuardianAPI(deployedVoteGuardianContract, providers, logger);
+    }
+    // ο τύπος VoteGuardianProviders έρχεται από το common-types.ts και ο τύπος VoteGuardianPrivateState έρχεται από το witnesses.ts
+    // private static async getPrivateState(providers: VoteGuardianProviders): Promise<VoteGuardianPrivateState> {
+    //   const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+    //   return existingPrivateState ?? createVoteGuardianPrivateState(utils.randomBytes(32));
+    // }
+    static async getPrivateStateMerklePath(providers) {
+        const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+        return (existingPrivateState?.voterPublicKeyPath ?? {
+            leaf: new Uint8Array(32),
+            path: [
+                {
+                    sibling: { field: BigInt(0) },
+                    goes_left: false,
+                },
+            ],
+        });
+    }
+    static async getPrivateStateVotesMap(providers) {
+        const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+        return existingPrivateState?.votesPerVotingMap ?? new Map();
     }
 }
 /**

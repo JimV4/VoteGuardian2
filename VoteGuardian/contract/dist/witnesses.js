@@ -2,10 +2,12 @@
  * This file defines the shape of the bulletin board's private state,
  * as well as the single witness function that accesses it.
  */
+import { toHex } from '@midnight-ntwrk/midnight-js-utils';
 // φτιάχνει objects τύπου VoteGuardianPrivateState
-export const createVoteGuardianPrivateState = (secretKey, voterPublicKeyPath) => ({
+export const createVoteGuardianPrivateState = (secretKey, voterPublicKeyPath, votesPerVotingMap) => ({
     secretKey,
     voterPublicKeyPath,
+    votesPerVotingMap,
 });
 /* **********************************************************************
  * The witnesses object for the bulletin board contract is an object
@@ -34,6 +36,14 @@ export const createVoteGuardianPrivateState = (secretKey, voterPublicKeyPath) =>
  * from the WitnessContext, so it uses the parameter notation that puts
  * only the binding for the privateState in scope.
  */
+function toBytes32FromString(str) {
+    const bytes32 = new Uint8Array(32);
+    if (str) {
+        const primitive = str.valueOf(); // convert String object → primitive string
+        bytes32.set(new TextEncoder().encode(primitive).subarray(0, 32));
+    }
+    return bytes32;
+}
 // Από την στιγμή που έχω μόνο έναν witness στο contract τότε έχω μόνο ένα πεδίο σε αυτό το object. Αν είχα κι άλλο
 // witness στο VoteGuardian.compact τότε θα υπήρχε αντίστοιχα κι άλλο πεδίο στο object με το ίδιο όνομα
 export const witnesses = {
@@ -46,8 +56,12 @@ export const witnesses = {
         privateState.secretKey,
     ],
     find_voter_public_key: ({ privateState, ledger }, item) => [
-        createVoteGuardianPrivateState(privateState.secretKey, ledger.eligible_voters.findPathForLeaf(item)),
+        createVoteGuardianPrivateState(privateState.secretKey, ledger.eligible_voters.findPathForLeaf(item), privateState.votesPerVotingMap),
         ledger.eligible_voters.findPathForLeaf(item),
+    ],
+    secret_vote: ({ privateState, ledger }, votingId) => [
+        createVoteGuardianPrivateState(privateState.secretKey, privateState.voterPublicKeyPath, privateState.votesPerVotingMap),
+        toBytes32FromString(privateState.votesPerVotingMap.get(toHex(votingId))?.toString()),
     ],
 };
 //# sourceMappingURL=witnesses.js.map

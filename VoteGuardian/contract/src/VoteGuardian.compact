@@ -9,7 +9,8 @@ export ledger count: Counter;
 export ledger university_public_key: Bytes<32>;
 
 export ledger votings: Set<Bytes<32>>;                // Map with the votings ids and the question of each voting
-export ledger voting_options: Map<Bytes<32>, Map<Bytes<32>, Opaque<"string">>>; // Map with the options of each question of each voting;
+// export ledger voting_options: Map<Bytes<32>, Map<Bytes<32>, Opaque<"string">>>; // Map with the options of each question of each voting;
+export ledger voting_options: Map<Bytes<32>, Set<Bytes<32>>>; 
 export ledger voting_questions: Map<Bytes<32>, Opaque<"string">>;
 export ledger voting_results: Map<Bytes<32>, Map<Bytes<32>, Counter>>;        // Map with a list of votes for each voting
 export ledger eligible_voters: HistoricMerkleTree<5, Bytes<32>>;      // Merkle tree of eligible voters
@@ -79,7 +80,7 @@ export circuit create_voting(): [] {
     voting_organizers.insert(disclose(voting_id), organizer_public_key);
     votings.insert(disclose(voting_id));
     voting_states.insert(disclose(voting_id), VOTE_STATE.open);
-    voting_options.insert(disclose(voting_id), default<Map<Bytes<32>, Opaque<"string">>>);
+    voting_options.insert(disclose(voting_id), default<Set<Bytes<32>>>);
     voting_results.insert(disclose(voting_id), default<Map<Bytes<32>, Counter>>);
     count.increment(1);
 }
@@ -96,7 +97,7 @@ export circuit edit_question(voting_id: Bytes<32>, voting_question: Opaque<"stri
     voting_questions.insert(disclose(voting_id), disclose(voting_question));
 }
 
-export circuit add_option(voting_id: Bytes<32>, vote_option: Bytes<32>, i: Opaque<"string">): [] {
+export circuit add_option(voting_id: Bytes<32>, vote_option: Bytes<32>): [] {
     const organizer_public_key = public_key(local_secret_key());
     
     assert (prove_eligibility(),
@@ -105,7 +106,7 @@ export circuit add_option(voting_id: Bytes<32>, vote_option: Bytes<32>, i: Opaqu
     assert (voting_organizers.lookup(disclose(voting_id)) == organizer_public_key,
         "Not authorized");   
 
-    voting_options.lookup(disclose(voting_id)).insert(disclose(vote_option), disclose(i));
+    voting_options.lookup(disclose(voting_id)).insert(disclose(vote_option));
     voting_results.lookup(disclose(voting_id)).insert(disclose(vote_option), default<Counter>);
 
 }
@@ -147,7 +148,7 @@ export circuit open_voting(voting_id: Bytes<32>): [] {
 
 
 // Function to cast a vote, only accessible when voting is open and the voter hasn’t already voted
-export circuit cast_vote(voting_id: Bytes<32>, vote_option: Bytes<32>): [] {
+export circuit cast_vote(voting_id: Bytes<32>): [] {
     const current_voting_state = voting_states.lookup(disclose(voting_id));
 
     assert (current_voting_state == VOTE_STATE.open, 

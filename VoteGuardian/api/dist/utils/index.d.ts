@@ -13,3 +13,5 @@ export declare const randomBytes: (length: number) => Uint8Array;
 export declare const hexToBytesNull: (hex: string) => Uint8Array<ArrayBuffer> | null;
 export declare const hexToBytes: (hex: string) => Uint8Array<ArrayBuffer>;
 export declare function stringToUint8Array(input: string): Uint8Array;
+export declare function fromBytes32(bytes32: Uint8Array): string;
+export declare function toBytes32(str: string): Uint8Array;

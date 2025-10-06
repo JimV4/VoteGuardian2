@@ -6,7 +6,7 @@
 
 // αυτό το αρχείο περιέχει την κύρια λογική του VoteGuardian dapp
 
-import { type ContractAddress, convert_bigint_to_Uint8Array } from '@midnight-ntwrk/compact-runtime';
+import { type ContractAddress, convert_bigint_to_Uint8Array, MerkleTreePath } from '@midnight-ntwrk/compact-runtime';
 import { type Logger } from 'pino';
 import type {
   VoteGuardianDerivedState,
@@ -44,12 +44,12 @@ export interface DeployedVoteGuardianAPI {
   readonly deployedContractAddress: ContractAddress;
   readonly state$: Observable<VoteGuardianDerivedState>;
 
-  cast_vote: (voting_id: Uint8Array, encrypted_vote: string) => Promise<void>;
+  cast_vote: (voting_id: Uint8Array) => Promise<void>;
   close_voting: (voting_id: Uint8Array) => Promise<void>;
   open_voting: (voting_id: Uint8Array) => Promise<void>;
   edit_question: (voting_id: Uint8Array, vote_question: string) => Promise<void>;
   create_voting: () => Promise<void>;
-  add_option: (voting_id: Uint8Array, vote_option: string, index: string) => Promise<void>;
+  add_option: (voting_id: Uint8Array, vote_option: Uint8Array) => Promise<void>;
   publish_vote: (voting_id: Uint8Array) => Promise<void>;
 }
 
@@ -177,8 +177,6 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       },
     );
   }
-  publish_vote: (voting_id: Uint8Array) => Promise<void>;
-  l: any;
 
   /**
    * Gets the address of the current deployed contract.
@@ -218,11 +216,11 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
     }
   }
 
-  async add_option(voting_id: Uint8Array, vote_option: string, index: string): Promise<void> {
+  async add_option(voting_id: Uint8Array, vote_option: Uint8Array): Promise<void> {
     try {
       this.logger?.info(`added option: ${vote_option}`);
-      this.logger?.info(`added index: ${index}`);
-      const txData = await this.deployedContract.callTx.add_option(voting_id, vote_option, index);
+      // this.logger?.info(`added index: ${index}`);
+      const txData = await this.deployedContract.callTx.add_option(voting_id, vote_option);
 
       this.logger?.trace({
         transactionAdded: {
@@ -254,10 +252,10 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
    * This method can fail during local circuit execution if the voting is not open or the user has already voted.
    */
 
-  async cast_vote(voting_id: Uint8Array, encrypted_vote: string): Promise<void> {
+  async cast_vote(voting_id: Uint8Array): Promise<void> {
     try {
-      this.logger?.info(`casted votee: ${encrypted_vote}`);
-      const txData = await this.deployedContract.callTx.cast_vote(voting_id, encrypted_vote);
+      // this.logger?.info(`casted votee: ${encrypted_vote}`);
+      const txData = await this.deployedContract.callTx.cast_vote(voting_id);
 
       this.logger?.trace({
         transactionAdded: {
@@ -273,6 +271,10 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       // console.log(error);
       if (err.message.includes('type error')) {
         this.logger?.info('You are not authorized to vote! 2');
+        this.logger?.info(err);
+        console.log((error as Error).message);
+        console.log((error as Error).stack);
+        console.log(error);
       } else {
         console.log((error as Error).message);
         console.log((error as Error).stack);
@@ -422,15 +424,19 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       const DeployedVoteGuardianContract = await deployContract(providers, {
         privateStateId: 'voteGuardianPrivateState',
         contract: VoteGuardianContractInstance,
-        initialPrivateState: createVoteGuardianPrivateState(utils.hexToBytes(secretKey), {
-          leaf: new Uint8Array(32),
-          path: [
-            {
-              sibling: { field: BigInt(0) },
-              goes_left: false,
-            },
-          ],
-        }),
+        initialPrivateState: createVoteGuardianPrivateState(
+          utils.hexToBytes(secretKey),
+          {
+            leaf: new Uint8Array(32),
+            path: [
+              {
+                sibling: { field: BigInt(0) },
+                goes_left: false,
+              },
+            ],
+          },
+          new Map<String, String>(),
+        ),
         args: [eligibleVoterPublicKeys],
       });
 
@@ -479,6 +485,8 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       },
     });
 
+    const privateStateMerklePath = await this.getPrivateStateMerklePath(providers);
+    const privateStateVotersMap = await this.getPrivateStateVotesMap(providers);
     const deployedVoteGuardianContract = await findDeployedContract(providers, {
       contractAddress,
       contract: VoteGuardianContractInstance,
@@ -487,15 +495,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       // initialPrivateState: createVoteGuardianPrivateState(utils.hexToBytes(secretKey)),
       initialPrivateState:
         // (await providers.privateStateProvider.get('voteGuardianPrivateState')) ??
-        createVoteGuardianPrivateState(utils.hexToBytes(secretKey), {
-          leaf: new Uint8Array(32),
-          path: [
-            {
-              sibling: { field: BigInt(0) },
-              goes_left: false,
-            },
-          ],
-        }),
+        createVoteGuardianPrivateState(utils.hexToBytes(secretKey), privateStateMerklePath, privateStateVotersMap),
     });
 
     logger?.trace({
@@ -511,6 +511,43 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
   // private static async getPrivateState(providers: VoteGuardianProviders): Promise<VoteGuardianPrivateState> {
   //   const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
   //   return existingPrivateState ?? createVoteGuardianPrivateState(utils.randomBytes(32));
+  // }
+  private static async getPrivateStateMerklePath(
+    providers: VoteGuardianProviders,
+  ): Promise<MerkleTreePath<Uint8Array>> {
+    const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+    return (
+      existingPrivateState?.voterPublicKeyPath ?? {
+        leaf: new Uint8Array(32),
+        path: [
+          {
+            sibling: { field: BigInt(0) },
+            goes_left: false,
+          },
+        ],
+      }
+    );
+  }
+
+  private static async getPrivateStateVotesMap(providers: VoteGuardianProviders): Promise<Map<String, String>> {
+    const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+    return existingPrivateState?.votesPerVotingMap ?? new Map<String, String>();
+  }
+
+  // public static async setPrivateStateVotesMap(providers: VoteGuardianProviders): Promise<void> {
+  //   const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+  //   const updatedVotesPerVotingMap = new Map(existingPrivateState!.votesPerVotingMap);
+  //   updatedVotesPerVotingMap.set(votingId, vote);
+
+  //   const newPrivateState: VoteGuardianPrivateState = {
+  //     secretKey: existingPrivateState!.secretKey,
+  //     voterPublicKeyPath: existingPrivateState!.voterPublicKeyPath,
+  //     votesPerVotingMap: updatedVotesPerVotingMap,
+  //   };
+
+  //   if (existingPrivateState) {
+  //     await providers.privateStateProvider.set('voteGuardianPrivateState', newPrivateState);
+  //   }
   // }
 }
 

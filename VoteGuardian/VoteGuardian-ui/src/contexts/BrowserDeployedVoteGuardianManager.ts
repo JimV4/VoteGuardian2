@@ -2,6 +2,7 @@ import {
   type DeployedVoteGuardianAPI,
   VoteGuardianAPI,
   type VoteGuardianProviders,
+  utils,
 } from '@midnight-ntwrk/vote-guardian-api';
 import { type ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import {
@@ -124,6 +125,9 @@ export interface DeployedVoteGuardianAPIProvider {
   getWalletPublicKey: () => Promise<string>;
 
   setPrivateStateSecretKey: (newSecretKey: string) => Promise<void>;
+  getVoteForVoting: (votingId: string) => Promise<string>;
+
+  setPrivateStateVote: (votingId: string, vote: string) => Promise<void>;
 }
 
 /**
@@ -201,12 +205,58 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
       const newPrivateState: VoteGuardianPrivateState = {
         secretKey: hexToBytes(newSecretKey),
         voterPublicKeyPath: existingPrivateState!.voterPublicKeyPath,
+        votesPerVotingMap: existingPrivateState!.votesPerVotingMap,
       };
 
       if (existingPrivateState) {
         await providers.privateStateProvider.set('voteGuardianPrivateState', newPrivateState);
       }
     }
+  }
+
+  async setPrivateStateVote(votingId: string, vote: string): Promise<void> {
+    console.log('inside setPrivateStateVote 1');
+    const providers = await this.getProviders();
+    if (providers !== undefined) {
+      const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+      console.log('inside setPrivateStateVote 2');
+      const updatedVotesPerVotingMap = new Map(existingPrivateState!.votesPerVotingMap);
+      updatedVotesPerVotingMap.set(votingId, vote);
+      console.log(updatedVotesPerVotingMap);
+
+      const newPrivateState: VoteGuardianPrivateState = {
+        secretKey: existingPrivateState!.secretKey,
+        voterPublicKeyPath: existingPrivateState!.voterPublicKeyPath,
+        votesPerVotingMap: updatedVotesPerVotingMap,
+      };
+
+      console.log(newPrivateState.votesPerVotingMap);
+
+      if (existingPrivateState) {
+        console.log('inside setPrivateStateVote 3');
+        await providers.privateStateProvider.set('voteGuardianPrivateState', newPrivateState);
+        console.log('inside setPrivateStateVote 4');
+      }
+    }
+  }
+
+  async getVoteForVoting(votingId: string): Promise<string> {
+    const providers = await this.getProviders();
+    if (providers !== undefined) {
+      const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+
+      if (existingPrivateState) {
+        const vote = existingPrivateState.votesPerVotingMap.get(votingId);
+
+        if (vote) {
+          console.log(`vote: ${vote}`);
+          return vote.toString();
+        }
+        console.log('indefined vote');
+        return 'no vote for this voting';
+      }
+    }
+    return 'no vote for this voting';
   }
 
   async getWalletPublicKey(): Promise<string> {
