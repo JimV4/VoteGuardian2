@@ -1518,6 +1518,22 @@ class Contract {
                                               .value
                                           )) } },
                      { ins: { cached: true, n: 3 } }]);
+    Contract._query(context,
+                    partialProofData,
+                    [
+                     { idx: { cached: false,
+                              pushPath: true,
+                              path: [
+                                     { tag: 'value',
+                                       value: { value: _descriptor_17.toValue(9n),
+                                                alignment: _descriptor_17.alignment() } }] } },
+                     { push: { storage: false,
+                               value: __compactRuntime.StateValue.newCell({ value: _descriptor_0.toValue(publish_voting_nullifier_0),
+                                                                            alignment: _descriptor_0.alignment() }).encode() } },
+                     { push: { storage: true,
+                               value: __compactRuntime.StateValue.newNull().encode() } },
+                     { ins: { cached: false, n: 1 } },
+                     { ins: { cached: true, n: 1 } }]);
     return [];
   }
   #_public_key_0(context, partialProofData, sk_0) {

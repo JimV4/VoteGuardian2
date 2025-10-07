@@ -200,6 +200,7 @@ export circuit publish_vote(voting_id: Bytes<32>): [] {
         "Not a valid option!");
 
     voting_results.lookup(disclose(voting_id)).lookup(disclose(secret_vote(voting_id))).increment(1);
+    publish_voting_nulifiers.insert(publish_voting_nullifier);
 
 }
 
