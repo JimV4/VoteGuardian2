@@ -101,7 +101,8 @@ export const witnesses = {
     { privateState, ledger }: WitnessContext<Ledger, VoteGuardianPrivateState>,
     votingId: Uint8Array,
   ): [VoteGuardianPrivateState, Uint8Array] => [
-    createVoteGuardianPrivateState(privateState.secretKey, privateState.voterPublicKeyPath, privateState.votesPerVotingMap),
+    // createVoteGuardianPrivateState(privateState.secretKey, privateState.voterPublicKeyPath, privateState.votesPerVotingMap),
+    privateState,
     toBytes32FromString(privateState.votesPerVotingMap.get(toHex(votingId))?.toString()),
   ],
 };

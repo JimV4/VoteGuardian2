@@ -60,7 +60,8 @@ export const witnesses = {
         ledger.eligible_voters.findPathForLeaf(item),
     ],
     secret_vote: ({ privateState, ledger }, votingId) => [
-        createVoteGuardianPrivateState(privateState.secretKey, privateState.voterPublicKeyPath, privateState.votesPerVotingMap),
+        // createVoteGuardianPrivateState(privateState.secretKey, privateState.voterPublicKeyPath, privateState.votesPerVotingMap),
+        privateState,
         toBytes32FromString(privateState.votesPerVotingMap.get(toHex(votingId))?.toString()),
     ],
 };

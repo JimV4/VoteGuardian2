@@ -166,7 +166,7 @@ export circuit cast_vote(voting_id: Bytes<32>): [] {
         "Already voted for this voting");
 
     voting_nulifiers.insert(disclose(voting_nullifier));
-    const hashed_vote = hash_secret_vote(secret_vote(voting_id), voting_id, local_secret_key());
+    const hashed_vote = disclose(hash_secret_vote(secret_vote(voting_id), voting_id, local_secret_key()));
     hashed_votes.insert(disclose(hashed_vote));
 
     // assert (voting_options.lookup(disclose(voting_id)).member(disclose(vote_option)),
@@ -191,7 +191,9 @@ export circuit publish_vote(voting_id: Bytes<32>): [] {
     assert (!publish_voting_nulifiers.member(publish_voting_nullifier),
         "Already published the vote for this voting");    
 
-    assert (hashed_votes.member(disclose(secret_vote(voting_id))),
+    const hashed_vote = disclose(hash_secret_vote(secret_vote(voting_id), voting_id, local_secret_key()));
+
+    assert (hashed_votes.member(disclose(hashed_vote)),
         "Vote not correct!");     
 
     assert (voting_options.lookup(disclose(voting_id)).member(disclose(secret_vote(voting_id))),

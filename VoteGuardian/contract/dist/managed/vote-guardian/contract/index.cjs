@@ -104,9 +104,9 @@ class _LeafPreimage_0 {
 
 const _descriptor_12 = new _LeafPreimage_0();
 
-const _descriptor_13 = new __compactRuntime.CompactTypeVector(4, _descriptor_0);
+const _descriptor_13 = new __compactRuntime.CompactTypeVector(3, _descriptor_0);
 
-const _descriptor_14 = new __compactRuntime.CompactTypeVector(3, _descriptor_0);
+const _descriptor_14 = new __compactRuntime.CompactTypeVector(4, _descriptor_0);
 
 const _descriptor_15 = new __compactRuntime.CompactTypeVector(2, _descriptor_1);
 
@@ -1446,29 +1446,33 @@ class Contract {
                                                                       { popeq: { cached: true,
                                                                                  result: undefined } }]).value),
                             'Already published the vote for this voting');
+    const hashed_vote_0 = this.#_hash_secret_vote_0(context,
+                                                    partialProofData,
+                                                    this.#_secret_vote_0(context,
+                                                                         partialProofData,
+                                                                         voting_id_0),
+                                                    voting_id_0,
+                                                    this.#_local_secret_key_0(context,
+                                                                              partialProofData));
+    __compactRuntime.assert(_descriptor_2.fromValue(Contract._query(context,
+                                                                    partialProofData,
+                                                                    [
+                                                                     { dup: { n: 0 } },
+                                                                     { idx: { cached: false,
+                                                                              pushPath: false,
+                                                                              path: [
+                                                                                     { tag: 'value',
+                                                                                       value: { value: _descriptor_17.toValue(11n),
+                                                                                                alignment: _descriptor_17.alignment() } }] } },
+                                                                     { push: { storage: false,
+                                                                               value: __compactRuntime.StateValue.newCell({ value: _descriptor_0.toValue(hashed_vote_0),
+                                                                                                                            alignment: _descriptor_0.alignment() }).encode() } },
+                                                                     'member',
+                                                                     { popeq: { cached: true,
+                                                                                result: undefined } }]).value),
+                            'Vote not correct!');
     let tmp_0;
     __compactRuntime.assert((tmp_0 = this.#_secret_vote_0(context,
-                                                          partialProofData,
-                                                          voting_id_0),
-                             _descriptor_2.fromValue(Contract._query(context,
-                                                                     partialProofData,
-                                                                     [
-                                                                      { dup: { n: 0 } },
-                                                                      { idx: { cached: false,
-                                                                               pushPath: false,
-                                                                               path: [
-                                                                                      { tag: 'value',
-                                                                                        value: { value: _descriptor_17.toValue(11n),
-                                                                                                 alignment: _descriptor_17.alignment() } }] } },
-                                                                      { push: { storage: false,
-                                                                                value: __compactRuntime.StateValue.newCell({ value: _descriptor_0.toValue(tmp_0),
-                                                                                                                             alignment: _descriptor_0.alignment() }).encode() } },
-                                                                      'member',
-                                                                      { popeq: { cached: true,
-                                                                                 result: undefined } }]).value)),
-                            'Vote not correct!');
-    let tmp_1;
-    __compactRuntime.assert((tmp_1 = this.#_secret_vote_0(context,
                                                           partialProofData,
                                                           voting_id_0),
                              _descriptor_2.fromValue(Contract._query(context,
@@ -1485,14 +1489,14 @@ class Contract {
                                                                                         value: { value: _descriptor_0.toValue(voting_id_0),
                                                                                                  alignment: _descriptor_0.alignment() } }] } },
                                                                       { push: { storage: false,
-                                                                                value: __compactRuntime.StateValue.newCell({ value: _descriptor_0.toValue(tmp_1),
+                                                                                value: __compactRuntime.StateValue.newCell({ value: _descriptor_0.toValue(tmp_0),
                                                                                                                              alignment: _descriptor_0.alignment() }).encode() } },
                                                                       'member',
                                                                       { popeq: { cached: true,
                                                                                  result: undefined } }]).value)),
                             'Not a valid option!');
-    const tmp_2 = 1n;
-    const tmp_3 = this.#_secret_vote_0(context, partialProofData, voting_id_0);
+    const tmp_1 = 1n;
+    const tmp_2 = this.#_secret_vote_0(context, partialProofData, voting_id_0);
     Contract._query(context,
                     partialProofData,
                     [
@@ -1506,10 +1510,10 @@ class Contract {
                                        value: { value: _descriptor_0.toValue(voting_id_0),
                                                 alignment: _descriptor_0.alignment() } },
                                      { tag: 'value',
-                                       value: { value: _descriptor_0.toValue(tmp_3),
+                                       value: { value: _descriptor_0.toValue(tmp_2),
                                                 alignment: _descriptor_0.alignment() } }] } },
                      { addi: { immediate: parseInt(__compactRuntime.valueToBigInt(
-                                            { value: _descriptor_4.toValue(tmp_2),
+                                            { value: _descriptor_4.toValue(tmp_1),
                                               alignment: _descriptor_4.alignment() }
                                               .value
                                           )) } },
@@ -1520,21 +1524,21 @@ class Contract {
     return this.#_persistentHash_2(context, partialProofData, sk_0);
   }
   #_nullifier_0(context, partialProofData, sk_0, voting_id_0) {
-    return this.#_persistentHash_1(context,
+    return this.#_persistentHash_0(context,
                                    partialProofData,
                                    [new Uint8Array([110, 117, 108, 105, 102, 105, 101, 114, 45, 100, 111, 109, 97, 105, 110, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
                                     voting_id_0,
                                     sk_0]);
   }
   #_publish_nullifier_0(context, partialProofData, sk_0, voting_id_0) {
-    return this.#_persistentHash_1(context,
+    return this.#_persistentHash_0(context,
                                    partialProofData,
                                    [new Uint8Array([112, 117, 98, 108, 105, 115, 104, 45, 110, 117, 108, 105, 102, 105, 101, 114, 45, 100, 111, 109, 97, 105, 110, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
                                     voting_id_0,
                                     sk_0]);
   }
   #_generate_voting_id_0(context, partialProofData, count_0, sk_0) {
-    return this.#_persistentHash_1(context,
+    return this.#_persistentHash_0(context,
                                    partialProofData,
                                    [new Uint8Array([103, 101, 110, 101, 114, 97, 116, 101, 95, 105, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
                                     __compactRuntime.convert_bigint_to_Uint8Array(32,
@@ -1547,7 +1551,7 @@ class Contract {
                        voting_id_0,
                        secret_key_0)
   {
-    return this.#_persistentHash_0(context,
+    return this.#_persistentHash_1(context,
                                    partialProofData,
                                    [new Uint8Array([115, 101, 99, 114, 101, 116, 45, 118, 111, 116, 101, 45, 100, 111, 109, 97, 105, 110, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
                                     voting_id_0,

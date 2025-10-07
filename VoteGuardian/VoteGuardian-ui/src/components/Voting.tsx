@@ -334,11 +334,11 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
             return <Typography>No votes yet.</Typography>;
           }
 
-          const optionsArray = Array.from(optionsForVoting as Iterable<[Uint8Array]>);
+          const optionsArray = Array.from(optionsForVoting as Iterable<Uint8Array>);
 
-          const entries = optionsArray.map(([optionKey]) => {
-            const count = resultsForVoting.member(optionKey) ? resultsForVoting.lookup(optionKey).read() : BigInt(0);
-            return [utils.fromBytes32(optionKey), count] as [string, bigint];
+          const entries = optionsArray.map((keyBytes, index) => {
+            const count = resultsForVoting.member(keyBytes) ? resultsForVoting.lookup(keyBytes).read() : BigInt(0);
+            return [utils.fromBytes32(keyBytes), count] as [string, bigint];
           });
 
           if (entries.length === 0) {
@@ -402,15 +402,27 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
                     size="medium"
                     onClick={() =>
                       handleVoteState(
-                        voteGuardianState?.votingStates?.lookup?.(votingIdBytes) === VOTE_STATE.open
-                          ? 'open'
-                          : 'closed',
+                        // voteGuardianState?.votingStates?.lookup?.(votingIdBytes) === VOTE_STATE.open
+                        //   ? 'open'
+                        //   : 'closed',
+                        voteGuardianState && voteGuardianState.votingStates.member(votingIdBytes)
+                          ? voteGuardianState.votingStates.lookup(votingIdBytes) === VOTE_STATE.open
+                            ? 'open'
+                            : 'closed'
+                          : 'open',
                       ).catch(console.error)
                     }
                   >
-                    {voteGuardianState?.votingStates?.lookup?.(votingIdBytes) === VOTE_STATE.open
+                    {
+                      /* {voteGuardianState?.votingStates?.lookup?.(votingIdBytes) === VOTE_STATE.open
                       ? 'CLOSE VOTING'
-                      : 'OPEN VOTING'}
+                      : 'OPEN VOTING'} */
+                      voteGuardianState && voteGuardianState.votingStates.member(votingIdBytes)
+                        ? voteGuardianState.votingStates.lookup(votingIdBytes) === VOTE_STATE.open
+                          ? 'CLOSE VOTING'
+                          : 'OPEN VOTING'
+                        : 'OPEN VOTING'
+                    }
                   </Button>
                 )}
 
@@ -448,6 +460,19 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
                 >
                   Vote
                 </Button>
+
+                {/* PUBLISH VOTE */}
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="medium"
+                  onClick={() => {
+                    handlePublishVote(votingIdBytes).catch(console.error);
+                  }}
+                >
+                  Publish Vote
+                </Button>
+                {/* END PUBLISH VOTE */}
 
                 {/* DISPLAY SECRET KEY */}
 

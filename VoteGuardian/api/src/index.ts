@@ -296,7 +296,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
 
       this.logger?.trace({
         transactionAdded: {
-          circuit: 'add_option',
+          circuit: 'publish_option',
           txHash: txData.public.txHash,
           blockHeight: txData.public.blockHeight,
         },
