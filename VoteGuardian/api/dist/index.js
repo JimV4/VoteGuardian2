@@ -132,56 +132,54 @@ export class VoteGuardianAPI {
      */
     state$;
     async create_voting() {
-        try {
-            console.log('before create voting inside api');
-            const txData = await this.deployedContract.callTx.create_voting();
-            console.log('after create voting inside api');
-            this.logger?.trace({
-                transactionAdded: {
-                    circuit: 'create_voting',
-                    txHash: txData.public.txHash,
-                    blockHeight: txData.public.blockHeight,
-                },
-            });
-        }
-        catch (error) {
-            console.log('eeeeeeeeeeeeeeee');
-            console.log(error.message);
-            console.log(error.stack);
-            console.log(error);
-            // Log the full exception, including stack trace if available.
-            this.logger?.error('Error casting a vote', {
-                message: error.message,
-                stack: error.stack,
-                details: error, // Capture additional details if the error is a custom object.
-            });
-        }
+        // try {
+        console.log('before create voting inside api');
+        const txData = await this.deployedContract.callTx.create_voting();
+        console.log('after create voting inside api');
+        this.logger?.trace({
+            transactionAdded: {
+                circuit: 'create_voting',
+                txHash: txData.public.txHash,
+                blockHeight: txData.public.blockHeight,
+            },
+        });
+        // } catch (error) {
+        //   console.log('eeeeeeeeeeeeeeee');
+        //   console.log((error as Error).message);
+        //   console.log((error as Error).stack);
+        //   console.log(error);
+        //   // Log the full exception, including stack trace if available.
+        //   this.logger?.error('Error casting a vote', {
+        //     message: (error as Error).message,
+        //     stack: (error as Error).stack,
+        //     details: error, // Capture additional details if the error is a custom object.
+        //   });
+        // }
     }
     async add_option(voting_id, vote_option) {
-        try {
-            this.logger?.info(`added option: ${vote_option}`);
-            // this.logger?.info(`added index: ${index}`);
-            const txData = await this.deployedContract.callTx.add_option(voting_id, vote_option);
-            this.logger?.trace({
-                transactionAdded: {
-                    circuit: 'add_option',
-                    txHash: txData.public.txHash,
-                    blockHeight: txData.public.blockHeight,
-                },
-            });
-        }
-        catch (error) {
-            console.log('eeeeeeeeeeeeeeee');
-            console.log(error.message);
-            console.log(error.stack);
-            console.log(error);
-            // Log the full exception, including stack trace if available.
-            this.logger?.error('Error casting a vote', {
-                message: error.message,
-                stack: error.stack,
-                details: error, // Capture additional details if the error is a custom object.
-            });
-        }
+        // try {
+        this.logger?.info(`added option: ${vote_option}`);
+        // this.logger?.info(`added index: ${index}`);
+        const txData = await this.deployedContract.callTx.add_option(voting_id, vote_option);
+        this.logger?.trace({
+            transactionAdded: {
+                circuit: 'add_option',
+                txHash: txData.public.txHash,
+                blockHeight: txData.public.blockHeight,
+            },
+        });
+        // } catch (error) {
+        //   console.log('eeeeeeeeeeeeeeee');
+        //   console.log((error as Error).message);
+        //   console.log((error as Error).stack);
+        //   console.log(error);
+        //   // Log the full exception, including stack trace if available.
+        //   this.logger?.error('Error casting a vote', {
+        //     message: (error as Error).message,
+        //     stack: (error as Error).stack,
+        //     details: error, // Capture additional details if the error is a custom object.
+        //   });
+        // }
     }
     /**
      * Attempts to caste a vote .
@@ -192,66 +190,63 @@ export class VoteGuardianAPI {
      * This method can fail during local circuit execution if the voting is not open or the user has already voted.
      */
     async cast_vote(voting_id) {
-        try {
-            // this.logger?.info(`casted votee: ${encrypted_vote}`);
-            const txData = await this.deployedContract.callTx.cast_vote(voting_id);
-            this.logger?.trace({
-                transactionAdded: {
-                    circuit: 'cast_vote',
-                    txHash: txData.public.txHash,
-                    blockHeight: txData.public.blockHeight,
-                },
-            });
-        }
-        catch (error) {
-            let err = error;
-            // console.log((error as Error).message);
-            // console.log((error as Error).stack);
-            // console.log(error);
-            if (err.message.includes('type error')) {
-                this.logger?.info('You are not authorized to vote! 2');
-                this.logger?.info(err);
-                console.log(error.message);
-                console.log(error.stack);
-                console.log(error);
-            }
-            else {
-                console.log(error.message);
-                console.log(error.stack);
-                console.log(error);
-                // Log the full exception, including stack trace if available.
-                this.logger?.error('Error casting a vote', {
-                    message: error.message,
-                    stack: error.stack,
-                    details: error, // Capture additional details if the error is a custom object.
-                });
-            }
-        }
+        // try {
+        // this.logger?.info(`casted votee: ${encrypted_vote}`);
+        const txData = await this.deployedContract.callTx.cast_vote(voting_id);
+        this.logger?.trace({
+            transactionAdded: {
+                circuit: 'cast_vote',
+                txHash: txData.public.txHash,
+                blockHeight: txData.public.blockHeight,
+            },
+        });
+        // } catch (error) {
+        //   let err = error as Error;
+        //   // console.log((error as Error).message);
+        //   // console.log((error as Error).stack);
+        //   // console.log(error);
+        //   if (err.message.includes('type error')) {
+        //     this.logger?.info('You are not authorized to vote! 2');
+        //     this.logger?.info(err);
+        //     console.log((error as Error).message);
+        //     console.log((error as Error).stack);
+        //     console.log(error);
+        //   } else {
+        //     console.log((error as Error).message);
+        //     console.log((error as Error).stack);
+        //     console.log(error);
+        //     // Log the full exception, including stack trace if available.
+        //     this.logger?.error('Error casting a vote', {
+        //       message: (error as Error).message,
+        //       stack: (error as Error).stack,
+        //       details: error, // Capture additional details if the error is a custom object.
+        //     });
+        //   }
+        // }
     }
     async publish_vote(voting_id) {
-        try {
-            this.logger?.info(`voting id: ${voting_id}`);
-            const txData = await this.deployedContract.callTx.publish_vote(voting_id);
-            this.logger?.trace({
-                transactionAdded: {
-                    circuit: 'publish_option',
-                    txHash: txData.public.txHash,
-                    blockHeight: txData.public.blockHeight,
-                },
-            });
-        }
-        catch (error) {
-            console.log('eeeeeeeeeeeeeeee');
-            console.log(error.message);
-            console.log(error.stack);
-            console.log(error);
-            // Log the full exception, including stack trace if available.
-            this.logger?.error('Error casting a vote', {
-                message: error.message,
-                stack: error.stack,
-                details: error, // Capture additional details if the error is a custom object.
-            });
-        }
+        // try {
+        this.logger?.info(`voting id: ${voting_id}`);
+        const txData = await this.deployedContract.callTx.publish_vote(voting_id);
+        this.logger?.trace({
+            transactionAdded: {
+                circuit: 'publish_option',
+                txHash: txData.public.txHash,
+                blockHeight: txData.public.blockHeight,
+            },
+        });
+        // } catch (error) {
+        //   console.log('eeeeeeeeeeeeeeee');
+        //   console.log((error as Error).message);
+        //   console.log((error as Error).stack);
+        //   console.log(error);
+        //   // Log the full exception, including stack trace if available.
+        //   this.logger?.error('Error casting a vote', {
+        //     message: (error as Error).message,
+        //     stack: (error as Error).stack,
+        //     details: error, // Capture additional details if the error is a custom object.
+        //   });
+        // }
     }
     /**
      * Attempts to caste a vote .
@@ -286,29 +281,28 @@ export class VoteGuardianAPI {
         });
     }
     async edit_question(voting_id, vote_question) {
-        try {
-            this.logger?.info(`vote question: ${vote_question}`);
-            const txData = await this.deployedContract.callTx.edit_question(voting_id, vote_question);
-            this.logger?.trace({
-                transactionAdded: {
-                    circuit: 'edit_question',
-                    txHash: txData.public.txHash,
-                    blockHeight: txData.public.blockHeight,
-                },
-            });
-        }
-        catch (error) {
-            console.log('bbbbbbbbbbbbbbbbbbbbbbbbb');
-            console.log(error.message);
-            console.log(error.stack);
-            console.log(error);
-            // Log the full exception, including stack trace if available.
-            this.logger?.error('Error casting a vote', {
-                message: error.message,
-                stack: error.stack,
-                details: error, // Capture additional details if the error is a custom object.
-            });
-        }
+        // try {
+        this.logger?.info(`vote question: ${vote_question}`);
+        const txData = await this.deployedContract.callTx.edit_question(voting_id, vote_question);
+        this.logger?.trace({
+            transactionAdded: {
+                circuit: 'edit_question',
+                txHash: txData.public.txHash,
+                blockHeight: txData.public.blockHeight,
+            },
+        });
+        // } catch (error) {
+        //   console.log('bbbbbbbbbbbbbbbbbbbbbbbbb');
+        //   console.log((error as Error).message);
+        //   console.log((error as Error).stack);
+        //   console.log(error);
+        //   // Log the full exception, including stack trace if available.
+        //   this.logger?.error('Error casting a vote', {
+        //     message: (error as Error).message,
+        //     stack: (error as Error).stack,
+        //     details: error, // Capture additional details if the error is a custom object.
+        //   });
+        // }
     }
     /**
      * Attempts to  count all the votes.

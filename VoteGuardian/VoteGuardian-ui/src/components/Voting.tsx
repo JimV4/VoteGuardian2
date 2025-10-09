@@ -294,10 +294,17 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
       > */}
       <Backdrop
         sx={{
+          // position: 'absolute',
+          // color: '#fff',
+          // width: '100%', // Full width of the Card
+          // height: '100%',
+          // zIndex: (theme) => theme.zIndex.drawer + 1,
           position: 'absolute',
-          color: '#fff',
-          width: '100%', // Full width of the Card
+          top: 0,
+          left: 0,
+          width: '100%',
           height: '100%',
+          color: '#fff',
           zIndex: (theme) => theme.zIndex.drawer + 1,
         }}
         open={isWorking}
@@ -393,153 +400,153 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
                   : 'No State'}
               </Typography>
 
-              <Stack spacing={2} alignItems="center">
-                {/* // VOTE STATE */}
-                {voteGuardianState?.votingStates && (
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size="medium"
-                    onClick={() =>
-                      handleVoteState(
-                        // voteGuardianState?.votingStates?.lookup?.(votingIdBytes) === VOTE_STATE.open
-                        //   ? 'open'
-                        //   : 'closed',
-                        voteGuardianState && voteGuardianState.votingStates.member(votingIdBytes)
-                          ? voteGuardianState.votingStates.lookup(votingIdBytes) === VOTE_STATE.open
-                            ? 'open'
-                            : 'closed'
-                          : 'open',
-                      ).catch(console.error)
-                    }
-                  >
-                    {
-                      /* {voteGuardianState?.votingStates?.lookup?.(votingIdBytes) === VOTE_STATE.open
-                      ? 'CLOSE VOTING'
-                      : 'OPEN VOTING'} */
+              {/* <Stack spacing={2} alignItems="center"> */}
+              {/* // VOTE STATE */}
+              {voteGuardianState?.votingStates && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="medium"
+                  onClick={() =>
+                    handleVoteState(
+                      // voteGuardianState?.votingStates?.lookup?.(votingIdBytes) === VOTE_STATE.open
+                      //   ? 'open'
+                      //   : 'closed',
                       voteGuardianState && voteGuardianState.votingStates.member(votingIdBytes)
                         ? voteGuardianState.votingStates.lookup(votingIdBytes) === VOTE_STATE.open
-                          ? 'CLOSE VOTING'
-                          : 'OPEN VOTING'
+                          ? 'open'
+                          : 'closed'
+                        : 'open',
+                    ).catch(console.error)
+                  }
+                >
+                  {
+                    /* {voteGuardianState?.votingStates?.lookup?.(votingIdBytes) === VOTE_STATE.open
+                      ? 'CLOSE VOTING'
+                      : 'OPEN VOTING'} */
+                    voteGuardianState && voteGuardianState.votingStates.member(votingIdBytes)
+                      ? voteGuardianState.votingStates.lookup(votingIdBytes) === VOTE_STATE.open
+                        ? 'CLOSE VOTING'
                         : 'OPEN VOTING'
-                    }
-                  </Button>
-                )}
+                      : 'OPEN VOTING'
+                  }
+                </Button>
+              )}
 
-                {/* END VOTE STATE */}
+              {/* END VOTE STATE */}
 
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="medium"
-                  onClick={() => {
-                    navigate(`/votings/${votingId}/question`);
+              <Button
+                variant="contained"
+                color="primary"
+                size="medium"
+                onClick={() => {
+                  navigate(`/votings/${votingId}/question`);
+                }}
+              >
+                Question
+              </Button>
+
+              <Button
+                variant="contained"
+                color="primary"
+                size="medium"
+                onClick={() => {
+                  navigate(`/votings/${votingId}/option`);
+                }}
+              >
+                Options
+              </Button>
+
+              <Button
+                variant="contained"
+                color="primary"
+                size="medium"
+                onClick={() => {
+                  navigate(`/votings/${votingId}/cast`);
+                }}
+              >
+                Vote
+              </Button>
+
+              {/* PUBLISH VOTE */}
+              <Button
+                variant="contained"
+                color="primary"
+                size="medium"
+                onClick={() => {
+                  handlePublishVote(votingIdBytes).catch(console.error);
+                }}
+              >
+                Publish Vote
+              </Button>
+              {/* END PUBLISH VOTE */}
+
+              {/* DISPLAY SECRET KEY */}
+
+              <Button variant="contained" color="primary" size="medium" onClick={onDisplaySecretKey}>
+                {secretKey !== undefined ? 'Hide secret key' : 'Display secret key'}
+              </Button>
+              {secretKey !== undefined && (
+                <Typography
+                  color="black"
+                  sx={{
+                    wordBreak: 'break-all', // breaks long words (like secret keys)
+                    whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
+                    width: '100%', // ensures it uses the full container width
+                    textAlign: 'center', // optional, for better visual balance
                   }}
                 >
-                  Question
-                </Button>
+                  {secretKey}
+                </Typography>
+              )}
+              {/* END DISPLAY SECRET KEY */}
 
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="medium"
-                  onClick={() => {
-                    navigate(`/votings/${votingId}/option`);
+              {/* DISPLAY VOTE */}
+
+              <Button variant="contained" color="primary" size="medium" onClick={onDisplayVote}>
+                {vote !== undefined ? 'Hide vote' : 'Display vote'}
+              </Button>
+              {vote !== undefined && (
+                <Typography
+                  color="black"
+                  sx={{
+                    wordBreak: 'break-all', // breaks long words (like secret keys)
+                    whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
+                    width: '100%', // ensures it uses the full container width
+                    textAlign: 'center', // optional, for better visual balance
                   }}
                 >
-                  Options
-                </Button>
+                  {vote}
+                </Typography>
+              )}
+              {/* END DISPLAY VOTE */}
 
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="medium"
-                  onClick={() => {
-                    navigate(`/votings/${votingId}/cast`);
+              {/* DISPLAY WALLET PUBLIC KEY */}
+
+              <Button variant="contained" color="primary" size="medium" onClick={onDisplayWalletPublicKey}>
+                {walletPublicKey !== undefined ? 'Hide wallet public key' : 'Display wallet public key'}
+              </Button>
+              {walletPublicKey !== undefined && (
+                <Typography
+                  color="black"
+                  sx={{
+                    wordBreak: 'break-all', // breaks long words (like secret keys)
+                    whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
+                    width: '100%', // ensures it uses the full container width
+                    textAlign: 'center', // optional, for better visual balance
                   }}
                 >
-                  Vote
-                </Button>
+                  {walletPublicKey}
+                </Typography>
+              )}
+              {/* END DISPLAY WALLET PUBLIC KEY */}
 
-                {/* PUBLISH VOTE */}
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="medium"
-                  onClick={() => {
-                    handlePublishVote(votingIdBytes).catch(console.error);
-                  }}
-                >
-                  Publish Vote
-                </Button>
-                {/* END PUBLISH VOTE */}
-
-                {/* DISPLAY SECRET KEY */}
-
-                <Button variant="contained" color="primary" size="medium" onClick={onDisplaySecretKey}>
-                  {secretKey !== undefined ? 'Hide secret key' : 'Display secret key'}
-                </Button>
-                {secretKey !== undefined && (
-                  <Typography
-                    color="black"
-                    sx={{
-                      wordBreak: 'break-all', // breaks long words (like secret keys)
-                      whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
-                      width: '100%', // ensures it uses the full container width
-                      textAlign: 'center', // optional, for better visual balance
-                    }}
-                  >
-                    {secretKey}
-                  </Typography>
-                )}
-                {/* END DISPLAY SECRET KEY */}
-
-                {/* DISPLAY VOTE */}
-
-                <Button variant="contained" color="primary" size="medium" onClick={onDisplayVote}>
-                  {vote !== undefined ? 'Hide vote' : 'Display vote'}
-                </Button>
-                {vote !== undefined && (
-                  <Typography
-                    color="black"
-                    sx={{
-                      wordBreak: 'break-all', // breaks long words (like secret keys)
-                      whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
-                      width: '100%', // ensures it uses the full container width
-                      textAlign: 'center', // optional, for better visual balance
-                    }}
-                  >
-                    {vote}
-                  </Typography>
-                )}
-                {/* END DISPLAY VOTE */}
-
-                {/* DISPLAY WALLET PUBLIC KEY */}
-
-                <Button variant="contained" color="primary" size="medium" onClick={onDisplayWalletPublicKey}>
-                  {walletPublicKey !== undefined ? 'Hide wallet public key' : 'Display wallet public key'}
-                </Button>
-                {walletPublicKey !== undefined && (
-                  <Typography
-                    color="black"
-                    sx={{
-                      wordBreak: 'break-all', // breaks long words (like secret keys)
-                      whiteSpace: 'pre-wrap', // preserves whitespace, allows wrapping
-                      width: '100%', // ensures it uses the full container width
-                      textAlign: 'center', // optional, for better visual balance
-                    }}
-                  >
-                    {walletPublicKey}
-                  </Typography>
-                )}
-                {/* END DISPLAY WALLET PUBLIC KEY */}
-
-                {/* SHOW RESULTS */}
-                <Button variant="contained" color="primary" size="medium" onClick={onShowResults}>
-                  SHOW RESULTS
-                </Button>
-                {/* END SHOW RESULTS */}
-              </Stack>
+              {/* SHOW RESULTS */}
+              <Button variant="contained" color="primary" size="medium" onClick={onShowResults}>
+                SHOW RESULTS
+              </Button>
+              {/* END SHOW RESULTS */}
+              {/* </Stack> */}
             </React.Fragment>
           )}
         </>

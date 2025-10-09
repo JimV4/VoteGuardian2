@@ -148,6 +148,8 @@ export const EditComponent: React.FC<Readonly<EditComponentProps>> = ({ voteGuar
       <Backdrop
         sx={{
           position: 'absolute',
+          top: 0,
+          left: 0,
           color: '#fff',
           width: '100%', // Full width of the Card
           height: '100%',
@@ -258,7 +260,7 @@ export const EditComponent: React.FC<Readonly<EditComponentProps>> = ({ voteGuar
                 variant="contained"
                 color="primary"
                 size="small"
-                onClick={() => selectedOption && onAdd('cast', selectedOption)}
+                onClick={() => selectedOption && onAdd('cast', selectedOption).catch(console.error)}
                 disabled={!selectedOption}
               >
                 Vote
@@ -293,7 +295,7 @@ export const EditComponent: React.FC<Readonly<EditComponentProps>> = ({ voteGuar
           <Button
             className="w-full bg-blue-600 text-white rounded-lg p-2"
             onClick={() => {
-              onAdd(action);
+              onAdd(action).catch(console.error);
             }}
           >
             Add
