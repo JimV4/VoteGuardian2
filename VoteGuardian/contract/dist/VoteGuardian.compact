@@ -18,7 +18,6 @@ export ledger voting_states: Map<Bytes<32>, VOTE_STATE>;                // Map w
 export ledger voting_nulifiers: Set<Bytes<32>>;         // Unique tokens per voting per user to avoid double voting
 export ledger publish_voting_nulifiers: Set<Bytes<32>>;         // Unique tokens per voting per user to avoid double vote publishing
 export ledger voting_organizers: Map<Bytes<32>, Bytes<32>>;        // Map with the votings of each organizer
-export ledger hashed_votes: Set<Bytes<32>>;
 
 // Constructor initializes the ADTs and predefines eligible voters
 constructor(eligible_voter_public_keys: Vector<5, Bytes<32>>) {
@@ -30,7 +29,6 @@ constructor(eligible_voter_public_keys: Vector<5, Bytes<32>>) {
     voting_nulifiers.resetToDefault();
     voting_organizers.resetToDefault();
     voting_questions.resetToDefault();
-    hashed_votes.resetToDefault();
     publish_voting_nulifiers.resetToDefault();
     count.increment(1);
 
@@ -148,33 +146,33 @@ export circuit open_voting(voting_id: Bytes<32>): [] {
 
 
 // Function to cast a vote, only accessible when voting is open and the voter hasn’t already voted
-export circuit cast_vote(voting_id: Bytes<32>): [] {
-    const current_voting_state = voting_states.lookup(disclose(voting_id));
+// export circuit cast_vote(voting_id: Bytes<32>): [] {
+//     const current_voting_state = voting_states.lookup(disclose(voting_id));
 
-    assert (current_voting_state == VOTE_STATE.open, 
-        "Voting is not open");
+//     assert (current_voting_state == VOTE_STATE.open, 
+//         "Voting is not open");
 
-    const voter_public_key = disclose(public_key(local_secret_key()));
+//     const voter_public_key = disclose(public_key(local_secret_key()));
 
-    assert (prove_eligibility(), 
-        "Not authorized!");
+//     assert (prove_eligibility(), 
+//         "Not authorized!");
 
-    const voting_nullifier = disclose(nullifier(local_secret_key(), voting_id));
+//     const voting_nullifier = disclose(nullifier(local_secret_key(), voting_id));
 
-    // Έλεγχος αν ο nullifier για τον τρέχον χρήστη ανήκει στο σύνολο. Αν ανήκει σημαίνει ότι έχει ήδη ψηφίσει
-    assert (!voting_nulifiers.member(voting_nullifier),
-        "Already voted for this voting");
+//     // Έλεγχος αν ο nullifier για τον τρέχον χρήστη ανήκει στο σύνολο. Αν ανήκει σημαίνει ότι έχει ήδη ψηφίσει
+//     assert (!voting_nulifiers.member(voting_nullifier),
+//         "Already voted for this voting");
 
-    voting_nulifiers.insert(disclose(voting_nullifier));
-    const hashed_vote = disclose(hash_secret_vote(secret_vote(voting_id), voting_id, local_secret_key()));
-    hashed_votes.insert(disclose(hashed_vote));
+//     voting_nulifiers.insert(disclose(voting_nullifier));
+//     // const hashed_vote = disclose(hash_secret_vote(secret_vote(voting_id), voting_id, local_secret_key()));
+//     // hashed_votes.insert(disclose(hashed_vote));
 
-    // assert (voting_options.lookup(disclose(voting_id)).member(disclose(vote_option)),
-    //     "Not a valid option!");
+//     // assert (voting_options.lookup(disclose(voting_id)).member(disclose(vote_option)),
+//     //     "Not a valid option!");
 
-    // voting_results.lookup(disclose(voting_id)).lookup(disclose(vote_option)).increment(1);
+//     // voting_results.lookup(disclose(voting_id)).lookup(disclose(vote_option)).increment(1);
 
-}
+// }
 
 export circuit publish_vote(voting_id: Bytes<32>): [] {
     const current_voting_state = voting_states.lookup(disclose(voting_id));
@@ -191,10 +189,10 @@ export circuit publish_vote(voting_id: Bytes<32>): [] {
     assert (!publish_voting_nulifiers.member(publish_voting_nullifier),
         "Already published the vote for this voting");    
 
-    const hashed_vote = disclose(hash_secret_vote(secret_vote(voting_id), voting_id, local_secret_key()));
+    // const hashed_vote = disclose(hash_secret_vote(secret_vote(voting_id), voting_id, local_secret_key()));
 
-    assert (hashed_votes.member(disclose(hashed_vote)),
-        "Vote not correct!");     
+    // assert (hashed_votes.member(disclose(hashed_vote)),
+    //     "Vote not correct!");     
 
     assert (voting_options.lookup(disclose(voting_id)).member(disclose(secret_vote(voting_id))),
         "Not a valid option!");

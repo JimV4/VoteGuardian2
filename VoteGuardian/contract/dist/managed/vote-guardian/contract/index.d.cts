@@ -27,7 +27,6 @@ export type ImpureCircuits<T> = {
                voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
   open_voting(context: __compactRuntime.CircuitContext<T>,
               voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
-  cast_vote(context: __compactRuntime.CircuitContext<T>, voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
   publish_vote(context: __compactRuntime.CircuitContext<T>,
                voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
 }
@@ -47,7 +46,6 @@ export type Circuits<T> = {
                voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
   open_voting(context: __compactRuntime.CircuitContext<T>,
               voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
-  cast_vote(context: __compactRuntime.CircuitContext<T>, voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
   publish_vote(context: __compactRuntime.CircuitContext<T>,
                voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
 }
@@ -124,12 +122,6 @@ export type Ledger = {
     member(key_0: Uint8Array): boolean;
     lookup(key_0: Uint8Array): Uint8Array;
     [Symbol.iterator](): Iterator<[Uint8Array, Uint8Array]>
-  };
-  hashed_votes: {
-    isEmpty(): boolean;
-    size(): bigint;
-    member(elem_0: Uint8Array): boolean;
-    [Symbol.iterator](): Iterator<Uint8Array>
   };
 }
 

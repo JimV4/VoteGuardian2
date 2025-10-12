@@ -78,7 +78,7 @@ export class VoteGuardianAPI {
                 eligibleVoters: ledgerState.eligible_voters,
                 votingList: [],
                 publishVotingNulifiers: ledgerState.publish_voting_nulifiers,
-                hashedVotes: ledgerState.hashed_votes,
+                // hashedVotes: ledgerState.hashed_votes,
                 // votingList: (() => {
                 //   const list: Voting[] = [];
                 //   for (const votingId of ledgerState.votings) {
@@ -189,41 +189,41 @@ export class VoteGuardianAPI {
      * @remarks
      * This method can fail during local circuit execution if the voting is not open or the user has already voted.
      */
-    async cast_vote(voting_id) {
-        // try {
-        // this.logger?.info(`casted votee: ${encrypted_vote}`);
-        const txData = await this.deployedContract.callTx.cast_vote(voting_id);
-        this.logger?.trace({
-            transactionAdded: {
-                circuit: 'cast_vote',
-                txHash: txData.public.txHash,
-                blockHeight: txData.public.blockHeight,
-            },
-        });
-        // } catch (error) {
-        //   let err = error as Error;
-        //   // console.log((error as Error).message);
-        //   // console.log((error as Error).stack);
-        //   // console.log(error);
-        //   if (err.message.includes('type error')) {
-        //     this.logger?.info('You are not authorized to vote! 2');
-        //     this.logger?.info(err);
-        //     console.log((error as Error).message);
-        //     console.log((error as Error).stack);
-        //     console.log(error);
-        //   } else {
-        //     console.log((error as Error).message);
-        //     console.log((error as Error).stack);
-        //     console.log(error);
-        //     // Log the full exception, including stack trace if available.
-        //     this.logger?.error('Error casting a vote', {
-        //       message: (error as Error).message,
-        //       stack: (error as Error).stack,
-        //       details: error, // Capture additional details if the error is a custom object.
-        //     });
-        //   }
-        // }
-    }
+    // async cast_vote(voting_id: Uint8Array): Promise<void> {
+    //   // try {
+    //   // this.logger?.info(`casted votee: ${encrypted_vote}`);
+    //   const txData = await this.deployedContract.callTx.cast_vote(voting_id);
+    //   this.logger?.trace({
+    //     transactionAdded: {
+    //       circuit: 'cast_vote',
+    //       txHash: txData.public.txHash,
+    //       blockHeight: txData.public.blockHeight,
+    //     },
+    //   });
+    // } catch (error) {
+    //   let err = error as Error;
+    //   // console.log((error as Error).message);
+    //   // console.log((error as Error).stack);
+    //   // console.log(error);
+    //   if (err.message.includes('type error')) {
+    //     this.logger?.info('You are not authorized to vote! 2');
+    //     this.logger?.info(err);
+    //     console.log((error as Error).message);
+    //     console.log((error as Error).stack);
+    //     console.log(error);
+    //   } else {
+    //     console.log((error as Error).message);
+    //     console.log((error as Error).stack);
+    //     console.log(error);
+    //     // Log the full exception, including stack trace if available.
+    //     this.logger?.error('Error casting a vote', {
+    //       message: (error as Error).message,
+    //       stack: (error as Error).stack,
+    //       details: error, // Capture additional details if the error is a custom object.
+    //     });
+    //   }
+    // }
+    // }
     async publish_vote(voting_id) {
         // try {
         this.logger?.info(`voting id: ${voting_id}`);

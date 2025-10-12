@@ -125,7 +125,7 @@ export type VoteGuardianDerivedState = {
   readonly votingStates: Ledger['voting_states'];
   readonly votingNulifiers: Ledger['voting_nulifiers'];
   readonly votingOrganizers: Ledger['voting_organizers'];
-  readonly hashedVotes: Ledger['hashed_votes'];
+  // readonly hashedVotes: Ledger['hashed_votes'];
   readonly publishVotingNulifiers: Ledger['publish_voting_nulifiers'];
 
   readonly votingList: Voting[];
