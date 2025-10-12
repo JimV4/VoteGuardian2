@@ -47,7 +47,7 @@ export type VoteGuardianCircuitKeys = Exclude<keyof VoteGuardianContract['impure
  *
  * @public
  */
-export type VoteGuardianProviders = MidnightProviders<VoteGuardianCircuitKeys, 'voteGuardianPrivateState', VoteGuardianPrivateState>;
+export type VoteGuardianProviders = MidnightProviders<VoteGuardianCircuitKeys, 'voteGuardianPrivateState2', VoteGuardianPrivateState>;
 /**
  * A {@link VoteGuardianContract} that has been deployed to the network.
  *

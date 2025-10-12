@@ -111,7 +111,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
         //    since the private state of the bulletin board application never changes, we can query the
         //    private state once and always use the same value with `combineLatest`. In applications
         //    where the private state is expected to change, we would need to make this an `Observable`.
-        from(providers.privateStateProvider.get('voteGuardianPrivateState') as Promise<VoteGuardianPrivateState>),
+        from(providers.privateStateProvider.get('voteGuardianPrivateState2') as Promise<VoteGuardianPrivateState>),
       ],
       // ...and combine them to produce the required derived state.
       (ledgerState, privateState) => {
@@ -422,7 +422,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
       DeployContractOptions
       */
       const DeployedVoteGuardianContract = await deployContract(providers, {
-        privateStateId: 'voteGuardianPrivateState',
+        privateStateId: 'voteGuardianPrivateState2',
         contract: VoteGuardianContractInstance,
         initialPrivateState: createVoteGuardianPrivateState(
           utils.hexToBytes(secretKey),
@@ -490,11 +490,11 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
     const deployedVoteGuardianContract = await findDeployedContract(providers, {
       contractAddress,
       contract: VoteGuardianContractInstance,
-      privateStateId: 'voteGuardianPrivateState',
+      privateStateId: 'voteGuardianPrivateState2',
       // initialPrivateState: createVoteGuardianPrivateState(utils.randomBytes(32)),
       // initialPrivateState: createVoteGuardianPrivateState(utils.hexToBytes(secretKey)),
       initialPrivateState:
-        // (await providers.privateStateProvider.get('voteGuardianPrivateState')) ??
+        // (await providers.privateStateProvider.get('voteGuardianPrivateState2')) ??
         createVoteGuardianPrivateState(utils.hexToBytes(secretKey), privateStateMerklePath, privateStateVotersMap),
     });
 
@@ -509,13 +509,13 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
 
   // ο τύπος VoteGuardianProviders έρχεται από το common-types.ts και ο τύπος VoteGuardianPrivateState έρχεται από το witnesses.ts
   // private static async getPrivateState(providers: VoteGuardianProviders): Promise<VoteGuardianPrivateState> {
-  //   const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+  //   const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState2');
   //   return existingPrivateState ?? createVoteGuardianPrivateState(utils.randomBytes(32));
   // }
   private static async getPrivateStateMerklePath(
     providers: VoteGuardianProviders,
   ): Promise<MerkleTreePath<Uint8Array>> {
-    const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+    const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState2');
     return (
       existingPrivateState?.voterPublicKeyPath ?? {
         leaf: new Uint8Array(32),
@@ -530,12 +530,12 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
   }
 
   private static async getPrivateStateVotesMap(providers: VoteGuardianProviders): Promise<Map<String, String>> {
-    const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+    const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState2');
     return existingPrivateState?.votesPerVotingMap ?? new Map<String, String>();
   }
 
   // public static async setPrivateStateVotesMap(providers: VoteGuardianProviders): Promise<void> {
-  //   const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+  //   const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState2');
   //   const updatedVotesPerVotingMap = new Map(existingPrivateState!.votesPerVotingMap);
   //   updatedVotesPerVotingMap.set(votingId, vote);
 
@@ -546,7 +546,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
   //   };
 
   //   if (existingPrivateState) {
-  //     await providers.privateStateProvider.set('voteGuardianPrivateState', newPrivateState);
+  //     await providers.privateStateProvider.set('voteGuardianPrivateState2', newPrivateState);
   //   }
   // }
 }
