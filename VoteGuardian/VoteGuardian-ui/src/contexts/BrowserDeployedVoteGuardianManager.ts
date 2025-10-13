@@ -201,7 +201,7 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
     };
     const providers = await this.getProviders();
     if (providers !== undefined) {
-      const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+      const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState3');
       const newPrivateState: VoteGuardianPrivateState = {
         secretKey: hexToBytes(newSecretKey),
         voterPublicKeyPath: existingPrivateState!.voterPublicKeyPath,
@@ -209,7 +209,7 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
       };
 
       if (existingPrivateState) {
-        await providers.privateStateProvider.set('voteGuardianPrivateState', newPrivateState);
+        await providers.privateStateProvider.set('voteGuardianPrivateState3', newPrivateState);
       }
     }
   }
@@ -218,7 +218,7 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
     console.log('inside setPrivateStateVote 1');
     const providers = await this.getProviders();
     if (providers !== undefined) {
-      const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+      const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState3');
       console.log('inside setPrivateStateVote 2');
       const updatedVotesPerVotingMap = new Map(existingPrivateState!.votesPerVotingMap);
       updatedVotesPerVotingMap.set(votingId, vote);
@@ -234,7 +234,7 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
 
       if (existingPrivateState) {
         console.log('inside setPrivateStateVote 3');
-        await providers.privateStateProvider.set('voteGuardianPrivateState', newPrivateState);
+        await providers.privateStateProvider.set('voteGuardianPrivateState3', newPrivateState);
         console.log('inside setPrivateStateVote 4');
       }
     }
@@ -243,7 +243,7 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
   async getVoteForVoting(votingId: string): Promise<string> {
     const providers = await this.getProviders();
     if (providers !== undefined) {
-      const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+      const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState3');
 
       if (existingPrivateState) {
         const vote = existingPrivateState.votesPerVotingMap.get(votingId);
@@ -270,7 +270,7 @@ export class BrowserDeployedVoteGuardianManager implements DeployedVoteGuardianA
   async displaySecretKey(): Promise<string> {
     const providers = await this.getProviders();
     if (providers !== undefined) {
-      const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+      const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState3');
 
       if (existingPrivateState) {
         const secretKey = existingPrivateState.secretKey;
