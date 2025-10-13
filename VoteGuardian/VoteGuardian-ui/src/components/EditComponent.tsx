@@ -102,6 +102,8 @@ export const EditComponent: React.FC<Readonly<EditComponentProps>> = ({ voteGuar
 
   const onAdd = useCallback(
     async (action: string | undefined, voteOption?: string) => {
+      let current_vote: string = await voteGuardianApiProvider.getVoteForVoting(votingId!);
+
       if (!messagePrompt && action != 'cast') {
         return;
       }
@@ -135,6 +137,7 @@ export const EditComponent: React.FC<Readonly<EditComponentProps>> = ({ voteGuar
           }
         }
       } catch (error: unknown) {
+        await voteGuardianApiProvider.setPrivateStateVote(votingId!, current_vote);
         setErrorMessage(error instanceof Error ? error.message : String(error));
       } finally {
         setIsWorking(false);

@@ -101,7 +101,7 @@ export type VoteGuardianCircuitKeys = Exclude<keyof VoteGuardianContract['impure
  */
 export type VoteGuardianProviders = MidnightProviders<
   VoteGuardianCircuitKeys,
-  'voteGuardianPrivateState3',
+  'voteGuardianPrivateState',
   VoteGuardianPrivateState
 >;
 
