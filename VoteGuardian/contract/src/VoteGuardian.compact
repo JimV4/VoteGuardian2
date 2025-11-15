@@ -9,7 +9,6 @@ export ledger count: Counter;
 export ledger university_public_key: Bytes<32>;
 
 export ledger votings: Set<Bytes<32>>;                // Map with the votings ids and the question of each voting
-// export ledger voting_options: Map<Bytes<32>, Map<Bytes<32>, Opaque<"string">>>; // Map with the options of each question of each voting;
 export ledger voting_options: Map<Bytes<32>, Set<Bytes<32>>>; 
 export ledger voting_questions: Map<Bytes<32>, Opaque<"string">>;
 export ledger voting_results: Map<Bytes<32>, Map<Bytes<32>, Counter>>;        // Map with a list of votes for each voting
