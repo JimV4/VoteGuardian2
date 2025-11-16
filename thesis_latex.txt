@@ -1,6 +1,7 @@
 \documentclass[12pt,a4paper]{report}
 
 \usepackage[utf8]{inputenc}
+\usepackage{float}
 \usepackage[LGR,T1]{fontenc}        % LGR για ελληνικά, T1 για αγγλικά
 \usepackage[greek,english]{babel}
 \usepackage{lmodern}                
@@ -950,41 +951,153 @@ const initializeProviders = async (logger: Logger): Promise<VoteGuardianProvider
 9f3ec6ed2544939544eb3f231247c4111ed3e5263f5613bf3d8aea4b269a1191 αντίστοιχα. Έστω επίσης πως το smart contract βρίσκεται στη διεύθυνση 0200881de6e23b631470d7c0dec45782f4c67e807955d9e44f8c4a5b9e376241c3b5.
 Θεωρούμε πως αυτή η διεύθυνση είναι γνωτή και έχει κοινοποιηθεί από το πανεπιστήμιο στους φοιτητές.
 
+\subsection{Είσοδος στην dapp}
 Όπως έχουμε ήδη εξηγήσει, κάθε φοιτητής μπορεί να δημιουργήσει ψηφοφορίες. Στην αρχική σελίδα της εφαρμογής ο χρήστης πρέπει να συμπληρώσει τη διεύθυνση του smart contract. Επίσης, ο φοιτητης συμπληρώνει το secret key του, ώστε να αρχικοποιηθεί η private state του. Σημειώνεται εδώ πως το secret key ποτέ δε "φεύγει" από τον υπολογιστή του χρήστη.΄Έστω λοιπόν πως ο user1 συνδέεται στην εφαρμογή, δίνοντας αρχικά τη διεύθυνση του smart contract καθώς και το secret key του, όπως φαίνεται στα σχήματα \ref{fig:enter_contract_new} και \ref{fig:enter_secret_key2}.
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.7\linewidth]{landpage.png}
   \caption{Η αρχική οθόνη της dapp}
   \label{fig:diag}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.7\linewidth]{enter_contract_new.png}
   \caption{Ο χρήστης user1 συμπληρώνει τη διεύθυνση του smart contract}
   \label{fig:enter_contract_new}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.7\linewidth]{enter_secret_key2.png}
   \caption{Ο χρήστης user1 συμπληρώνει το secret key του}
   \label{fig:enter_secret_key2}
 \end{figure}
 Στη συνέχεια, ο χρήστης οδηγείται στην αρχική οθόνη του smart contract όπου μπορεί να δει τις διαθέσιμες ψηφοφορίες ή να δημιουργήσει ο ίδιος μία, βλ. σχήμα \ref{fig:create_or_view}.
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.7\linewidth]{create_or_view.png}
   \caption{Η αρχική οθόνη του smart contract}
   \label{fig:create_or_view}
 \end{figure}
+\subsection{Δημιουργία ψηφοφορίας}
 Καθώς δεν υπάρχουν ακόμα ψηφοφορίες, ο χρήστης επιλέγει τη δημιουργία μιας νέας ψηφοφορίας μέσω του transaction create\_voting. Με αυτή την επιλογή, θα εμφανιστεί το παράθυρο του lace wallet όπου ο χρήστης πρέπει να υπογράψει το transaction. Αυτό γίνεται σε κάθε transaction που πραγματοποιεί ο χρήστης και φαίνεται στο σχήμα \ref{fig:sign_transaction}.
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
   \includegraphics[width=0.7\linewidth]{sign_transaction.png}
   \caption{Η υπογραφή ενός transaction με το lace wallet}
   \label{fig:sign_transaction}
 \end{figure}
+Έχοντας δημιουργήσει την ψηφοφορία και επιστρέφοντας στην αρχική οθόνη, αν ο χρήστης επιλέξει την επιλογή VIEW VOTINGS τότε μπορεί να δει αυτή την ψηφοφορία, η οποία δεν έχει κάποια ερώτηση, και για αυτό αναγράφεται η ένδειξη "No question yet". Αυτό φαίνεται στο σχήμα \ref{fig:no_question_yet}.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{no_question_yet.png}
+  \caption{Η αρχικά άδεια δημιουργημένη ψηφοφορία}
+  \label{fig:no_question_yet}
+\end{figure}
+Επιλέγοντας τη συγκεκριμένη ψηφοφορία, ο χρήστης οδειγήτεαι στο μενού της, όπου υπάρχει η ακόλουθη εικόνα.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{voting_menu.png}
+  \caption{Η αρχικά άδεια δημιουργημένη ψηφοφορία}
+  \label{fig:voting_menu}
+\end{figure}
 
+Ο χρήστης μπορεί να ανοίξει ή να κλείσει την ψηφοφορία ανάλογα με την κατάσταση της, μπορεί να προσθέσει την ερώτηση της ψηφοφορίας, να προσθέσει επιλογές, να ψηφίσει, να δημοσιεύεσει την ψήφο του, να δει τα αποτελέσματα της ψηφοφορίας (τα οποία όπως έχουμε εγηγήσει εμφανίζονται μετά την λήξη της έχοντας εκτελέσει publish\_vote) και να δει την ψήφο που έχει επιλέξει για τη συγκεκριμένη ψηφοφορία. 
+
+\subsection{Προσθήκη ερώτησης}
+Ο χρήστης επιλέγει το κουμπί QUESTION οπότε οδηγείται στο μενού επεξεργασίας της ερώτησης όπως φαίνεται στο σχήμα \ref{fig:edit_question}. Ας πούμε πως η ερώτηση είναι η question1.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{edit_question.png}
+  \caption{Ο χρήστης user1 δημιουργεί την ερώτηση question1}
+  \label{fig:edit_question}
+\end{figure}
+
+\subsection{Προσθήκη επιλογών}
+Με την ίδια λογική ο χρήστης προσθέτει στην ψηφοφορία δύο διαθέσιμες επιλογές, τις option1 και opption2.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{option1_option2.png}
+  \caption{Ο χρήστης user1 δημιουργεί τις επιλογές option1, option2}
+  \label{fig:option1_option2}
+\end{figure}
+
+\subsection{Τελική εικόνα}
+Τώρα αφού τελειώσαμε με την δημιουργία ψηφοφορίας από τον χρήστη user1, όπως είπαμε προηγουμένως υπάρχει και ο χρήστης user2. Με ακριβώς παρόμοια βήματα με τα προηγούμενα, ο user2 δημιουργεί μια νέα ψηφοφορία με ερώτηση την question2 και επιλογές τις option11, option22. Στο τέλος, η εικόνα που υπάρχει στο smart contract είναι 2 ανοικτές ψηφοφορίες, και αυτό φαίνεται στην αρχική οθόνη, επιλέγοντας το κουμπί VIEW VOTINGS.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{view_votings_q1q2.png}
+  \caption{Η εικόνα του smart contract με δύο ανοικτές ψηφοφορίες}
+  \label{fig:view_votings_q1q2}
+\end{figure}
+
+\subsection{Κακόβουλη χρήση}
+Για να δείξουμε και μερικές περιπτώσεις κακόυβουλης χρήσης, ας υποθέσουμε ότι ο user1 θέλει να τροποποιήσει την ψηφοφορία που δημιούργησε ο user1 προσθέτοντας μια επιλογή, και ας υποθέσουμε επίσης ότι ο user2 Θέλει να κάνει το αντίστοιχο στην ψηφοφορία του user1, τροποποιώντας την ερώτηση. Και στις δύο περιπτώσεις θα εμφανιστεί μήνυμα λάθους, το οποίο προέρχεται από τα assert statements του smart contract, όπως φαίνεται στα δύο επόμενα σχήματα.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{user1_tries_to_edit_question_on_Vote2_failed.png}
+  \caption{Ο user1 προσπαθεί να αλλάξει την ερώτηση της ψηφοφορίας που ανήκει στον user2}
+  \label{fig:user1_tries_to_edit_question_on_Vote2_failed}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{user2_tries_to_add_option_to_voting1_failed.png}
+  \caption{Ο user2 προσπαθεί να προσθέσει μια επιλογή στην ψηφοφορία που ανήκει στον user1}
+  \label{fig:user2_tries_to_add_option_to_voting1_failed}
+\end{figure}
+
+\section{Ψήφος σε Ψηφοφορία}
+Σε αυτή την ενότητα θα συνεχίσουμε με το παράδειγμα που ξεκινήσαμε προηγουμένως και θα δούμε τους δύο χρήστες να ψηφίζουν σε ψηφοφορίες, αλλά και το πως η εφαρμοφή απαγορεύει το double-voting με κατάλληλα μηνύματα λάθους.
+
+\subsection{Φυσιολογική ροή}
+Αρχικά, ο χρήστης user1 ψηφίζει την επιλογή option1 στην ψηφοφορία που δημιούργησε. Ωστόσο, πριν το κάνει αυτό, βλέπουμε πως επιλέγοντας την επιλογή DISPLAY VOTE στο μενόυ της ψηφοφορίας, φαίνεται πως δεν υπάρχει καταχωρημένη κάποια ψήφος, βλ. σχήμα \ref{fig:user2_votes_on_question1_no_vote}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{user2_votes_on_question1_no_vote.png}
+  \caption{Ο user1 πριν ψηφίσει στην ψηφοφορία που δημιούργησε}
+  \label{fig:user2_votes_on_question1_no_vote}
+\end{figure}
+Στη συνέχεια επιλέγει την επιλογή VOTE και ψηφίζει το option1 και τώρα στο μενού της ψηφοφορίας, στην επιλογή DISPLAY VOTE, θα φαίνεται η επιλογή option1.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{vote_option1.png}
+  \caption{Ο user1 ψηφίζει το option1 στην ψηφοφορία που δημιούργησε}
+  \label{fig:vote_option1}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{display_vote_user1_option1.png}
+  \caption{Ο user1 έχοντας ψηφίσει option1 στην ψηφοφορία που δημιούργησε}
+  \label{fig:display_vote_user1_option1}
+\end{figure}
+
+Όπως είπαμε προηγουμένως, επειδή στο ledger καταχωρείται το hash της ψήφου και όχι η ίδια η ψήφος στο στάδιο αυτό, αν ο χρήστης επιλέξει την επιλογή SHOW RESULTS τότε δε θα φαίνεται ότι υπάρχουν καταχωρημένα αποτελέσματα, πράγμα που επιβεβαιώνεται παρακάτω:
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{show_results_empy.png}
+  \caption{Τα αποτελέσματα δε φαίνονται όσο είναι ανοιχτή η ψηφοφορία και δεν έχουν γίνει published οι ψήφοι}
+  \label{fig:show_results_empy}
+\end{figure}
+
+Συμμετρικά τώρα, ο χρήστης user2 με ίδια βήματα ψηφίζει την επιλογή option2 στην ψηφοφορία του user1(question1). Επίσης, ο user1 ψηφίζει την επιλογή option11 στην ψηφοφορία του user2(question2) και ο user2 ψηφίζει την επιλογή option22. Για χάριν απλότητας παραλείπουμε τα ενδιάμεσαβήματα.
+
+\subsection{Κακόβουλη χρήση - double-voting}
+Έστω ότο ο χρήστης user1 επιλέγει να ξαναψηφίσει στην ίδια ψηφοφορία. Αν το πραγματοποιήσει αυτό, τότε ευμφανίζεται κατάλληλο μήνυμα λάθους που προέρχεται από το assert statement του cast\_vote circuit στο smart contract, το οποίο έχει αναλυτικά περιγραφεί παραπάνω.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{failed_vote_user1.png}
+  \caption{Περίπτωση double-voting}
+  \label{fig:failed_vote_user1}
+\end{figure}
+
+\section{Δημοσίευση ψήφου}
+Σε αυτή την ενότητα θα συνεχίσουμε το παράδειγμα που έχουμε ήδη ξεκινήσει ώστε να ολοκληρώσουμε έναν πλήρη κύκλο χρήστης της εφαρμογής, αξιοποιώντας όλες τις δυνατότητές της. 
+
+Έχοντας λοιπόν και οι δύο χρήστες user1 και user2 ψηφίσει
 
 \end{document}
