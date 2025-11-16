@@ -61,7 +61,14 @@ export const ViewVotingsCreateVoting: React.FC<Readonly<ViewVotingsCreateVotingP
         navigate('/votings');
       }
     } catch (error: unknown) {
-      setErrorMessage(error instanceof Error ? error.message : String(error));
+      // setErrorMessage(error instanceof Error ? error.message : String(error));
+      let message = error instanceof Error ? error.message : String(error);
+
+      if (message.includes('type error:')) {
+        message = 'Not authorized';
+      }
+
+      setErrorMessage(message);
     } finally {
       setIsWorking(false);
     }

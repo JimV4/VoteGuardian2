@@ -132,13 +132,21 @@ export const EditComponent: React.FC<Readonly<EditComponentProps>> = ({ voteGuar
             const voteOptionUint8 = utils.toBytes32(voteOption!);
             console.log(`option bytes: ${voteOptionUint8}`);
             console.log(`option str: ${voteOption}`);
-            await voteGuardianApiProvider.setPrivateStateVote(votingId!, voteOption!);
+            // await voteGuardianApiProvider.setPrivateStateVote(votingId!, voteOption!);
+            await voteGuardianApiProvider.setPrivateStateVote(votingId!, 'my_vote');
             await deployedVoteGuardianAPI.cast_vote(votingIdBytes);
           }
         }
       } catch (error: unknown) {
         await voteGuardianApiProvider.setPrivateStateVote(votingId!, current_vote);
-        setErrorMessage(error instanceof Error ? error.message : String(error));
+        // setErrorMessage(error instanceof Error ? error.message : String(error));
+        let message = error instanceof Error ? error.message : String(error);
+
+        if (message.includes('type error:')) {
+          message = 'Not authorized';
+        }
+
+        setErrorMessage(message);
       } finally {
         setIsWorking(false);
       }

@@ -1,0 +1,990 @@
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[LGR,T1]{fontenc}        % LGR για ελληνικά, T1 για αγγλικά
+\usepackage[greek,english]{babel}
+\usepackage{lmodern}                
+\renewcommand{\rmdefault}{lmr}      
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{gray!10},
+  keywordstyle=\color{blue}\bfseries,
+  stringstyle=\color{green!50!black},
+  commentstyle=\color{gray}\itshape,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  tabsize=2
+}
+
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{setspace}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\usepackage{tikz}                   % <-- MUST include TikZ package
+\usetikzlibrary{trees} 
+\begin{document}
+
+% ------------------ Title Page -------------------
+\begin{titlepage}
+    \centering
+    
+    \vspace*{1cm}
+    {\Large National Technical University of Athens \\}
+    {\large School of Electrical and Computer Engineering \\}
+    {\large Computer Science Laboratory \\}
+    
+    \vfill
+    
+    {\LARGE \textbf{Student Voting DApp on Midnight Blockchain} \\[1.5cm]}
+    
+    {\Large \textbf{DIPLOMA THESIS} \\[1.5cm]}
+    
+    {\Large VASSILIOU DIMITRIOS \\}
+    
+    \vfill
+    
+    {\large September 2025}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ------------------ First Chapter Introcution -------------------
+\chapter{Introduction}
+
+Blockchain technology is a distributed ledger system that enables secure,
+transparent, and tamper-resistant recording of digital transactions. Unlike
+traditional centralized databases, a blockchain is maintained collectively
+by a network of participants, eliminating the need for a single trusted
+authority.
+
+Each block in the chain contains a group of transactions, a timestamp, and
+a cryptographic hash of the previous block, which together ensure
+immutability and traceability. Once information is added, it is extremely
+difficult to alter without the consensus of the network.
+
+Key features of blockchain include:
+\begin{itemize}
+    \item \textbf{Decentralization} -- data is stored and verified across many
+    nodes instead of a central server.
+    \item \textbf{Transparency} -- transactions are visible to all participants
+    in the network.
+    \item \textbf{Security} -- cryptographic mechanisms make it resistant to
+    fraud and tampering.
+    \item \textbf{Consensus mechanisms} -- such as Proof of Work or Proof of
+    Stake, which ensure agreement among participants.
+\end{itemize}
+
+Initially introduced with Bitcoin in 2008 as the backbone of digital
+currency, blockchain technology has since evolved far beyond cryptocurrencies.
+It is now being applied in areas such as supply chain management, healthcare,
+identity verification, and voting systems.
+This thesis focuses on \textit{Midnight}, a blockchain platform designed with
+a strong emphasis on security, user privacy, and transparency. By leveraging
+advanced cryptographic techniques, particularly zero-knowledge proofs, Midnight
+enables participants to prove the validity of information without revealing the
+underlying data. These characteristics make Midnight an ideal foundation for the
+development of a decentralized voting application, where trust, confidentiality,
+and verifiability are essential requirements.
+
+% ------------------ Motivation -------------------
+\selectlanguage{greek}
+\section{Κίνητρο}
+Η ψηφοφορία είναι μια θεμελιώδης διαδικασία που ενσωματώνει την πρακτική εφαρμογή της δημοκρατίας. 
+Χρησιμεύει ως μηχανισμός λήψης αποφάσεων σε ένα ευρύ φάσμα πλαισίων, συμπεριλαμβανομένων 
+των κυβερνητικών εκλογών, των επαγγελματικών ενώσεων, των κοινωνικών οργανώσεων και των εκπαιδευτικών  ιδρυμάτων. Η ακεραιότητα της διαδικασίας ψηφοφορίας είναι επομένως κρίσιμη, καθώς διασφαλίζει ότι τα αποτελέσματα αντικατοπτρίζουν την πραγματική βούληση των συμμετεχόντων. Για το λόγο αυτό, ένα σύστημα ψηφοφορίας πρέπει να είναι διαφανές, δίκαιο και ανώνυμο, ώστε να προστατεύεται η ταυτότητα και η ιδιωτικότητα των συμμετεχόντων.
+Τα παραδοσιακά συστήματα ψηφοφορίας, είτε σε χαρτί είτε ηλεκτρονικά, συχνά αντιμετωπίζουν σημαντικές 
+προκλήσεις. Τα χαρτιά ψηφοφορίας είναι ευάλωτα σε ανθρώπινα λάθη και χειραγώγηση, ενώ 
+τα κεντρικά ηλεκτρονικά συστήματα μπορεί να είναι ευάλωτα σε κυβερνοεπιθέσεις, παραβιάσεις και διαρροές δεδομένων . Στο πλαίσιο των φοιτητικών εκλογών, τα συμβατικά ηλεκτρονικά συστήματα απαιτούν συνήθως έναν κεντρικό διακομιστή και μια βάση δεδομένων όπου αποθηκεύονται τα προσωπικά στοιχεία και οι ψήφοι των φοιτητών .Αυτό δημιουργεί μια κατάσταση όπου οι φοιτητές πρέπει να αποκαλύψουν τις επιλογές τους στο ίδρυμα, γεγονός που θέτει σε κίνδυνο την αρχή της ανωνυμίας των ψηφοφόρων και μπορεί να υπονομεύσει την εμπιστοσύνη στη διαδικασία.
+
+Επιπλέον, τα κεντρικά συστήματα εισάγουν ένα ενιαίο σημείο αστοχίας, πράγμα που σημαίνει ότι οποιαδήποτε παραβίαση, κακοδιαχείριση ή τεχνική δυσλειτουργία θα μπορούσε να θέσει σε κίνδυνο ολόκληρες τις εκλογές. Αυτές οι ευπάθειες υπογραμμίζουν την ανάγκη για εναλλακτικές προσεγγίσεις που μπορούν να διασφαλίσουν τόσο την ασφάλεια όσο και την ιδιωτικότητα, διατηρώντας παράλληλα τη διαφάνεια και την επαληθευσιμότητα. Μια λύση βασισμένη στο blockchain ,
+ιδίως μια λύση που αξιοποιεί προηγμένες κρυπτογραφικές τεχνικές όπως οι αποδείξεις μηδενικής γνώσης ,
+ προσφέρει μια πολλά υποσχόμενη οδό για την αντιμετώπιση αυτών των ζητημάτων. Καταργώντας την ανάγκη για μια κεντρική αρχή και επιτρέποντας κρυπτογραφικά επαληθεύσιμη αλλά ιδιωτική ψηφοφορία, ένα τέτοιο σύστημα μπορεί να προστατεύσει την ανωνυμία, να αποτρέψει την απάτη και να ενισχύσει την εμπιστοσύνη στις ψηφοφορίες των φοιτητών.
+
+\newpage
+
+% ------------------ Second Chapter Theoretical Background-------------------
+\chapter{Θεωρητικό Υπόβαθρο}
+Σε αυτή την ενότητα, παρουσιάζουμε το βασικό θεωρητικό υπόβαθρο που σχετίζεται με την παρούσα διατριβή. Ξεκινάμε με την εισαγωγή των βασικών εννοιών της τεχνολογίας blockchain, παρέχοντας τα θεμέλια για την κατανόηση των αποκεντρωμένων συστημάτων που αποτελούν τη βάση της προτεινόμενης εφαρμογής. Στη συνέχεια, εξετάζουμε τα βασικά εργαλεία από την επιστήμη της κρυπτογραφίας που χρησιμοποιούνται στην DApp, συμπεριλαμβανομένων των αποδείξεων μηδενικής γνώσης, των συναρτήσεων κατακερματισμού και των δέντρων Merkle, επισημαίνοντας τον ρόλο τους στην εξασφάλιση της ασφάλειας, της ακεραιότητας και της ιδιωτικότητας. Τέλος, εξετάζουμε λεπτομερώς το Midnight blockchain, εστιάζοντας στους μηχανισμούς του για τη διατήρηση της ιδιωτικότητας και της ανωνυμίας των χρηστών, οι οποίοι αποτελούν τη βάση για το ασφαλές και εμπιστευτικό σύστημα ψηφοφορίας που αναπτύχθηκε σε αυτή την εργασία.
+
+\selectlanguage{greek}
+\section{Τεχνολογία Blockchain}
+Το blockchain είναι μία κατανεμημένη βάση δεδομένων που επιτρέπει την ασφαλή και ανθεκτική σε παραβιάσεις τήρηση δεδομένων χωρίς να υπάρχει η ανάγκη για μια κεντρική αρχή όπως για παράδειγμα η ύπαρξη ενός server. Ο έλεγχος των δεδομένων διαχέεται σε ένα δίκτυο από πολλαπλούς κόμβους (nodes). Κάθε κόμβος στο δίκτυο κρατάει ένα αντίγραφο όλων των δεδομένων και ακολουθεί ένα συμφωνημένο πρωτόκολλο για να ελέγχει την εγκυρότητα συναλλάγων και block. Αυτό που κάνει την τεχνολογία αυτή πολύ ισχυρή είναι ότι είναι πρακτικά αδύνατο να αλλοιώσει κάποιος τα δεδομένα , καθώς θα πρέπει να έχει στον έλεγχό του την πλειονότητα των κόμβων του δικτύου. Έτσι, τα δεδομένα παραμένουν πρακτικά αναλλοίωτα και οι χρήστες μπορούν να χρησιμοποιούν το δίκτυο δίχως την ανάγκη ύπαρξης μιας κεντρικής αρχής.
+\subsection{Μηχανισμοί consensus}
+Ένα σημαντικό στοιχείο στα συστήματα blockchain είναι οι μηχανισμοί consensus, οι οποίοι αποτελούν τα πρωτόκολλα που ακολουθούν οι συμμετέχοντες κόμβοι προκειμένου να έρθουν σε συμφωνία για την τρέχουσα κατάσταση των δεδομένων στο δίκτυο. Διακρίνουμε τους δύο πιο γνωστούς τέτοιους μηχανισμούς:
+\begin{itemize}
+    \item \textbf{Proof Of Work(PoW)}: Το πρωτόκολλο αυτό χρησιμοποιείται από το Bitcoin και απαιτεί την ύπαρξη κόμβων που λέγονται miners οι οποίοι καλούνται να λύσουν κάποιο πολύπλοκο μαθηματικό πρόβλημα, το οποίο έγκυται στην αντιστροφή μιας συνάρτησης κατακερματισμού. Ο κόμβος που θα λύσει πρώτος το πρόβλημα λαμβάνει μια αμοιβή σε κρυπτονόμισα και είναι αυτός που θα προσθέσει το επόμενο μπλοκ στην αλυσίδα. Το PoW, παρότι είναι πολύ ασφαλές, απαιτεί κόμβους με πολύ υπολογιστική ισχύ και είναι δαπανηρό σε ενέργεια ενώ ταυτόχρονα καθιστά πρακτικά ακατόρθωτο σε κάποιον απλό χρήστη να συμμετέχει στο πρωτόκολλο.
+    \item \textbf{Proof Of Stake(PoS)}: Το PoS είναι πιο καινούργιο από το PoW και δεν βασίζεται στη λύση πολύπλοκων μαθηματικών προβλημάτων. Αντιθέτως, ο κόμβος που θα εκλεγεί ως αυτός που θα προσθέσει στην αλυσίδα το επόμενο μπλοκ βασίζεται σε έναν συνδυασμό τύχης αλλά και του ποσού του οποίου ο κόμβος έχει δεσμεύσει. Χρησιμοποείται σε blockchains όπως το Ethereum και το Cardano και ενώ είναι πιο φιλικό προς το περιβάλλον, ταυτόχρονα δίνει την δυνατότητα στον απλό χρήστη να συμμετέχει στο πρωτόκολλο καθώς μπορεί ο ίδιος να δεσμεύσει ένα ποσό κρυπτονομισμάτων σε κάποιο ευρύτερο σύνολο οντοτήτων που ονομάζονται \textbf{stakepools}. Ένα \textbf{stakepool} αποτελεί ένα σύνολο κόμβων και χρηστών που αθροίζουν συνολικά που το ποσό που κάνουν stake έτσι ώστε να έχουν μεγαλύτερη πιθανότητα εκλογής. Αν το pool είναι τελικά ο νικητής του γύρου, τα κέρδη μοιράζονται ποσοστιαία σε όλους τους συμμετέχοντες.
+\end{itemize}
+
+\subsection{Smart Contracts}
+Τα Smart Contracts είναι προγράμματα γραμμένα σε κάποια γλώσσα προγραμματισμού όπως η Plutus, η Solidity ή η Compact, τα οποία εκτελούνται στο blockchain όταν συγκεριμένες συνθήκες που έχουν ήδη προκαθοριστεί λαμβάνουν χώρα. Τα smart contracts περιλαμβάνουν κανόνες για το πως αλληλεπιδρούν οι συμμετέχοντες του δικτύου, ωστόσο στο Midnight όπως θα δούμε παρακάτω, παίζουν καθοριστικό ρόλο στην προστασία των δεδομένων των χρηστών.
+
+\subsection{Αποκεντρωμένες Εφαρμογές (dApps)}
+Μία αποκεντρωμένη εφαρμογή είναι μια εφαρμογή η οποία δε βασίζεται σε κάποια κεντρική βάση δεδομένων και κάποιο κεντρικό server, αντιθέτως λειτουργεί πάνω σε ένα δίκτυο blockchain. Πολύ σημαντικό ρόλο σε αυτού του είδους τις εφαρμογές παίζουν τα smart contracts τα οποία και καθορίζουν το τι μπορεί να κάνει κάποιος χρήστη στην αποκεντρωμένη εφαρμογή, ενώ συγκεκριμένα στο Midnight διασφαλίζουν και ότι οι προσωπικές πληροφορίες κάθε χρήστη παραμένουν ασφαλείς και δεν εκτίθενται ποτέ στο δίκτυο, αντί αυτού παραμένουν στον τοπικό του υπολογιστή.
+
+\section{Εργαλεία από την επιστήμη της κρυπτογραφίας}
+% ------------------ Hash Functions-------------------
+\subsection{Συναρτήσεις Κατακερματισμού}
+Οι συναρτήσεις κατακερματισμού είναι μαθηματικές συναρτήσεις που λαμβάνουν μια συμβολοσειρά εισόδου \(A\) και παράγουν μια συμβολοσειρά εξόδου σταθερού μεγέθους \(B = H(A)\). Το κύριο πλεονέκτημά τους έγκειται στη μονοκατευθυντική τους φύση: είναι υπολογιστικά αδύνατο να αντιστραφεί η συνάρτηση και να ανακτηθεί η αρχική είσοδος από την έξοδο. Με άλλα λόγια, δεδομένου του \(B\), είναι πρακτικά 
+αδύνατο να προσδιοριστεί το \(A\). Αυτή η ιδιότητα καθιστά τις συναρτήσεις κατακερματισμού ένα θεμελιώδες εργαλείο στην κρυπτογραφία για τη διασφάλιση της ακεραιότητας και της ασφάλειας των δεδομένων. Θα αναφέρουμε τις επιθμητές ιδιότητες που πρέπει να έχει μια συνάρτηση κατακερματισμού  \(H\):
+\begin{itemize}
+    \item \textbf{Αντίσταση Πρώτου Ορίσματος}: Είναι υπολογιστικά αδύνατο δεδομένης μιας τιμής \(y\)
+    στο πεδίο τιμών της \(H\), να βρεθεί \(x\) τέτοιο ώστε \(Η(x) = y\). Δηλαδή είναι δύσκολη η αντιστοφή της συνάρτησης.
+    \item \textbf{Αντίσταση Δεύτερου Ορίσματος}: Είναι υπολογιστικά δύκολο για κάποιο συγκεκριμένο στοιχείο  \(x\), ένα στοιχείο  \(x'\) διαφορετικό του \(x\), αλλά με \(H(x) = H(x')\).
+    \item \textbf{Δυσκολία Εύρεσης Συγκρούσεων}: Είναι υπολογιστικά δύσκολο να βρεθούν δύο διαφορετικές τιμές \(x\), \(x'\) τέτοιες ώστε \(H(x) = H(x')\).
+\end{itemize}
+\newline
+\newline
+Αρκετές γνωστές συναρτήσεις κατακερματισμού χρησιμοποιούνται ευρέως στην πράξη, συμπεριλαμβανομένων των SHA-256, SHA-3 και του αλγορίθμου MD5 (αν και ο MD5 θεωρείται ανασφαλής για σύγχρονες εφαρμογές). Αυτές οι συναρτήσεις χρησιμοποιούνται σε ψηφιακές υπογραφές, συστήματα blockchain, κατακερματισμό κωδικών πρόσβασης και άλλες εφαρμογές κρίσιμης σημασίας για την ασφάλεια.
+\newline
+\newline
+Μια θεμελιώδης εφαρμογή των συναρτήσεων κατακερματισμού είναι τα \textit{σχέδια δέσμευσης}. 
+Ας υποθέσουμε ότι ένας χρήστης διαθέτει μια μυστική τιμή \(S\) που πρέπει να παραμείνει ιδιωτική. Ο χρήστης μπορεί να δεσμευτεί για αυτό το μυστικό υπολογίζοντας τον κατακερματισμό του, \(H(S)\). Η προκύπτουσα τιμή, \(H(S)\), μπορεί στη συνέχεια να δημοσιευτεί, για παράδειγμα, σε ένα blockchain, λειτουργώντας ως κρυπτογραφική δέσμευση για το \(S\) χωρίς να αποκαλύπτεται το ίδιο το μυστικό. Αργότερα, οποιοσδήποτε μπορεί να επαληθεύσει μια δηλωθείσα δέσμευση ελέγχοντας ότι ο παρεχόμενος κατακερματισμός ταιριάζει με την προηγουμένως δημοσιευμένη τιμή \(H(S)\), διασφαλίζοντας την ακεραιότητα της δέσμευσης και διατηρώντας το μυστικό \(S\) εντελώς κρυφό.
+\newline
+
+% ------------------ Zero Knowledge Proofs------------------
+\subsection{Αποδείξεις Μηδενικής Γνώσης}
+Η απόδειξη μηδενικής γνώσης είναι μια μέθοδος με την οποία ο αποδεικνύων(prover) μπορεί να πείσει τον επαληθευτή(verifier) ότι μια συγκεκριμένη δήλωση είναι αληθής, χωρίς να αποκαλύψει καμία πρόσθετη πληροφορία πέραν της αλήθειας της δήλωσης. Με άλλα λόγια, ο prover αποδεικνύει τη γνώση ενός μυστικού (ή της λύσης ενός προβλήματος) χωρίς να μοιράζεται το ίδιο το μυστικό. Για παράδειγμα, μια ZKP θα μπορούσε να σας επιτρέψει να αποδείξετε ότι έχετε δικαίωμα ψήφου σε φοιτητικές εκλογές χωρίς να αποκαλύψετε την ταυτότητά σας ως φοιτητής. 
+\selectlanguage{greek}
+Αν και το μαθηματικό υπόβαθρο των αποδείξεων μηδενικής γνώσης ξεφεύγει από το σκοπό αυτής της εργασίας, αξίζει να περιγραφεί σε υψηλό επίπεδο ο τρόπος λειτουργίας τους:
+
+\begin{itemize}
+    \item Συμμετέχουν δύο μέρη: ο \selectlanguage{english}\textbf{prover},\selectlanguage{greek} που κατασκευάζει την απόδειξη θέλοντας να αποδείξει έναν ισχυρισμό ή μια πρόταση, και ο \textbf{verifier}, που ελέγχει την εγκυρότητά της. Ο prover κατέχει μια μυστική πληροφορία, τον \textit{witness}, και πρέπει να πείσει τον verifier για έναν ισχυρισμό χωρίς να αποκαλύψει τον witness.
+    \item Ο ισχυρισμός του prover (ο οποίος θα μπορούσε να είναι μια πρόταση της μορφής: <<ανήκω στο σύνολο των έγκυρων ψηφοφόρων>>) αναπαρίσταται μέσω ενός μαθηματικού κυκλώματος, γνωστού ως zero-knowledge circuit.
+    \item Στην αρχή πραγματοποιείται μια \textit{φάση αρχικοποίησης }, κατά την οποία δημιουργούνται τα αντίστοιχα \textit{proving} και \textit{verifying keys}.
+    \item Ο prover χρησιμοποιεί τον witness και το proving key για να κατασκευάσει την απόδειξη.
+    \item Ο verifier, χρησιμοποιώντας το verifying key αλλά και το μαθηματικό κύκλωμα, ελέγχει αν η απόδειξη είναι έγκυρη. Αν επαληθευθεί, τότε ο ισχυρισμός του prover θεωρείται αληθής· διαφορετικά, είτε ο ισχυρισμός είναι λανθασμένος είτε ο prover δεν γνωρίζει στην πραγματικότητα έναν έγκυρο witness.
+\end{itemize}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{zkproofs.drawio.png}
+  \caption{Ένα πρωτόκολλο μηδενικής γνώσης σε high level}
+  \label{fig:diag}
+\end{figure}
+
+
+% ------------------ Merkle Trees------------------
+\selectlanguage{greek}
+\subsection{Δένδρα Merkle}
+
+Τα δέντρα Merkle είναι μια κρυπτογραφική δομή δεδομένων που χρησιμοποιείται ευρέως σε συστήματα blockchain και άλλες εφαρμογές που απαιτούν επαλήθευση της ακεραιότητας των δεδομένων. Το βασικό τους πλεονέκτημα είναι ότι επιτρέπουν σε κάποιον να αποδείξει ότι μια συγκεκριμένη τιμή ανήκει σε ένα σύνολο χωρίς να αποκαλύψει την τιμή αυτή. Αυτή η ιδιότητα είναι απαραίτητη για την αποτελεσματική και διακριτική επαλήθευση.
+
+Δομικά, ένα δέντρο Merkle είναι ένα δυαδικό δέντρο όπου κάθε \textbf{leaf node} περιέχει 
+το hash ενός στοιχείου δεδομένων και κάθε \textbf{parrent node} περιέχει το hash της 
+παράθεσης των κόμβων παιδιών του. Αυτή η ιεραρχία κατακερματισμού συνεχίζεται μέχρι τη 
+ρίζα, που ονομάζεται \textbf{Merkle root}, η οποία αντιπροσωπεύει με μοναδικό τρόπο ολόκληρο το σύνολο των δεδομένων. Η επαλήθευση ότι μια τιμή ανήκει στο σύνολο απαιτεί μόνο έναν λογαριθμικό αριθμό υπολογισμών τιμών κατακερματισμού, καθιστώντας τα δέντρα Merkle εξαιρετικά αποδοτικά.
+
+\selectlanguage{english}
+\begin{figure}[h!]
+    \centering
+    \begin{tikzpicture}[level distance=2.5cm,  % increase vertical spacing
+      level 1/.style={sibling distance=6cm},   % increase horizontal spacing for first level
+      level 2/.style={sibling distance=3cm}]   % increase horizontal spacing for second level
+      \node {$\text{root}$}
+        child {node {$H(H(A)\mid H(B))$}
+          child {node {$H(A)$}}
+          child {node {$H(B)$}}
+        }
+        child {node {$H(H(C)\mid H(D))$}
+          child {node {$H(C)$}}
+          child {node {$H(D)$}}
+        };
+    \end{tikzpicture}
+    \caption{\selectlanguage{greek}Δομή δέντρου Merkle: Κάθε lead node περιέχει το hash ενός στοιχείου δεδομένων και κάθε parrent node περιέχει το hash των παιδιών του. Ο root node αντιπροσωπεύει το hash ολόκληρου του συνόλου δεδομένων.}
+    \label{fig:merkle_tree}
+\end{figure}
+In the figure above, we see a Merkle tree with leaf nodes $H(A)$, $H(B)$, $H(C)$, and $H(D)$. 
+Each parent node contains the hash of its children, culminating in the Merkle root, which 
+represents the hash of the entire dataset.  
+
+Suppose that $A$, $B$, $C$, and $D$ represent secret keys of different users, and user $D$ 
+wants to prove that they belong to the tree without revealing their secret key $D$. This 
+can be achieved using a zero-knowledge proof based on the following procedure.  
+
+The protocol provides user $D$ with only the hashes required to reconstruct the root, 
+specifically $H(C)$ and $H(H(A) \mid H(B))$. Using these values along with their own 
+hash $H(D)$, user $D$ computes the hash of the concatenation $(H(C) \mid H(D))$. 
+Next, they combine this newly computed hash with the hash provided by the protocol 
+$H(H(A) \mid H(B))$ to reconstruct the root:  
+\[
+H\big(H(H(A)\mid H(B)) \mid (H(C)\mid H(D))\big)
+\]  
+If the resulting hash matches the Merkle root, the proof is valid, and anyone can 
+verify that user $D$ belongs to the tree without ever revealing the secret $D$. This 
+process illustrates how Merkle trees, combined with zero-knowledge proofs, enable 
+efficient and privacy-preserving verification of membership.
+
+% ------------------ Midnight -------------------
+\section{Midnight}
+\selectlanguage{greek}
+Σε αυτό το υπό-κεφάλαιο θα εξετάσουμε τα βασικά χαρακτηριστικά του \selectlanguage{english}Midnight\selectlanguage{greek}, δίνοντας έμφαση στον τρόπο λειτουργίας των \selectlanguage{english}smart contracts\selectlanguage{greek}, στον τρόπο με τον οποίο διασφαλίζεται η ανωνυμία των χρηστών των αποκεντρωμένων εφαρμογών που αναπτύσσονται σε αυτό το \selectlanguage{english}blockchain\selectlanguage{greek}, καθώς και στις μοναδικές δυνατότητες που προσφέρει για ασφαλείς και αυτοματοποιημένες συναλλαγές χωρίς την ανάγκη κεντρικών διαμεσολαβητών.
+\selectlanguage{english}
+\subsection{Lace Wallet}
+\selectlanguage{greek}
+Το \selectlanguage{english} Midnight \selectlanguage{greek} χρησιμοποιεί το \textbf{Lace Wallet} ως κύριο μέσο διεπαφής των χρηστών με τις αποκεντρωμένες εφαρμογές, αλλά και ως μέσο διεξαγωγής συναλλαγών μεταξύ τους. Κάθε wallet διαθέτει μια μοναδική διεύθυνση, ορατή στον έξω κόσμο, καθώς και ένα ζεύγος κλειδιών — το \textbf{public key} και το \textbf{private key} — που αναπαριστώνται ως δεκαεξαδικές συμβολοσειρές. Το \textbf{public key} λειτουργεί ως αναφορά για το ποιος χρήστης εκτέλεσε ένα συγκεκριμένο transaction, ενώ το \textbf{private key}, που παραμένει μυστικό ακόμα και στον ίδιο τον χρήστη, χρησιμοποιείται για την υπογραφή των συναλλαγών που πραγματοποιεί το wallet. Το νόμισμα που χρησιμοποιεί το Midnight για τις συναλλαγές είναι το \textbf{tDUST}.
+
+\selectlanguage{english}
+\subsection{Proof Server}
+\selectlanguage{greek}
+
+Οποιοσδήποτε επιθυμεί να χρησιμοποιήσει μια αποκεντρωμένη εφαρμογή βασισμένη στο \selectlanguage{english}Midnight\selectlanguage{greek} πρέπει να εγκαταστήσει και να τρέξει τοπικά στον υπολογιστή του τον \selectlanguage{english}proof server\selectlanguage{greek}, ο οποίος είναι ενθυλακωμένος μέσα σε ένα \selectlanguage{english}docker container\selectlanguage{greek}. Ο \selectlanguage{english}proof server\selectlanguage{greek} παράγει τις αποδείξεις μηδενικής γνώσης για κάθε \selectlanguage{english}transaction\selectlanguage{greek} ενός \selectlanguage{english}smart contract\selectlanguage{greek}. Οι αποδείξεις αυτές αποτελούν το εχέγγυο ότι ο χρήστης μιας αποκεντρωμένης εφαρμογής, και κατά συνέπεια του αντίστοιχου \selectlanguage{english}smart contract\selectlanguage{greek}, έχει ακολουθήσει όλους τους κανόνες που ορίζει κάθε \selectlanguage{english}transaction\selectlanguage{greek}. Στη συνέχεια, η απόδειξη προωθείται στο δίκτυο ώστε να επαληθευθεί η ορθότητά της.
+
+Αξίζει να τονιστεί ότι ο \selectlanguage{english}proof server\selectlanguage{greek} δεν συνδέεται ποτέ στο διαδίκτυο ούτε αποστέλλει δεδομένα σε τρίτους αποδέκτες. Λειτουργεί αποκλειστικά τοπικά για κάθε χρήστη και παράγει αποδείξεις μηδενικής γνώσης με πλήρη ασφάλεια.
+
+\selectlanguage{english}
+\subsection{Smart Contracts \selectlanguage{greek}στο\selectlanguage{english} Midnight }
+\selectlanguage{greek}
+Το Midnight χρησιμοποιεί την compact ως γλώσσα προγραμματισμού για ανάπτυξη smart contracts, η οποία έχεθ αναπτυχθεί από την ομάδα του Midnight. Θα κάνουμε μια σύντομη περιήγηση στα βασικά στοιχεία της compact μέσω ενός απλού smart contract. Εκτενέστερη ανάλυση θα πραγματοποιηθεί κατά την παρουσίαση του smart contract που αναπτύχθηκε για τη δική μας εφαρμογή.
+Παρουσιάζουμε παρακάτω ένα απλό smart contract το οποίο ορίζει μια public μεταβλητή και επιτρέπει μόνο στον δημιουργό του contract να την αλλάξει.
+\selectlanguage{english}
+\begin{figure}[h]
+\begin{lstlisting} % you can choose other language or leave it generic
+import CompactStandardLibrary;
+
+witness secretKey(): Bytes<32>;
+
+export ledger organizer: Bytes<32>;
+export ledger restrictedCounter: Counter;
+constructor() {
+  organizer = publicKey(secretKey());
+}
+
+export circuit increment(): [] {
+  assert(organizer == publicKey(secretKey()), "not authorized");
+  restrictedCounter.increment(1);
+}
+
+circuit publicKey(sk: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<2, Bytes<32>>>([pad(32, "some-domain-seperator"), sk]);
+}
+\end{lstlisting}
+\selectlanguage{greek}
+\caption{Ένα απλό smart contract γραμμένο σε compact}
+\end{figure}
+\selectlanguage{greek}
+\subsubsection{Το ledger και η public state}
+Όσες μεταβλητές έχουν μπροστά τη λέξει-κλειδί \textbf{ledger} αποτελούν την public state του smart contract και είναι ορατές σε όλο το blockchain. Στο παράδειγμά μας, η μεταβλητή organizer είναι public και αποτελεί την διεύθυνση του δημιουργού του contract μέσω μιας δεκαεξαδικής συμβολοσειράς. Επίσης η μεταβλητή resrictedCounter είναι δημόσια και είναι ένας απλός μετρητής.
+
+\subsubsection{Ο witness και η private state}
+Όσες μεταβλητές έχουν μπροστά τη λέξη κλειδί \textbf{witness} αποτελούν την private state του smart contract και ζουν αποκλειστικά στον υπολογιστή του χρήστη. Είναι σημαντικό να τονιστεί ότι η πραγματική τιμή τους δεν είναι ποτέ ορατή στο smart contract, απλά όσες μεταβλητές έχουν τη λέξη witness μπροστά αποτελούν μια διεπαφή στην private state του χρήστη. Στο παράδειγμά μας η μεταβλητή secretKey αποτελεί το μυστικό κλειδί του χρήστη και η πραγματική της τιμή δεν αποκαλύπτεται ποτέ δημόσια, ούτε στο contract. Μόνο ο χρήστης γνωρίζει την τιμή της και είναι στη δική του δικαιοδοσία να ορίσει ποια θα είναι αυτή. Δηλαδή μπορεί διαφορετικοί χρήστες μιας αποκεντρωμένης εφαργμογής να ορίσουν ο καθένας τον δικό του witness, στη δική μας περίπτωση το δικό του secretKey.
+
+\subsubsection{Τα circuits}
+Τα circuits μπορούν να παρομοιαστούν περίπου σαν τις συναρτήσεις σε μια γλώσσα προγραμματισμού σαν την C. Μπορούν να επιστρέφουν ή όχι τιμές, ανάλογα με αυτό που ορίζει ο προγραμματιστής. Χωρίζονται σε δύο κατηγορίες: 
+\begin{itemize}
+    \item \textbf{pure circuits}: δεν αλλάζουν ούτε χρησιμοποιούν την private ή την public state (δηλαδή τις ledger μεταβλητές και τους witnesses),
+    \item \textbf{impure circuits}: μπορούν να τροποποιούν και να χρησιμοποιούν την public και την private state. Τα impure circuits κατά κανόνα αποτελούν τις ενέργειες που μπορεί να κάνει ένας χρήστης στο smart contract, δηλαδή είναι τα entry points στο smart contract καθώς και τα transactions που μπορεί να εκτελέσει ένας χρήστης. Κάθε impure circuit μεταγλωττίζεται σε γλώσσα Typescript και μπορεί να χρησιμοποιηθεί σαν μια συνάρτηση Typescript.
+\end{itemize}
+Στο παράδειγμά μας pure circuit είναι το publicKey το οποίο λειτουργεί απλά σαν hash function αξιοποιώντας την συνάρτηση persistentHash της βιβλιοθήκης. Αυτό το cirtcuit χρησιμοποιείται για να υπολογιστεί το hash του secretKey.
+
+Το impure circuits είναι το increment το οποίο προσπαθεί να αυξήσει την τιμή της ledger μεταβλητής counter. Ωστόσο μέσα σε αυτο το circuit παρατηρούμε ότι χρησιμοποείται η έκφραση \textbf{assert}. Κάθε τέτοια έκφραση που είναι σε ένα circuit αποτελεί τους κανόνες που ορίζει το smart contract και διέπουν τη λειτουργία του. Το συγκεκριμένο assert επιβάλλει ότι μόνο ο organizer του smart contract, δηλαδή αυτός που γνωρίζει ένα secretKey τέτοιο ώστε το hash αυτού του secretKey να ισούται με τη μεταβλητή organizer, έχει δικαίωμα να αυξήσει τον restrictedCounter. Διαφορετικά, αν ένας χρήστης που δεν γνωρίζει το έγκυρο secretKey προσπαθήσει να εκτελέσει ένα transaction με το increment circuit, αυτό θα αποτύχει και θα εμφανιστεί το μήνυμα λάθους "not authorized".
+
+Σε αυτό το σημείο πρέπει να σημειώσουμε ότι μόλις ένα contract μεταγλωττιστεί, τότε για κάθε impure circuit που περιλαμβάνεται στο contract δημιουργούνται τα εξής αρχεία:
+\begin{itemize}
+    \item \textbf{.zkir αρχεία}: Αποτελούν την ενδιάμεση αναπαράσταση του circuit σε μηδενική γνώση και ουσιαστικά αναπαριστούν τους κανόνες που θέτει το συγκεκριμένο circuit. Για κάθε τέτοιο αρχείο, υπάρχει και η δυαδική το αναπαράσταση σε ένα .bzkir αρχείο
+    \item \textbf{.prover αρχεία}: Είναι τα proving keys στο πλαίσιο ενός πρωτόκολλου αποδείξεων μηδενικής γνώσης.
+    \item \textbf{.verifier αρχεία}: Είναι τα verifying keys στο πλαίσιο ενός πρωτόκολλου αποδείξεων μηδενικής γνώσης.
+\end{itemize}
+Στο δικό μας απλό smart contract θα είχαμε τα αρχεία increment.zkir, increment.bzkir, increment.prover, increment.verifier.
+
+Κατά την δημιουργία ενός transaction μέσω του increment circuit ο χρήστης, χρησιμοποιώντας .prover κλειδί και το .zkir αρχείο κατασκευάζει μέσω του proof server μια απόδειξη μηδενικής γνώσης. Αυτή η απόδειξη, μαζί με το .verifier κλειδί διαχέονται στο δίκτυο και αναλόγως με την ορθότητα της απόδειξης, το transction γίνεται αποδεκτό και πραγματοποιείται αλλαγή στην public state του contract ή απορρίπτεται.
+
+
+\newpage
+% ------------------ Third Chapter Methodology and Implementation-------------------
+\chapter{Μεθοδολογία και Υλοποίηση}
+Σε αυτή την ενότητα θα περιγράψουμε την μεθοδολογία που ακολουθήθηκε για το σχεδιασμό της αποκεντρωμένης εφαρμογής. Θα ξεκινήσουμε με μια γενική περιγραφή της εφαρμογής και παρουσιάζοντας τον τρόπο με τον οποίο τα επιμέρους κομμάτια που την αποτελούν επικοινωνούν και αλληλεπιδρούν μεταξύ τους. Στη συνέχεια θα γίνει εκτενής αναφορά στο smart contract που αναπτύχθηκε, αναλύοντας λεπτομερώς όλα τα στοιχεία του και εξηγώντας πως μέσω αυτού διασφαλίζονται τα επιθυμητά χαρακτηριστικά ενός ασφαλούς e-voting συστήματος, όπως είναι η ανωνυμία και η μοναδικότητα στην ψήφο. Επίσης, θα πραγματοποιηθεί γενική επισκόπηση του κώδικα που χρησιμοποιήθηκε και το πώς από την compact δημιουργείται κώδικας Typescript ο οποίος στη συνέχεια αξιοποιείτα για την ανάπτυξη της εφαρμογής.
+Τέλος, θα παρουσιαστούν διάφορες περιπτώσεις χρήσης μέσω παραδειγμάτων για να δείξουμε πως ένας χρήστης μπορεί να αξιοποιήσει την εφαρμογή.
+
+\section{Γενική επισκόπηση της αποκεντρωμένης εφαρμογής}
+\subsection{Stakeholders}
+Η συγκεκριμένη εφαρμογή περιλαμβάνει τους εξής εμπλεκόμενους:
+\begin{itemize}
+    \item \textbf{Φοιτητές ως ψηφοφόρους}: Όλοι οι φοιτητές που είναι εγγεγραμμένοι στο πανεπιστήμιο έχουν δικαίωμα ψηφοφορίας σε όλες τις διαθέσιμες ψηφοφορίες της εφαρμογής.
+    \item \textbf{Φοιτητές ως διοργανωτές}: Όλοι οι φοιτητές που είναι εγγεγραμμένοι στο πανεπιστήμιο έχουν δικαίωμα να δημιοργήσουν οι ίδιοι ψηφοφορίες καθορίζοντας τις ερωτήσεις και τις διαθέσιμες επιλογές.
+    \item \textbf{Το πανεπιστήμιο}: Το πανεπιστήμιο λειτουργεί ως μια έμπιστη κεντρική αρχή και το μόνο που έχει δικαιοδοσία να κάνει ως εμπλεκόμενος είναι να δημιουργήσει το smart contract εξασφαλίζοντας ότι έγκυροι ψηφοφόροι θα είναι μόνο όλοι οι εγγεγραμένοι φοιτητές του πανεπιστημίου. Άπαξ και δημιουργηθεί και δημοσιευθεί στο δίκτυο το smart contract, το πανεπιστήμιο δεν μπορεί να συμμετέχει στην εφαρμογή, δηλαδή ούτε να ψηφίσει ούτε να δημιουργήσει ψηφοφορίες.
+\end{itemize}
+
+
+\subsection{Σχεδιασμός και συστατικά του συστήματος}
+Το σύστημά μας αποτελείται από τα εξής συστατικά:
+\begin{itemize}
+    \item \textbf{Smart Contract}: Λειτουργεί ως μια μικρή βάση δεδομένων και αποθηκεύει on-chain σε δομές δεδομένων όλα τα χαρακτηριστικά των ψηφοφοριών, δηλαδή τις ερωτήσεις μιας ψηφοφορίας, τις διαθέσιμες επιλογές, τους επιτρεπτούς ψηφοφόρους, τα αποτελέσματα και τον κάθε οργανωτή μιας ψηφοφορίας. Ταυτόχρονα, όπως θα αναλυθεί παρακάτω, το contract περιλαμβάνει όλους τους κανόνες που πρέπει να διέπουν τη λειτουργία της εφαρμογής, εξασφαλίζοντας μεταξύ άλλων ότι μόνο εγγεγραμένοι φοιτητές μπορούν να ψηφίσουν, ότι οι ψήφοι παραμένουν ανώνυμοι και ότι κανείς δε μπορεί να διπλο-ψηφίσει. Τα παραπάνω πραγματοποιούνται με τη χρήση τεχνικών από την επιστήμη της κρυπτογραφίας και με την ενσωμάτωση αποδείξεων μηδενικής γνώσης.
+    \item \textbf{University Server}: Περιλαμβάνει μια βάση δεδομένων με τα στοιχεία των φοιτητών (για απλούστευση μόνο όνομα χρήστη και κωδικό) καθώς και έναν backend server ο οποίος χρησιμοποιείται για την επαλήθευση ότι ένας φοιτητής ανήκει στο πανεπιστήμιο. Επίσης, περιλαμβάνει την λειτουργία έναρξης της ψηφοφορίας καθώς το πανεπιστήμιο δημοσιεύει το smart contract στο δίκτυο του Midnight έχοντας εξασφαλίσει εκ των προτέρων ότι οι ικανοί ψηφοφόροι θα είναι μόνο οι εγγεγραμένοι στο πανεπιστήμιο. Σημειώνουμε εδώ ότι η βάση δεδομένων είναι βάση \textit{MongoDB} και ο κώδικας για το backend του πανεπιστημίου γράφτηκε σε \textit{NodeJS}
+    \item \textbf{Frontend}: Το frontend αποτελεί τη διεπαφή χρηστών μέσω της οποίας οι φοιτητές μπορούν να χρησιμοποιήσουν την εφαρμογή αλληλεπιδρώντας με το smart contract. Πρακτικά, κάθε transaction του smart contract είναι και μια περίπτωση χρήσης η οποία πραγματοποιείται μέσω κώδικα \textit{Typescript} και \textit{ReactJS}.
+    \item \textbf{Proof Server}: Όπως αναφέρθηκε και προηγουμένως, κάθε χρήστης της αποκεντρωμένης εφαρμογής πρέπει να τρέχει στον τοπικό του πολογιστή τον \textit{Midnight Proof Server} έτσι ώστε για κάθε transaction που επιθυμεί να πραγματοποιήσει, να δημιουργεί μια απόδειξη μηδενικής γνώσης η αποία αποστέλνεται για επαλήθευση στο δίκτυο. Σημειώνουμε ότι και το πανεπιστήμιο, κατά το transaction δημοσίευσης του contract, πρέπει να τρέχει τον δικό του Proof Server.
+
+\end{itemize}
+Παρακάτω παρουσιάζουμε και το component diagram για μια γενική επισκόπηση του συστήματος:
+
+\section{Ανάλυση του Smart Contract}
+\subsection{ Οι μεταβλητές ledger}
+Το smart contract αποτελείται από την δήλωση των μεταβλητών οι οποίες θα είναι δημόσιες στο δίκτυο: 
+\begin{itemize}
+    \item \textbf{university\_public\_key}: Είναι το δημόσιο κλειδί του πανεπιστημίου, συγκεκριμένα το hash του secret key του πανεπιστημίου.
+    \item \textbf{votings}: Είναι ένα σύνολο με τα ids όλων των ψηφοφοριών. Κάθε ψηφοφορία όταν δημιουργείται διακρίνεται από ένα μοναδικό δεαεξαδικό id.
+    \item \textbf{voting\_options}: Είναι ένα Map που περιέχει σαν κλειδί το id της ψηφοφορίας και σαν τιμή την διαθέσιμη επιλογή. Για τεχνικούς λόγους η διαθέσιμη επιλογή αναπαρίσταται και αυτή ως Map με κλειδί τον αριθμό της επιλογής και τιμή την ίδια την επιλογή.
+    \item \textbf{voting\_questions}: Είναι ένα Map για τις ερωτήσεις με κλειδί το id της ψηφοφορίας και τιμή την ερώτηση ή γενικότερα το θέμα της ψηφοφορίας.
+    \item \textbf{voting\_results}: Είναι ένα Map για το αποτέλεσμα κάθε ψηφοφορίας με κλειδί το id της και τιμή ένα δεύτερο Map. Το Map αυτό έχει κλειδί την επιλογή και ως τιμή έναν counter που αναπαριστά το πλήθος των φορών που επιλέχθηκε η συγκεκριμένη επιλογή.
+    \item \textbf{eligible\_voters}: Οι συμμετέχοντες στις ψηφοφορίες αναπαρίστανται ως ένα Merkle Tree που περιέχει τα δημόσια κλειδιά τους, δηλαδή τα hash των μυστικών κλειδιών τους. Η χρήση Merkle Tree όπως θα περιγραφεί στη συνέχεια είναι καθοριστική για τη διατήρηση της ανωνυμίας.
+    \item \textbf{voitng\_states}: Είναι ένα Map με κλειδί το id της ψηφοφορίας και τιμή τύπου VOTE\_STATE που δηλώνει αν η ψηφοφορία είναι ανοικτή ή αν έχει κλείσει.
+    \item \textbf{voting\_nulifiers}: Είναι ένα σύνολο από μοναδικές δεκαεξαδικές τιμές που δρουν σαν tokens προς κάθε ψηφοφόρο προς αποφυγή διπλο-ψηφίσματος.
+    \item \textbf{publish\_voting\_nulifiers}: Είναι ένα σύνολο από μοναδικές δεκαεξαδικές τιμές που δρουν σαν tokens προς κάθε ψηφοφόρο ώστε να μην μπορεί ο κάθε ψηφοφόρος να δημοσιεύεσει 2 φορές την ψήφο του. Θα μιλήσουμε εκτενέστερα στη συνέχεια για τη δημοσίευση ψήφου.
+    \item \textbf{hashed\_votes}: Είναι ένα σύνολο που περιέχει όλες τις ψήφους, αλλά κατακερματισμένες από hash function.
+    \item \textbf{voting\_organizers}: Είναι ένα Map όπου κλειδί είναι το id της ψηφοφορίας και τιμή το δημόσιο κλειδί (δηλαδή το hash του ιδιωτικού κλειδιού) του διοργανωτή της συγκεκριμένης ψηφοφορίας.
+    
+\end{itemize}
+
+\selectlanguage{english}
+\begin{figure}[h]
+\begin{lstlisting} % you can choose other language or leave it generic
+export ledger votings: Set<Bytes<32>>;               
+export ledger voting_options: Map<Bytes<32>, Set<Bytes<32>>>; 
+export ledger voting_questions: Map<Bytes<32>, Opaque<"string">>;
+export ledger voting_results: Map<Bytes<32>, Map<Bytes<32>, Counter>>;        
+export ledger eligible_voters: HistoricMerkleTree<5, Bytes<32>>;      
+export ledger voting_states: Map<Bytes<32>, VOTE_STATE>;                
+export ledger voting_nulifiers: Set<Bytes<32>>;         
+export ledger publish_voting_nulifiers: Set<Bytes<32>>;         
+export ledger voting_organizers: Map<Bytes<32>, Bytes<32>>;       
+export ledger hashed_votes: Set<Bytes<32>>;      
+\end{lstlisting}
+\selectlanguage{greek}
+\caption{Οι ledger μεταβλητές του smart contract}
+\end{figure}
+
+\selectlanguage{greek}
+
+\subsection{ Ο κατασκευαστής}
+Το smart contract έχει έναν κατασκευαστή ο οποίος αρχικοποιεί τις ledger μεταβλητές στις default τιμές και θέτει το university\_public\_key να είναι ίσο με το hash του secret key του τρέχοντος χρήστη ο οποίος θα είναι το πανεπιστήμιο. Έτσι, αρχικοποιείται το public key του πανεπιστημίου. Τέλος, ο κατασκευαστής λαμβάνοντας ως είσοδο ένα Vector με τα public keys των έγκυρων ψηφοφόρων, πραγματοποιεί την είσοδο αυτών στο Merkle Tree των έγκυρων ψηφοφόρων.
+
+\selectlanguage{english}
+\begin{figure}[h]
+\begin{lstlisting} 
+constructor(eligible_voter_public_keys: Vector<5, Bytes<32>>) {
+    university_public_key = disclose(public_key(local_secret_key()));
+    votings.resetToDefault();
+    voting_options.resetToDefault(); 
+    voting_results.resetToDefault();
+    voting_states.resetToDefault();
+    voting_nulifiers.resetToDefault();
+    voting_organizers.resetToDefault();
+    voting_questions.resetToDefault();
+    hashed_votes.resetToDefault();
+    publish_voting_nulifiers.resetToDefault();
+    count.increment(1);
+
+    for (const v of disclose(eligible_voter_public_keys)) {
+        eligible_voters.insert(v);
+    }
+}
+\end{lstlisting}
+\selectlanguage{greek}
+\caption{Ο κατασκευαστής του smart contract}
+\end{figure}
+\selectlanguage{greek}
+
+
+\subsection{Οι witness μεταβλητές και η private state}
+Όπως έχουμε αναφέρει οι witness μεταβλητές αποτελούν την ιδιωτική κατάσταση κάθε χρήστη και γι αυτό το λόγο υλοποιούνται από τους διαφορετικούς χρήστες της εφαρμογής. Το αποτέλεσμα που θα δώσουν δε θα πρέπει να θεωρείται εμπιστεύστιμο. Στη δική μας υλοποίηση, για την ιδιωτική κατάσταση χρειαζόμαστε ένα αντικείμενο τύπου \textit{VoteGuardianPrivateState} και μια συνάρτηση που θα κατασκευάζει την ιδιωτική κατάσταση, δηλαδή αντικείμενα του παραπάνω τύπου, την createVoteGuardianPrivateState. 
+\selectlanguage{english}
+\begin{figure}[h]
+\begin{lstlisting} 
+export type VoteGuardianPrivateState = {
+  readonly secretKey: Uint8Array;
+  voterPublicKeyPath: MerkleTreePath<Uint8Array>;
+  votesPerVotingMap: Map<String, String>;
+};
+
+export const createVoteGuardianPrivateState = (
+  secretKey: Uint8Array,
+  voterPublicKeyPath: MerkleTreePath<Uint8Array>,
+  votesPerVotingMap: Map<String, String>,
+) => ({
+  secretKey,
+  voterPublicKeyPath,
+  votesPerVotingMap,
+});
+\end{lstlisting}
+\selectlanguage{greek}
+\caption{Η private state του smart contract}
+\end{figure}
+\selectlanguage{greek}
+
+Όπως έχουμε αναφέρει οι μεταβλητές witness ζουν αποκλειστικά τοπικά για κάθε χρήστη και δε δημοσιεύονται ποτέ στο δίκτυο ενώ ταυτόχρονα αποτελούν την μυστική πληροφορία που κατέχει ο prover σε ένα πρωτόκολλο μηδενικής γνώσης η οποία είναι σημαντική για την ορθότητα της απόδειξης. Στην εφαρμογή μας διακρίνονται τρεις τέτοιες μεταβλητές:
+\begin{itemize}
+    \item \textbf{local\_secret\_key}: Αποτελεί το secret key κάθε συμμετέχοντος ως μια δεκαεξαδική συμβολοσειρά. Δεν παίρνει κάποιο όρισμα, απλά επιστρέφει την ίδια private state και το ίδιο secret key, καθώς δεν αλλάζει την ιδιωτική κατάσταση.  \newline
+    \textbf{Τι θα γινόταν αν ένας κακόβουλος χρήστης έκανε τη δική του υλοποίηση?} Πρακτικά αν ένας χρήστης όριζε για παράδειγμα η {local\_secret\_key} να επιστρέφει κάθε φορά ένα τυχαίο δεκαεξαδικό, τότε θα ήταν σχεδόν απίθανο να μαντέχει ένα secret key που να ανήκει σε αυτά των έγκυρων χρηστών οπότε δε θα μπορούσε να συμμετέχει στις ψηφορορίες. Για να υπήρχε πρόβλημα ασφάλειας, θα έπρεπε το secret key που θα επέστρεφε να ήταν ένα εκ των έγκυρων, κάτι το οποίο είναι υπολογιστικά αδύνατο.
+    \item \textbf{find\_voter\_public\_key}: Παίρνει ως όρισμα το δημόσιο κλειδί ενός χρήστη και η τιμή επιστροφής του είναι τύπου \textit{MerkleTreePath} το οποίο περιέχει μια λίστα με όλα τα hashes που χρειάζεται να έχει ο κάτοχος του τρέχοντος φύλλου στο δέντρο (δηλαδή του τρέχοντος δημόσιου κλειδιού) ώστε να ανακατασκευάσει τη ρίζα. Ουσιαστικά αυτός ο witness αποτελεί τη γνώση που κατέχει ο έγκυρος ψηφοφόρος ότι γνωρίζει ένα έγκυρο μονοπάτι μέσα στο Merkle tree. Όπως θα δούμε στη συνέχεια, η απόδειξη πως ένας χρήστης είναι έγκυρος βασίζεται στην κλήση της συνάρτησης από τη βιβλιοθήκη της compact \textit{checkRoot} πάνω στο δένδρο των ψηφοφόρων με όρισμα το αποτέλεσμα που θα επιστρέψει ο witness. 
+    \newline
+    Στην υλοποίηση της εφαρμογής, η find\_voter\_public\_key χρησιμοποεί την \textit{findPathForLeaf} για το public key που λαμβάνει ως είσοδο και επιστρέφει το \textit{MerkleTreePath} για αυτό το public key. Αν το public key που δεχθεί ως όρισμα δεν υπάρχει στο δέντρο τότε επιστρέφει \textit{undefined}.
+    \textbf{Τι θα γινόταν αν ένας κακόβουλος χρήστης έκανε τη δική του υλοποίηση?}. Ας υποθέσουμε ότι ένας μη έγκυρος χρήστης έχοντας πρόσβαση στο δημόσιο merkle tree υλοποιεί την find\_voter\_public\_key έτσι ώστε να επιστρέφει μια έγκυρη λίστα από hashes που κατ' επέκταση ανακατασκευάζουν επιτυχώς τη ρίζα. Θα μπορούσε να ξεγελάσει την εφαρμογή μας? Η απάντηση είναι όχι, καθώς 
+
+    \item \textbf{secret\_vote}: Αποτελεί την μυστική ψήφο ενός ψηφοφόρου για ψηφοφορία με συγκεκριμένο id. Παίρνει ως όρισμα το id της ψηφοφορίας και επιστρέφει την ψήφο για τη συγκεκριμένη ψηφοφορία ψάχνοντας στο Map votesPerVotingMap το οποίο είναι αποθηκευμένο στην private state του ψηφοφόρου. Αν δεν υπάρχει ψήφος για ση συγκεκριμένη ψηφοφορία τότε θα επιστρέψει default τιμή, δηλαδή ένα Uint8Array με 32 μηδενικά. Η ουσία εδώ είναι η ψήφος να παραμένει μυστική για κάθε χρήστη και να δημοσιεύεται το hash αυτής. Στο τέλος της ψηφοφορίας ο χρήστης θα δημοσιεύει την ψήφο του, μη ακοπαλύπτοντας φυσικά ποια είναι αυτή, αλλά δημοσιεύοντας το hash της πραγματικής του ψήφου. Στη συνέχεια θα γίνεται έλεγχος αν αυτό το hash είναι ίδιο με το hash που υπάρχει αποθηκευμένο στο ledger. Αν ισχύει αυτό, σημαίνει ότι η ψήφος είναι σωστή.
+\end{itemize}
+
+
+\selectlanguage{greek}
+
+Επίσης παρουσιάζουμε την υλοποίηση των witness function ως συναρτήσεις \textit{Typescript} στο σχήμα 3.3. 
+\selectlanguage{english}
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=TypeScript] 
+local_secret_key: ({
+    privateState,
+    ledger,
+  }: WitnessContext<Ledger, VoteGuardianPrivateState>): [VoteGuardianPrivateState, Uint8Array] => [
+    privateState,
+    privateState.secretKey,
+  ],
+
+  find_voter_public_key: (
+    { privateState, ledger }: WitnessContext<Ledger, VoteGuardianPrivateState>,
+    item: Uint8Array,
+  ): [VoteGuardianPrivateState, MerkleTreePath<Uint8Array>] => [
+    createVoteGuardianPrivateState(privateState.secretKey, ledger.eligible_voters.findPathForLeaf(item)!),
+    ledger.eligible_voters.findPathForLeaf(item)!,
+  ],   
+
+  secret_vote: (
+    { privateState, ledger }: WitnessContext<Ledger, VoteGuardianPrivateState>,
+    votingId: Uint8Array,
+  ): [VoteGuardianPrivateState, Uint8Array] => [
+    privateState,
+    toBytes32FromString(privateState.votesPerVotingMap.get(toHex(votingId))?.toString()),
+  ],
+\end{lstlisting}
+\selectlanguage{greek}
+\caption{Οι συναρτήσεις witness}
+\end{figure}
+
+
+\selectlanguage{greek}
+
+\subsection{Τα pure circuits}
+Το smart contract περιλαμβάνει τα ακόλουθα pure circuits:
+\begin{itemize}
+    \item \textbf{public\_key}: Υπολογίζει το hash του secret key επιστρέφοντας μια δεκαεξαδική τιμή.
+    \item \textbf{nullifier}: Παίρνει ως είσοδο το secret key του χρήστη και το id της τρέχουσας ψηφοφορίας και με αυτό τον τρόπο δημιουργεί ένα μοναδικό hash για τον χρήστη για τη συγκεκριμένη ψηφοφορία.
+    \item \textbf{generate\_voting\_id}: Χρησιμοποιείται για την απόδοση ενός μοναδικού id για μια ψηφοφορία. Παίρνει ως είσοδο το secret key του οργανωτή της ψηφοφορίας καθώς και την δημόσια μεταβλητή count η οποία αυξάνεται κατά 1 κατά τη δημιουργία κάθε ψηφοφορίας. Έτσι επιτυγχάνεται η μοναδικότητα στα ids κάθε ψηφοφορίας. 
+    \item \textbf{prove\_eligibility}: Αυτό το circuit χρησιμοποείται για να ελέγχξει αν ο τρέχων χρήστης είναι έγκυρος επιστρέφοντας true ή false αντίστοιχα. Υπολογίζεται η μεταβλητή path που είναι το αποτέλεσμα της επιστροφής της find\_voter\_public\_key για το public key του τρέχοντος χρήστη και πρέπει να αποτελεί ένα έγκυρο μονοπάτι μέσα στο δέντρο. Στη συνέχεια, με χρήση της συνάρτηρης \texit{checkRoot} ελέγχεται το συγκεκριμένο path μπορεί να ανακατασκευαστεί η ρίζα. Αν ναι σημαίνει πως το path είναι έγκυρο και επιστρέφεται true, διαφορετικά false.
+    \item \textbf{publish\_nullifier}: Παίρνει ως είσοδο το secret key του χρήστη και το id της τρέχουσας ψηφοφορίας και με αυτό τον τρόπο δημιουργεί ένα μοναδικό hash για τον χρήστη για τη συγκεκριμένη ψηφοφορία.
+    \item \textbf{hash\_secret\_vote}: Παίρνει ως είσοδο την ψήφο, το id της ψηφοφορίας και το secret key του ψηφοφόρου και δημιουργεί ένα μοναδικό hash για την ψήφο, ανά ψηφοφορία και ανά χρήστη.
+    
+\end{itemize}
+
+\selectlanguage{english}
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=TypeScript] 
+circuit public_key(sk: Bytes<32>): Bytes<32> {
+    return persistentHash<Bytes<32>>(sk);
+}
+
+circuit nullifier (sk: Bytes<32>, voting_id: Bytes<32>): Bytes<32> {
+   return persistentHash<Vector<3, Bytes<32>>>(
+           [pad(32, "nulifier-domain"), voting_id as Bytes<32>, sk]);
+}
+
+circuit publish_nullifier (sk: Bytes<32>, voting_id: Bytes<32>): Bytes<32> {
+   return persistentHash<Vector<3, Bytes<32>>>(
+           [pad(32, "publish-nulifier-domain"), voting_id as Bytes<32>, sk]);
+}
+
+circuit generate_voting_id (count: Field, sk: Bytes<32>) : Bytes<32> {
+    return persistentHash<Vector<3, Bytes<32>>>(
+           [pad(32, "generate_id"), count as Bytes<32>, sk]);
+}
+
+circuit hash_secret_vote(
+    secret_vote: Bytes<32>, 
+    voting_id: Bytes<32>, 
+    secret_key: Bytes<32>
+): Bytes<32> {
+    return persistentHash<Vector<4, Bytes<32>>>(
+        [pad(32, "secret-vote-domain"), voting_id, secret_vote, secret_key]
+    );
+}
+
+circuit prove_eligibility(): Boolean {
+    const participant_public_key = public_key(local_secret_key());
+    const path = find_voter_public_key(participant_public_key);
+
+    return eligible_voters.checkRoot(disclose(merkleTreePathRoot<5, Bytes<32>>(path)));
+        
+}
+\end{lstlisting}
+\selectlanguage{greek}
+\caption{Τα pure circuits του smart contract}
+\end{figure}
+
+
+\selectlanguage{greek}
+
+\newpage
+
+\subsection{Τα impure circuits}
+Κάθε impure circuit που περιλαμβάνεται στο smart contract μπορεί να χρησιμοποιεί τις witness functions και να μεταβάλλει τις ledger μεταβλητές, αλλάζοντας την δημόσια κατάσταση του smart contract. Κάθε τέτοιο circuit μετά την μεταγλώττιση από Compact σε Typescript είναι διαθέσιμο να κληθεί και αποτελεί ένα transaction στο Midnight. Πριν ξεκινήσουμε την ανάλυση των circuits, θα εξηγήσουμε μια κοινή λογική που υπάρχει σε όλα τα circuits και κατά την ανάλυση θα αναφέρουμε ποια από τα παρακάτω ισχύουν σε κάθε circuit. Συγκεκριμένα:
+\begin{enumerate}
+    \item Το πανεπιστήμιο δεν μπορεί να κάνει κανένα transaction, η "δουλειά" του τελειώνει μετά την δημοσίευση του contract. Γι' αυτό το λόγο, στην αρχή κάθε circuit ελέγχεται με τη δήλωση \textit{assert} ότι το public key του πανεπιστημίου (το οποίο υπάρχει ως ledger μεταβλητή) πρέπει να διαφέρει από το public key του τρέχοντας χρήστη.
+    \item Κάθε άλλο transaction πρέπει να πραγματοποιείται μόνο από έγκυρους χρήστες, δηλαδή από τους φοιτητές. Γι' αυτό το λόγο στην αρχή των circuits που απαιτούν αυθεντικοποίηση πραγματοποιείται έλεγος με δήλωση \textit{assert} ότι ο χρήστης ανήκει στο merkle tree, μέσω του 
+    textit{prove\_eligibility} circuit.
+    \item Κάθε transaction που πραγματοποιείται από τον διοργανωτή της ψηφοφορίας απαιτεί έλεγχο ότι ο συγκεκριμένος χρήστης είναι ο διοργανωής, μέσω  \textit{assert} το συγκεκριμένο id της ψηφοφορίας "ανήκει" στο τρέχον public key, δηλαδή στο hash του τρέχοντος secret key. Με άλλα λόγια ότι το Map voting\_organizers περιέχει το ζεύγος voting\_id, organizer\_public\_key.
+\end{enumerate}
+
+Για όλους τους παραπάνω κανόνες, σε περίπτωση που δεν ισχύει κάποιος από αυτούς κατά την πραγματοποίηση ενός transaction μέσω ων circuits, τότε το transaction δεν ολοκληρώνεται και εμφανίζεται αντίστοιχο μήνυμα λάθους στον μη έγκυρο χρήστη που το εκτέλεσε.
+Συγκεκριμένα, το smart contract περιλαμβάνει τα ακόλουθα impuure circuits:
+
+\begin{itemize}
+    \item \textbf{create\_voting}: Με αυτό το transaction δημιουργείται μια νέα ψηφοφορία. Ισχύουν τα (1) και (2) από παραπάνω. Η ψηφοφορία αποκτά ένα μοναδικό id και γίνεται είσοδος αυτού του id στη μεταβλητή votings, και σαν διοργανωτής ορίζεται το τρέχων public key. Αυτό πραγματοποιείται με είσοδο στη μεταβλητή voting\_organizers. Η ψηφοφορία αρχικοποιείται ως OPEN και οι υπόλοιπες ledger μεταβλητές αρχικοποιούνται με default τιμές έχοντας ως κλειδί σε κάθε Map το id.
+    \item \textbf{edit\_question}: Με αυτό το transaction καθορίζεται η ερώτηση της συγκεκριμένης ωηφοφορίας. Ισχύουν τα (1), (2) και (3) από παραπάνω. Το circuit δέχεται ορίσματα το id της ψηφοφορίας και την ερώτηση και εισάγει στη ledger μεταβλητή voting\_questions το ζεύγος αυτό.
+    \item \textbf{add\_option}: Με αυτό το transaction εισάγεται μια επιλογή για την ψηφοφορία. Ισχύουν τα (1), (2) και (3) από παραπάνω. Το circuit δέχεται ως όρισμα το id της ψηφοφορίας και την επιλογή. Γίνεται εισαγωγή στη ledger μεταβλητή voting\_options το id της ψηφοφορίας σαν κλειδί και προστίθεται στο σύνολο η επιλογή Επίσης, αρχικοποιείται με τον default μετρητή και η ledger μεταβλητή voting\_results για τη συγκεκριμένη επιλογή.
+    \item \textbf{open\_voting}: Με αυτό το transaction ανοίγει η συγκεκριμένη ψηφοφορία, δηλαδή τίθεται η κατάστασή της ως OPEN. Ισχύουν τα (1), (2) και (3) από παραπάνω. Το transaction δέχεται ως όρισμα το id της ψηφοφορίας και ελέγχει μέσω \textit{assert} ότι η ψηφοφορία είναι κλειστή, διαφορετικά εμφανίζει μήνυμα λάθους. Στη συνέχεια, γίνεται εισαγωγή στη ledger μεταβλητή
+    voting\_states το ζεύγος του id της ψηφοφορίας με την τιμή OPEN.
+    \item \textbf{close\_voting}: Συμμετρικό του open\_voting.
+    \item \textbf{cast\_vote}: Με αυτό το transaction ένας έγκυρος χρήστης μπορεί να ψηφίσει. 
+    \begin{enumerate}
+        \item Αρχικά ελέγχεται ότι η ψηφοφορία είναι ανοικτή μέσω σχετικής δήλωσης \textit{assert}. Αν δεν είναι ανοικτή, εμφανίζεται σχετικό μήνυμα λάθους και το transaction εγκαταλείπεται.
+        \item Πραγματοποιούνται οι έλεγχοι (1), (2) από παραπάνω και αν κάποιος αποτύχει δηλαδή αν ο χρήστης είναι το πανεπιστήμιο, ή αν ο χρήστης δεν είναι έγκυρος τότε το transaction εγκαταλείπεται με σχετικό μήνυμα λάθους. Σημειώνεται εδώ ότι όλοι οι έγκυροι χρήστες μπορούν να ψηφίσουν σε όλες τις ψηφοφορίες.
+        \item Στη συνέχεια γίνεται ο έλεγχος για double-voting δηλαδή έλεγχος για το αν ο τρέχων χρήστης έχει ήδη ψηφίσει για αυτή την ψηφοφορία. Για να δούμε πως γίνεται αυτό υποθέτουμε ότι έχουμε φτάσει στο τέλος των ελέγχων όπου ο χρήστης έχει καταχωρίσει την ψήφο του. Μόλις γίνει αυτό, υπολογίζεται το \textit{voting\_nullifier} το οποίο είναι hash του secret key με διαφορετικό domain για να ξεχωρίζει από το public key. Το hash αυτό πραγματοποιείται μέσω του pure circuit nullifier και δέχεται επίσης ως όρισμα μαζί με το secret key και το \textit{voting\_id} ώστε να είναι μοναδικό ανά χρήστη ανά ψηφοφορία. Το \textit{voting\_nullifier} καταχωρείται στο ledger σύνολο \textit{voting\_nulifiers}. Όταν λοιπόν το circuit φτάσει στον έλεγχο για double-voting ελέγχεται αν το hash με τη nullifier του secret key του τρέχοντος χρήστη για τη συγκεκριμένη ψηφοφορία υπάρχει στο σύνολο των \textit{voting\_nulifiers}. Αν ναι σημαίνει πως ο χρήστης έχει ήδη ψηφίσει οπότε εμφανίζεται μήνυμα λάθους και εγκαταλείπεται το transaction, διαφορετικά συνεχίζονται οι ενέργειες.
+        \item Στη συνέχεια, ο typescript κώδικας της dapp φροντίζει ώστε να ενημερωθεί η private state του χρήστη με τη συγκεκριμένη ψήφο, έτσι ώστε η κλήση της witness μεταβλητής \textit{secret\_vote(voting\_id)} να επιστρέψει την ψήφο του ψηφοφόρου για τη συγκεκριμένη ψηφοφορία. Υπενθυμίζουμε ότι παρότι ο κώδικας της dapp θα ενημερώσει την private state με την επιλεγμένη ψήφο, στην πραγματικότητα ο χρήστης μπορεί να τροποποιήσει τον κώδικα και να αναθέσει στην επιλεγμένη ψήφο του όποια τιμή θέλει. Ο έλεγχος για το αν η ψήφος είναι έγκυρη, θα πραγματοποιηθεί σε επόμενο transaction.
+        \item Έχοντας οριστεί και το private state, το επόμενο βήμα του transaction είναι να υπολογιστεί το hash της επιλεγμένης ψήφου, καλώντας το circuit \textit{hash\_secret\_vote}. Η κλήση σε αυτό το circuit επιστρέφει ένα hash για την ψήφο αλλά δεν αποκαλύπτει την πραγματική τιμή της ψήφου, δηλαδή τη witness μεταβλητή \textit{secret\_vote(voting\_id)}.
+        \item Τελευταίο βήμα είναι η εισαγωγή του hash που υπολογίστηκε πριν στη ledger μεταβλητή \textit{hashed\_votes}.
+        \item Τέλος, γίνεται καταχώρηση της ψήφου στη ledger μεταβλητή \textit{voting\_results} όπου για το συγκεκριμένο \textit{voting\_id} αναζητάται το συγκεκριμένο \textit{vote\_option} και αυξάνεται ο μετρητής που του αντιστοιχεί κατά 1.
+        
+        
+    \end{enumerate}
+    \item \textbf{publish\_vote}:
+    \begin{enumerate}
+        \item Αρχικά ελέγχεται ότι η ψηφοφορία είναι ανοικτή μέσω σχετικής δήλωσης \textit{assert}. Αν δεν είναι ανοικτή, εμφανίζεται σχετικό μήνυμα λάθους και το transaction εγκαταλείπεται.
+        \item Πραγματοποιούνται οι έλεγχοι (1), (2) από παραπάνω και αν κάποιος αποτύχει δηλαδή αν ο χρήστης είναι το πανεπιστήμιο, ή αν ο χρήστης δεν είναι έγκυρος τότε το transaction εγκαταλείπεται με σχετικό μήνυμα λάθους. 
+        \item Ελέγχεται ότι ο χρήστης δεν έχει εκτελέσει δεύτερη φορά το ίδιο transaction , ακολουθώντας ίδια λογική με το cast\_vote transaction χρησιμοποιώντας nulifiers.
+        \item Υπολογίζεται το hash της ψήφου, καλώντας το circuit hash_secret_vote με ορίσματα την ψήφο του χρήστη η οποία εξάγεται από τη witness μεταβλητή secret\_vote, το id της ψηφοφορίας και το secret key. Μετά ελέγχεται αν αυτό το hash υπάρχει στο σύνολο hashed\_votes στο ledger. Η ουσία εδώ είναι πως, αν τα δύο hashes δεν ταυτίζονται, σημαίνει πως μετά την εκτέλεση του cast\_vote ο χρήστης άλλαξε το private state του και δηλαδή την ψήφο του, γιατί όπως έχουμε εξηγήσει, την private state μπορεί να την αλλάζει ο κάθε χρήστης όπως θέλει. Τότε απορρίπτεται το transaction και εμφανίζεται κατάλληλο μήνυμα λάθους. Αν από την άλλη ταυτίζονται τα 2 hashes, τότε η ψήφος δεν άλλαξε και συνεχίζονται οι έλεγχοι.
+        \item Τέλος, ελέγχεται αν η ψήφος είναι έγκυρη, δηλαδή αν το secret\_vote για τη συγκεκριμένη ψηφοφορία ανήκει στο map voting\_options του συγκεκριμένου id ψηφοφορίας.\item Τέλος, γίνεται καταχώρηση της ψήφου στη ledger μεταβλητή \textit{voting\_results} όπου για το συγκεκριμένο \textit{voting\_id} αναζητάται το συγκεκριμένο \textit{vote\_option} και αυξάνεται ο μετρητής που του αντιστοιχεί κατά 1.
+       \end{enumerate} 
+\end{itemize}
+        Σε αυτό το σημείο, αξίζει να σημειωθεί πως οι ψήφοι σαν οντότητες δεν κρυπτογραφούνται, αλλά εισάγονται στο ledger σύνολο \textit{voting\_results}. Ωστόσο, υπάρχει πλήρης ανωνυμία καθώς η χρήση Merkle Tree εγγυάται ότι όταν ο τρέχων χρήστης αποδεικνύει εγκυρότητα βρίσκοντας ένα έγκυρο μονοπάτι μέσα στο δέντρο, δεν αποκαλύπτεται καμία πληροφορία για το public key του, και προφανώς για το secet key που χρησιμοποιήθηκε.
+
+        Επίσης, με τη χρήση του μοτίβου cast\_vote - publish\_vote, δηλαδή ψήφος και δημοσίευση της, λύνουμε ένα θέμα που θα υπήρχε αν χρησιμοποιούσαμε μόνο το cast\_vote, το οποίο έγκειται στην εμφάνιση των αποτελεσμάτων της ψηφοφορίας. Αν υπήρχε μόνο cast\_vote τότε, με το που ψηφίζει ένας χρήστης, καταχωρείται η ψήφους του στο voting\_results, και στο interface της εφαρμογής , μπορεί οποιοσδήποτε να δει τα αποτελέσματα ενώ η ψηφοφορία είναι ακόμα ανοιχτή. Με αυτό τον τρόπο, θα μπορούσε να επηρεαστεί κάποιος ψηφοφόρος βλέποντας την πορεία της ψηφοφορίας και είτε να μην ψηφίσει καθόλου, είτε να αλλάξει γνώμη. Με το μοτίβο publish\_vote όμως, ο χρήστης όταν ψηφίζει κρατάει μυστική την ψήφο του και απλά δημοσιεύει μια δέσμευση σε αυτή, δηλαδή ένα hash. Η μεταβλητή voting\_results δεν αλλάζει, συνεπώς δεν αλλάζει το αποτέλεσμα της ψηφοφορίας. Όταν η ψηφοφορία κλείσει, τότε οι χρήστες δημοσιεύουν την ψήφο τους (χωρίς να είναι δυνατή η σύνδεση του ποιος ψήφισε με το τι ψήφισε) και τα αποτελέσματα γίνονται ορατά.
+    
+    
+
+
+\selectlanguage{english}
+\begin{lstlisting}[]
+
+
+export circuit create_voting(): [] {
+    const organizer_public_key = disclose(public_key(local_secret_key()));
+
+    assert (university_public_key != organizer_public_key,
+        "University cannot create votings");
+
+    assert (prove_eligibility(), 
+        "Not authorized!");
+
+    const voting_id = generate_voting_id(count, local_secret_key());
+
+    voting_organizers.insert(disclose(voting_id), organizer_public_key);
+    votings.insert(disclose(voting_id));
+    voting_states.insert(disclose(voting_id), VOTE_STATE.open);
+    voting_options.insert(disclose(voting_id), default<Set<Bytes<32>>>);
+    voting_results.insert(disclose(voting_id), default<Map<Bytes<32>, Counter>>);
+    count.increment(1);
+}
+
+export circuit edit_question(voting_id: Bytes<32>, voting_question: Opaque<"string">): [] {
+    const organizer_public_key = disclose(public_key(local_secret_key()));
+    assert (prove_eligibility(),
+        "Not authorized");
+    assert (voting_organizers.lookup(disclose(voting_id)) == organizer_public_key,
+        "Not authorized");   
+    voting_questions.insert(disclose(voting_id), disclose(voting_question));
+}
+
+export circuit add_option(voting_id: Bytes<32>, vote_option: Bytes<32>): [] {
+    const organizer_public_key = public_key(local_secret_key());   
+    assert (prove_eligibility(),
+        "Not authorized");
+
+    assert (voting_organizers.lookup(disclose(voting_id)) == organizer_public_key,
+        "Not authorized");   
+    voting_options.lookup(disclose(voting_id)).insert(disclose(vote_option));
+    voting_results.lookup(disclose(voting_id)).insert(disclose(vote_option), default<Counter>);
+
+}
+
+
+export circuit close_voting(voting_id: Bytes<32>): [] {
+    const organizer_public_key = public_key(local_secret_key());
+    assert (prove_eligibility(),
+        "Not authorized");   
+    assert (voting_organizers.lookup(disclose(voting_id)) == organizer_public_key,
+        "Not authorized");       
+    const current_voting_state = voting_states.lookup(disclose(voting_id));
+    assert (current_voting_state == VOTE_STATE.open,
+        "Voting phase is not open or has already closed");    
+    voting_states.insert(disclose(voting_id), VOTE_STATE.closed);
+}
+
+export circuit open_voting(voting_id: Bytes<32>): [] {
+    const organizer_public_key = public_key(local_secret_key());
+    assert (prove_eligibility(),
+        "Not authorized");    
+    assert (voting_organizers.lookup(disclose(voting_id)) == organizer_public_key,
+        "Not authorized");       
+    const current_voting_state = voting_states.lookup(disclose(voting_id));
+    assert (current_voting_state == VOTE_STATE.closed,
+        "Voting phase is not closed or has already opened");    
+    voting_states.insert(disclose(voting_id), VOTE_STATE.open);
+}
+
+
+export circuit cast_vote(voting_id: Bytes<32>): [] {
+    const current_voting_state = voting_states.lookup(disclose(voting_id));
+    assert (current_voting_state == VOTE_STATE.open, 
+        "Voting is not open");
+    const voter_public_key = disclose(public_key(local_secret_key()));
+    assert (prove_eligibility(), 
+        "Not authorized!");
+    const voting_nullifier = disclose(nullifier(local_secret_key(), voting_id));
+    assert (!voting_nulifiers.member(voting_nullifier),
+        "Already voted for this voting");
+    voting_nulifiers.insert(disclose(voting_nullifier));
+    const hashed_vote = disclose(hash_secret_vote(secret_vote(voting_id), voting_id, local_secret_key()));
+    hashed_votes.insert(disclose(hashed_vote));
+
+
+}
+
+export circuit publish_vote(voting_id: Bytes<32>): [] {
+    const current_voting_state = voting_states.lookup(disclose(voting_id));
+    assert (current_voting_state == VOTE_STATE.closed, 
+        "Voting is not closed");
+    assert (prove_eligibility(), 
+        "Not authorized!");   
+    const publish_voting_nullifier = disclose(publish_nullifier(local_secret_key(), voting_id));
+    assert (!publish_voting_nulifiers.member(publish_voting_nullifier),
+        "Already published the vote for this voting");    
+
+    const hashed_vote = disclose(hash_secret_vote(secret_vote(voting_id), voting_id, local_secret_key()));
+    assert (hashed_votes.member(disclose(hashed_vote)),
+        "Vote not correct!");     
+    assert (voting_options.lookup(disclose(voting_id)).member(disclose(secret_vote(voting_id))),
+        "Not a valid option!");
+
+    voting_results.lookup(disclose(voting_id)).lookup(disclose(secret_vote(voting_id))).increment(1);
+    publish_voting_nulifiers.insert(publish_voting_nullifier);
+
+}
+
+\end{lstlisting}
+
+\selectlanguage{greek}
+\section{Ανάλυση του κώδικα της \selectlanguage{english} dapp}
+\subsection{Από Compact σε Typescript}
+Μετά την μεταγλώττιση του contract, δημιουργείται για κάθε impure circuit το αντίστοιχο .zkir αρχείο που είναι μια αναπαράσταση του κυκλώματος μηδενικής γνώσεις, καθώς και τα αρχεία .prover και .verifier που αποτελούν τα κλειδιά απόδειξης και επαλήθευσης του πρωτόκολλου μηδενικής γνώσης. Επίσης, δημιουργείται αρκετός κώδικα Typescript ο οποίος μπορεί να θεωρηθεί ως μαύρο κουτί καθώς πραγματοποιεί low-level διεργασίες όπως η υλοποίηση των κυκλωμάτων μηδενικής γνώσης. Ωστόσο, σημαντικό είναι το αρχείο \textit{index.d.ts} που δημιουργεί απαραίτητους τύπους για τη συνέχεια. Εστιάζουμε στον τύπο \textit{Ledger} που ουσιαστικά είναι η αναπαράσταση σε Typescript της public state, καθώς περιέχει σαν πεδίο κάθε ledger μεταβλητή που ορίστηκε στο contract. Με αυτό τον τρόπο, η εφαρμογή μπορεί να έχει πρόσβαση στην public state. Επίσης η κλάση \textit{Contract} περιέχει τους witnesses, όλα τα circuits, τον constructor του contract και την αρχική κατάσταση.
+\selectlanguage{english}
+\begin{lstlisting}[]
+export type Ledger = {
+  readonly count: bigint;
+  readonly university_public_key: Uint8Array;
+  votings: {
+    isEmpty(): boolean;
+    size(): bigint;
+    member(elem_0: Uint8Array): boolean;
+    [Symbol.iterator](): Iterator<Uint8Array>
+  };
+  voting_options: {
+    isEmpty(): boolean;
+    size(): bigint;
+    member(key_0: Uint8Array): boolean;
+    lookup(key_0: Uint8Array): {
+      isEmpty(): boolean;
+      size(): bigint;
+      member(key_1: string): boolean;
+      lookup(key_1: string): string;
+      [Symbol.iterator](): Iterator<[string, string]>
+    }
+  };
+  voting_questions: {
+    isEmpty(): boolean;
+    size(): bigint;
+    member(key_0: Uint8Array): boolean;
+    lookup(key_0: Uint8Array): string;
+    [Symbol.iterator](): Iterator<[Uint8Array, string]>
+  };
+  voting_results: {
+    isEmpty(): boolean;
+    size(): bigint;
+    member(key_0: Uint8Array): boolean;
+    lookup(key_0: Uint8Array): {
+      isEmpty(): boolean;
+      size(): bigint;
+      member(key_1: string): boolean;
+      lookup(key_1: string): { read(): bigint }
+    }
+  };
+  eligible_voters: {
+    isFull(): boolean;
+    checkRoot(rt_0: { field: bigint }): boolean;
+    root(): __compactRuntime.MerkleTreeDigest;
+    firstFree(): bigint;
+    pathForLeaf(index_0: bigint, leaf_0: Uint8Array): __compactRuntime.MerkleTreePath<Uint8Array>;
+    findPathForLeaf(leaf_0: Uint8Array): __compactRuntime.MerkleTreePath<Uint8Array> | undefined;
+    history(): Iterator<__compactRuntime.MerkleTreeDigest>
+  };
+  voting_states: {
+    isEmpty(): boolean;
+    size(): bigint;
+    member(key_0: Uint8Array): boolean;
+    lookup(key_0: Uint8Array): VOTE_STATE;
+    [Symbol.iterator](): Iterator<[Uint8Array, VOTE_STATE]>
+  };
+  voting_nulifiers: {
+    isEmpty(): boolean;
+    size(): bigint;
+    member(elem_0: Uint8Array): boolean;
+    [Symbol.iterator](): Iterator<Uint8Array>
+  };
+  voting_organizers: {
+    isEmpty(): boolean;
+    size(): bigint;
+    member(key_0: Uint8Array): boolean;
+    lookup(key_0: Uint8Array): Uint8Array;
+    [Symbol.iterator](): Iterator<[Uint8Array, Uint8Array]>
+  };
+}
+
+export declare class Contract<T, W extends Witnesses<T> = Witnesses<T>> {
+  witnesses: W;
+  circuits: Circuits<T>;
+  impureCircuits: ImpureCircuits<T>;
+  constructor(witnesses: W);
+  initialState(context: __compactRuntime.ConstructorContext<T>,
+               eligible_voter_public_keys_0: Uint8Array[]): __compactRuntime.ConstructorResult<T>;
+}
+\end{lstlisting}
+
+\selectlanguage{greek}
+\subsection{Το api}
+Έχοντας διαθέσιμους όλους τους απαραίτητους τύπος που έχουν προκύψει από τη μεταγλώττιση της Compact σε Typescript, σημαντικό ρόλο στην εφαρμογή κατέχει το api το οποίο ουσιαστικά λειτουργεί ως μια διεπαφή μέσω της οποίας ο χρήστης μπορεί να δημοσιεύσει ένα contract, να αναζητήσει ένα ήδη δυμοσιευμέυνο contract και να πραγματοποιήσει τα διαθέσιμα transcations του contract στο δίκτυο. Συγκεκριμένα, το api περιέχει το interface \textit{DeployedVoteGuardianAPI} που περιλαμβάνει την διεύθυνση του contract, την κατάστασή του, και όλα τα transactions ως typescript συναρτήσεις αλλά με τα ίδια ορίσματα και αντίστοιχους τύπους επιστροφής με τα ανάλογα της compact.
+\selectlanguage{english}
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=TypeScript] 
+export interface DeployedVoteGuardianAPI {
+  readonly deployedContractAddress: ContractAddress;
+  readonly state$: Observable<VoteGuardianDerivedState>;
+
+  cast_vote: (voting_id: Uint8Array, encrypted_vote: string) => Promise<void>;
+  close_voting: (voting_id: Uint8Array) => Promise<void>;
+  open_voting: (voting_id: Uint8Array) => Promise<void>;
+  edit_question: (voting_id: Uint8Array, vote_question: string) => Promise<void>;
+  create_voting: () => Promise<void>;
+  add_option: (voting_id: Uint8Array, vote_option: string, index: string) => Promise<void>;
+}
+\end{lstlisting}
+\selectlanguage{greek}
+\caption{Το DeployedVoteGuardianAPI interface}
+\end{figure}
+
+\selectlanguage{greek}
+Η κλάση \textit{VoteGuardianAPI} υλοποιεί το παραπάνω interface, αρχικοποιοώντας την κατάστασή του με την τρέχουσα κατάσταση που υπάρχει στο contract και τη διεύθυνσή του με τη διεύθυνση του contract. Για κάθε transaction παρέχεται η υλοποίησή του, η οποία στον πυρήνα της καλεί την αντίστοιχη συνάρτηση που έχε προκύψει από την compact έχοντας μεταγλωττιστεί σε typescript. Ενδεικτικά, παρουσιάζουμε την υλοποίηση του transaction edit\_question καθώς η λογική είναι ίδια στα υπόλοιπα.
+\selectlanguage{english}
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=TypeScript] 
+async edit_question(voting_id: Uint8Array, vote_question: string): Promise<void> {
+    try {
+      this.logger?.info(`vote question: ${vote_question}`);
+      const txData = await this.deployedContract.callTx.edit_question(voting_id, vote_question);
+
+      this.logger?.trace({
+        transactionAdded: {
+          circuit: 'edit_question',
+          txHash: txData.public.txHash,
+          blockHeight: txData.public.blockHeight,
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      this.logger?.error('Error editing a question', {
+        message: (error as Error).message,
+        stack: (error as Error).stack,
+        details: error,
+      });
+    }
+  }
+\end{lstlisting}
+\selectlanguage{greek}
+\caption{Η κλήση του cast\_vote μέσω typescript}
+\end{figure}
+\newpage
+\newpage
+
+\selectlanguage{greek}
+Επίσης, η κλάση \textit{VoteGuardianAPI} παρέχει δύο στατικές μεθόδους, την \textit{deploy} για δημοσίευση ενός contract και την \text{join} για την αναζήτηση ενός contract και συμμετοχή σε αυτό. Και οι δύο αυτές μέθοδοι επιστρέφουν ένα αντικείμενο της κλάσης \textit{VoteGuardianAPI}. Και οι δύο αυτές μέθοδοι πρέπει να αρχικοποιήσουν την private state καθώς όταν κάποιος είτε δημοσιεύει ένα contract είτε κάνει join σε αυτό, πρέπει να έχει μια αρχική private state. Στη δική μας περίπτωση, όπως έχουμε πει η private state αποτελείται από το secret key και από το έγκυρο μονοπάτι μέσα στο merkle tree. Το secret key δίνεται ως όρισμα στις deploy, join ώστε ο χρήστης που τις καλεί να δώσει το δικό του secret key (ως γνωστόν δε φεύγει ποτέ από το δικό του υπολογιστή), ενώ ως merkle path δίνεται μια dummy τιμή με μηδενικά, καθώς σε αυτό το σημείο δε μας νοιάζει να είναι έγλυρο το path. Η αλλαγή στην private state  και συγκεκριμένα στην find\_voter\_public\_key θα πραγματοποιείται κάθε φορά που ο χρήστης πραγματοποιεί transaction που απαιτεί αυθεντικοποίηση. Παραθέτουμε την υλοποίηση της \text{join}.
+
+\selectlanguage{english}
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=TypeScript] 
+ static async join(
+    providers: VoteGuardianProviders,
+    contractAddress: ContractAddress,
+    secretKey: string,
+    logger?: Logger,
+  ): Promise<VoteGuardianAPI> {
+    logger?.info({
+      joinContract: {
+        contractAddress,
+      },
+    });
+
+    const deployedVoteGuardianContract = await findDeployedContract(providers, {
+      contractAddress,
+      contract: VoteGuardianContractInstance,
+      privateStateId: 'voteGuardianPrivateState',
+      initialPrivateState:
+        // (await providers.privateStateProvider.get('voteGuardianPrivateState')) ??
+        createVoteGuardianPrivateState(utils.hexToBytes(secretKey), {
+          leaf: new Uint8Array(32),
+          path: [
+            {
+              sibling: { field: BigInt(0) },
+              goes_left: false,
+            },
+          ],
+        }),
+    });
+
+    logger?.trace({
+      contractJoined: {
+        finalizedDeployTxData: deployedVoteGuardianContract.deployTxData.public,
+      },
+    });
+
+    return new VoteGuardianAPI(deployedVoteGuardianContract, providers, logger);
+  }
+\end{lstlisting}
+\selectlanguage{greek}
+\caption{Η στατική μέθοδος join της κλάσης VoteGuardianApi}
+\end{figure}
+
+\selectlanguage{greek}
+
+\subsection{Το user interface}
+Το user interface της εφαρμογής γράφτηκε χρησιμοποιώντας \textit{ReactJS} και στην ουσία αξιοποιεί τους τύπους και τα αντικείμενα που προσφέρονται από το api και από τον κώδικα Typescript που παράγεται από την compact. Εκτενής παρουσίαση του interface θα γίνει σε επόμενο κεφάλαιο, παρουσιάζοντας διάφορες περιπτώσεις χρήσης. Ωστόσο, μια σημαντική λειτουργία που πραγματοποιείται από τον κώδικα του ui είναι η αρχικοποίηση σημαντικών παραμέτρων, οι οποίες ονομάζονται \textbf{providers} για την σωστή λειτουργία της εφαρμογής στο Midnight, όπως είναι η σύνδεση του Lace Wallet με την εφαρμογή, η διαχείριση της private state κάθε χρήστη και η σύνδεση με τον proofServer. Αυτές οι λειτουργίες πραγματοποιούνται μέσω της συνάρτησης \textit{initializeProviders} που φαίνεται στο σχήμα 3.9. Συγκεκριμένα αυτή η συνάρηση:
+\begin{enumerate}
+    \item Επιστρέφει τιμή τύπου MidnightProviders.
+    \item Ως privateStateProvider, δηλαδή ως μέσο αποθήκευσης της private state κάθε χρήστη ορίζει τη level-db του browser της οποίας η υλοποίηση έρχεται από τη βιβλιοθήκη του Midnight.
+    \item Ορίζει ως proof server αυτόν που έχει ορίσει ο χρήστης μέσω του wallet του, δηλώνοντας εκεί τη διεύθυνση στην οποία τρέχει ο proof server (η οποία είναι συνήθως localhost:6000).
+    \item Δηλώνει τη διεύθυνση του indexer, δηλαδή του συστατικού εκείνου μέσω του οποίου γίνεται η αναζήτηση για δεδομένα στο δίκτυο, δεδομένα όπως η public state του contract. Τη διεύθυνση του indexer τη δίνει ο χρήστης μέσω του lace wallet.
+    \item Συνδέει το lace wallet με την εφαρμογή, αρχικοποιώντας τον walletProvider.
+    \item Δηλώνει από που θα λαμβάνονται τα κλειδιά και τα circuits που αφορούν τις αποδείξεις μηδενικής γνώσεις, αρχικοποιώντας τον zkConfigProvider.
+    \item Αρχικοποιεί τον midnightProvider ώστε να μπορούν να πραγματοποιούνται transactions στο Midnight.
+    
+\end{enumerate}
+
+
+\selectlanguage{english}
+\begin{figure}[h]
+\centering
+\begin{lstlisting}[language=TypeScript] 
+const initializeProviders = async (logger: Logger): Promise<VoteGuardianProviders> => {
+  const { wallet, uris } = await connectToWallet(logger);
+  const walletState = await wallet.state();
+
+  return {
+    privateStateProvider: levelPrivateStateProvider({
+      privateStateStoreName: 'voteGuardian-private-state',
+    }),
+    zkConfigProvider: new FetchZkConfigProvider(window.location.origin, fetch.bind(window)),
+    proofProvider: httpClientProofProvider(uris.proverServerUri),
+    publicDataProvider: indexerPublicDataProvider(uris.indexerUri, uris.indexerWsUri),
+    walletProvider: {
+      coinPublicKey: walletState.coinPublicKey,
+      encryptionPublicKey: walletState.encryptionPublicKey,
+      balanceTx(tx: UnbalancedTransaction, newCoins: CoinInfo[]): Promise<BalancedTransaction> {
+        return wallet
+          .balanceTransaction(
+            ZswapTransaction.deserialize(tx.serialize(getLedgerNetworkId()), getZswapNetworkId()),
+            newCoins,
+          )
+          .then((tx) => wallet.proveTransaction(tx))
+          .then((zswapTx) => Transaction.deserialize(zswapTx.serialize(getZswapNetworkId()), getLedgerNetworkId()))
+          .then(createBalancedTx);
+      },
+    },
+    midnightProvider: {
+      submitTx(tx: BalancedTransaction): Promise<TransactionId> {
+        return wallet.submitTransaction(tx);
+      },
+    },
+  };
+};
+\end{lstlisting}
+\selectlanguage{greek}
+\caption{Η αρχικοποίηση των Midnight Providers}
+\end{figure}
+
+\selectlanguage{greek}
+\newpage
+\chapter{Περιπτώσεις Χρήσης}
+Σε αυτό το κεφάλαιο θα παρουσιάσουμε τον τρόπο με τον οποίο το πανεπιστήμιο δημιουργεί και αναπτύσσει το smart contract, ώστε να ξεκινήσει και να υποστηριχθεί η διαδικασία των ψηφοφοριών. Στη συνέχεια, θα εξετάσουμε τις περιπτώσεις χρήσης της εφαρμογής, δείχνοντας πώς οι χρήστες μπορούν να την αξιοποιήσουν για να πραγματοποιήσουν τα διαθέσιμα transactions, δημιουργώντας νέες ψηφοφορίες, πραγματοποιώντας αλλαγές σε αυτές και συμμετέχοντας σε αυτές με την ψήφο τους. Με αυτόν τον τρόπο θα επιβεβαιώσουμε στην πράξη ότι οι κανόνες που έχουν οριστεί από το smart contract εφαρμόζονται σωστά και λειτουργούν όπως σχεδιάστηκαν.
+
+\section{Δημιουργία του smart contract από το πανεπιστήμιο}
+Όπως έχουμε προαναφέρει η συμμετοχή του πανεπιστημίου στο σύστημα έγγειται στη δημιουργία και δημοσίευση του smart contract στο Midnight, έχοντας συγκεντρώσει τα public keys των έγγυρων χρηστών. Για να δημοσιεύσει ένα smart contract στο Midnight, το πανεπιστήμιο θα πρέπει να τρέξει τοπικά τον proof server όπως και όλοι οι voters ενώ θα χρειαστεί να έχει το δικό του wallet, καθώς ένα deploy ενός smart contract χρεώνεται. Καθώς όμως το πανεπιστήμιο δεν έχει user interface, δε θα χρησιμοποιήσει το lace wallet, αντιθέτως θα δημιουργήσει ένα δικό του wallet μέσω βιβλιοθηκών του Midnight, το οποίο ωστόσο θα έχει τις ίδιες δυνατότητες με το lace wallet. 
+
+\section{Δημιουργία Ψηφοφορίας}
+Για τις επόμενες ενότητες θα δουλέψουμε το εξής σενάριο: Έχουμε δύο έγκυρους χρήστες, ας πούμε τους user1, user2 με μυστικά κλειδία ec1d0ad62fbd918ea23a151264a4de5e59ecdce87d36f84ed6402ba4077dc30b και
+9f3ec6ed2544939544eb3f231247c4111ed3e5263f5613bf3d8aea4b269a1191 αντίστοιχα. Έστω επίσης πως το smart contract βρίσκεται στη διεύθυνση 0200881de6e23b631470d7c0dec45782f4c67e807955d9e44f8c4a5b9e376241c3b5.
+Θεωρούμε πως αυτή η διεύθυνση είναι γνωτή και έχει κοινοποιηθεί από το πανεπιστήμιο στους φοιτητές.
+
+Όπως έχουμε ήδη εξηγήσει, κάθε φοιτητής μπορεί να δημιουργήσει ψηφοφορίες. Στην αρχική σελίδα της εφαρμογής ο χρήστης πρέπει να συμπληρώσει τη διεύθυνση του smart contract. Επίσης, ο φοιτητης συμπληρώνει το secret key του, ώστε να αρχικοποιηθεί η private state του. Σημειώνεται εδώ πως το secret key ποτέ δε "φεύγει" από τον υπολογιστή του χρήστη.΄Έστω λοιπόν πως ο user1 συνδέεται στην εφαρμογή, δίνοντας αρχικά τη διεύθυνση του smart contract καθώς και το secret key του, όπως φαίνεται στα σχήματα \ref{fig:enter_contract_new} και \ref{fig:enter_secret_key2}.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\linewidth]{landpage.png}
+  \caption{Η αρχική οθόνη της dapp}
+  \label{fig:diag}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\linewidth]{enter_contract_new.png}
+  \caption{Ο χρήστης user1 συμπληρώνει τη διεύθυνση του smart contract}
+  \label{fig:enter_contract_new}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\linewidth]{enter_secret_key2.png}
+  \caption{Ο χρήστης user1 συμπληρώνει το secret key του}
+  \label{fig:enter_secret_key2}
+\end{figure}
+Στη συνέχεια, ο χρήστης οδηγείται στην αρχική οθόνη του smart contract όπου μπορεί να δει τις διαθέσιμες ψηφοφορίες ή να δημιουργήσει ο ίδιος μία, βλ. σχήμα \ref{fig:create_or_view}.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\linewidth]{create_or_view.png}
+  \caption{Η αρχική οθόνη του smart contract}
+  \label{fig:create_or_view}
+\end{figure}
+Καθώς δεν υπάρχουν ακόμα ψηφοφορίες, ο χρήστης επιλέγει τη δημιουργία μιας νέας ψηφοφορίας μέσω του transaction create\_voting. Με αυτή την επιλογή, θα εμφανιστεί το παράθυρο του lace wallet όπου ο χρήστης πρέπει να υπογράψει το transaction. Αυτό γίνεται σε κάθε transaction που πραγματοποιεί ο χρήστης και φαίνεται στο σχήμα \ref{fig:sign_transaction}.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\linewidth]{sign_transaction.png}
+  \caption{Η υπογραφή ενός transaction με το lace wallet}
+  \label{fig:sign_transaction}
+\end{figure}
+
+
+\end{document}

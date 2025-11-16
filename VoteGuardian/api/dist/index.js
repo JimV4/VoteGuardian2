@@ -63,7 +63,7 @@ export class VoteGuardianAPI {
             //    since the private state of the bulletin board application never changes, we can query the
             //    private state once and always use the same value with `combineLatest`. In applications
             //    where the private state is expected to change, we would need to make this an `Observable`.
-            from(providers.privateStateProvider.get('voteGuardianPrivateState')),
+            from(providers.privateStateProvider.get('voteGuardianPrivateState5')),
         ], 
         // ...and combine them to produce the required derived state.
         (ledgerState, privateState) => {
@@ -337,7 +337,7 @@ export class VoteGuardianAPI {
             DeployContractOptions
             */
             const DeployedVoteGuardianContract = await deployContract(providers, {
-                privateStateId: 'voteGuardianPrivateState',
+                privateStateId: 'voteGuardianPrivateState5',
                 contract: VoteGuardianContractInstance,
                 initialPrivateState: createVoteGuardianPrivateState(utils.hexToBytes(secretKey), {
                     leaf: new Uint8Array(32),
@@ -392,11 +392,11 @@ export class VoteGuardianAPI {
         const deployedVoteGuardianContract = await findDeployedContract(providers, {
             contractAddress,
             contract: VoteGuardianContractInstance,
-            privateStateId: 'voteGuardianPrivateState',
+            privateStateId: 'voteGuardianPrivateState5',
             // initialPrivateState: createVoteGuardianPrivateState(utils.randomBytes(32)),
             // initialPrivateState: createVoteGuardianPrivateState(utils.hexToBytes(secretKey)),
             initialPrivateState: 
-            // (await providers.privateStateProvider.get('voteGuardianPrivateState')) ??
+            // (await providers.privateStateProvider.get('voteGuardianPrivateState5')) ??
             createVoteGuardianPrivateState(utils.hexToBytes(secretKey), privateStateMerklePath, privateStateVotersMap),
         });
         logger?.trace({
@@ -408,11 +408,11 @@ export class VoteGuardianAPI {
     }
     // ο τύπος VoteGuardianProviders έρχεται από το common-types.ts και ο τύπος VoteGuardianPrivateState έρχεται από το witnesses.ts
     // private static async getPrivateState(providers: VoteGuardianProviders): Promise<VoteGuardianPrivateState> {
-    //   const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+    //   const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState5');
     //   return existingPrivateState ?? createVoteGuardianPrivateState(utils.randomBytes(32));
     // }
     static async getPrivateStateMerklePath(providers) {
-        const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+        const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState5');
         return (existingPrivateState?.voterPublicKeyPath ?? {
             leaf: new Uint8Array(32),
             path: [
@@ -424,7 +424,7 @@ export class VoteGuardianAPI {
         });
     }
     static async getPrivateStateVotesMap(providers) {
-        const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState');
+        const existingPrivateState = await providers.privateStateProvider.get('voteGuardianPrivateState5');
         return existingPrivateState?.votesPerVotingMap ?? new Map();
     }
 }
