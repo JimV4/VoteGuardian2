@@ -1048,6 +1048,17 @@ const initializeProviders = async (logger: Logger): Promise<VoteGuardianProvider
   \label{fig:user2_tries_to_add_option_to_voting1_failed}
 \end{figure}
 
+Μια άλλη περίπτωση κακόβουλης χρήσης είναι ένας μη έγκυρος χρήστης, δηλαδή ένας χρήστης του οποίου το hash(secret key) δεν ανήκει στο στο Merkle Tree με τους έγκυρους ψηφοφόρους, να προσπαθήσει να δημιουργήσει μια ψηφοφορία εκτελώντας το transcation create\_voting. Όπως έχουμε δει από την υλοποίηση του σχετικού circuit, θα αποτύχει ο έλεγχος prove\_eligibility και θα εμφανιστεί μήνυμα λάθους όπως φαίνεται παρακάτω.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{user_outside_merkle_tree_tries_to_create_voting.png}
+  \caption{Μη έγκυρος χρήστης προσπαθεί να δημιουργήσει μια ψηφοφορία}
+  \label{fig:user_outside_merkle_tree_tries_to_create_voting}
+\end{figure}
+
+
+
 \section{Ψήφος σε Ψηφοφορία}
 Σε αυτή την ενότητα θα συνεχίσουμε με το παράδειγμα που ξεκινήσαμε προηγουμένως και θα δούμε τους δύο χρήστες να ψηφίζουν σε ψηφοφορίες, αλλά και το πως η εφαρμοφή απαγορεύει το double-voting με κατάλληλα μηνύματα λάθους.
 
@@ -1083,7 +1094,7 @@ const initializeProviders = async (logger: Logger): Promise<VoteGuardianProvider
   \label{fig:show_results_empy}
 \end{figure}
 
-Συμμετρικά τώρα, ο χρήστης user2 με ίδια βήματα ψηφίζει την επιλογή option2 στην ψηφοφορία του user1(question1). Επίσης, ο user1 ψηφίζει την επιλογή option11 στην ψηφοφορία του user2(question2) και ο user2 ψηφίζει την επιλογή option22. Για χάριν απλότητας παραλείπουμε τα ενδιάμεσαβήματα.
+Συμμετρικά τώρα, ο χρήστης user2 με ίδια βήματα ψηφίζει την επιλογή option2 στην ψηφοφορία του user1(question1). Επίσης, ο user1 ψηφίζει την επιλογή option11 στην ψηφοφορία του user2(question2) και ο user2 ψηφίζει την επιλογή option22. Για χάριν απλότητας παραλείπουμε τα ενδιάμεσα βήματα.
 
 \subsection{Κακόβουλη χρήση - double-voting}
 Έστω ότο ο χρήστης user1 επιλέγει να ξαναψηφίσει στην ίδια ψηφοφορία. Αν το πραγματοποιήσει αυτό, τότε ευμφανίζεται κατάλληλο μήνυμα λάθους που προέρχεται από το assert statement του cast\_vote circuit στο smart contract, το οποίο έχει αναλυτικά περιγραφεί παραπάνω.
@@ -1098,6 +1109,25 @@ const initializeProviders = async (logger: Logger): Promise<VoteGuardianProvider
 \section{Δημοσίευση ψήφου}
 Σε αυτή την ενότητα θα συνεχίσουμε το παράδειγμα που έχουμε ήδη ξεκινήσει ώστε να ολοκληρώσουμε έναν πλήρη κύκλο χρήστης της εφαρμογής, αξιοποιώντας όλες τις δυνατότητές της. 
 
-Έχοντας λοιπόν και οι δύο χρήστες user1 και user2 ψηφίσει
+\subsection{Φυσιολογική ροή}
+Έχοντας λοιπόν και οι δύο χρήστες user1 και user2 ψηφίσει, αρχικά ο user1 κλείνει την ψηφοφορία επιλέγοντας την επιλογή CLOSE VOTING, η οποία καλεί το circuit close\_voting. Στη συνέχεια εκτελεί το transaction PUBLISH VOTE. Αντίστοιχα ο user2 εκτελεί και αυτός PUBLISH VOTE, συνεπώς η εικόνα στην επιλογή SHOW RESULTS είναι αυτή που παρουσιάζεται στο σχήμα \ref{fig:user2_publish_vote_on_vote1_results}:
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{user2_publish_vote_on_vote1_results.png}
+  \caption{Τα αποτελέσματα στην ψηφοφορία μετά την δημοσίευση και των δύο ψήφων}
+  \label{fig:user2_publish_vote_on_vote1_results}
+\end{figure}
+
+Αντίστοιχη είναι και η εικόνα στην ψηφοφορία που δημιούργησε ο user2 όταν και οι δύο χρήστες δημοσιεύσουν τις ψήφους τους,
+
+\subsection{Κακόβουλη χρήση - Δεύτερη δημοσίευση ψήφου}
+Αν ο χρήστης user1 επιλέξει να εκτελέσει δεύτερη φορά το transcation publish\_vote τότε θα εμφανιστεί το αντίστοιχο μήνυμα λάθους που υπάρχει στο circuit.
+\ref{fig:user1_publishes_vote_twice_on_vote1_failed}:
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{user1_publishes_vote_twice_on_vote1_failed.png}
+  \caption{Ο χρήστης user1 προσπαθεί δεύτερη φορά να δημοσιεύσει την ψήφο του}
+  \label{fig:user1_publishes_vote_twice_on_vote1_failed}
+\end{figure}
 
 \end{document}
