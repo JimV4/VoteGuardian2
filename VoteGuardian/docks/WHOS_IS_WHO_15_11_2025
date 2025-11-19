@@ -2,6 +2,7 @@
 question1 -> user1
 user1 -> option1
 user2 -> option2
+user3 -> option2
 
 
 question2 -> user2

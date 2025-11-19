@@ -1106,6 +1106,18 @@ const initializeProviders = async (logger: Logger): Promise<VoteGuardianProvider
   \label{fig:failed_vote_user1}
 \end{figure}
 
+\subsection{Κακόβουλη χρήση - Μη έγκυρος χρήστης}
+Ας υποθέσουμε ότι έχουμε έναν χρήστη ο του οποίου το public key δεν ανήκει στο Merkle Tree Με τους έγκυρους ψηφοφόρους. Αν αυτός ο χρήστης προσπαθήσει να ψηφίσει σε οποιαδήποτε ψηφοφορία, ακριβώς επειδή θα αποτύχει να αποδείξει ότι γνωρίζει έγκυρο μονοπάτι προς τη ρίζα του δέντρου, δεν έχει δικαίωμα να ψηφίσει και εμφανίζεται κατάλληλο μήνυμα λάθους από την εφαρμογή.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{user_outside_merkle_Tree_tries_to_vote.png}
+  \caption{Μη έγκυρος χρήστης προσπαθεί να ψηφίσει}
+  \label{fig:user_outside_merkle_Tree_tries_to_vote}
+\end{figure}
+
+
+
 \section{Δημοσίευση ψήφου}
 Σε αυτή την ενότητα θα συνεχίσουμε το παράδειγμα που έχουμε ήδη ξεκινήσει ώστε να ολοκληρώσουμε έναν πλήρη κύκλο χρήστης της εφαρμογής, αξιοποιώντας όλες τις δυνατότητές της. 
 
@@ -1129,5 +1141,39 @@ const initializeProviders = async (logger: Logger): Promise<VoteGuardianProvider
   \caption{Ο χρήστης user1 προσπαθεί δεύτερη φορά να δημοσιεύσει την ψήφο του}
   \label{fig:user1_publishes_vote_twice_on_vote1_failed}
 \end{figure}
+
+\subsection{Κακόβουλη χρήση - Μη έγκυρη ψήφος}
+Έστω ότι έχουμε έναν χρήστη, ο οποίος αλλάζει την υλοποίηση της εφαρμογής, και θέτει στην private state του, τη μεταβλητή secret\_vote(voting\_id) να είναι μια ψήφος της επιλογής του, έστω my\_vote. Όπως έχουμε ήδη αναφέρει, η private state ανήκει στον χρήστη και δεν εκτίθεται ποτέ έξω από το τοπικό του περιβάλλον, συνεπώς μπορεί να την τροποποιήσει όπως θέλει.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{user_votes_his_own_vote.png}
+  \caption{Ο χρήστης ρίχνει μια δική του ψήφο που δεν υπάρχει στις διαθέσιμες επιλογές}
+  \label{fig:user_votes_his_own_vote}
+\end{figure}
+
+Το transaction cast\_vote θα πετύχει κανονικά και στη ledger μεταβλητή hashed\_votes Θα καταχωρηθεί το hash της συμβολοσειράς my\_vote. Όταν όμως ο χρήστης εκτελέσει το transaction publish\_vote, θα ελεγθεί ότι η ψήφος αυτή δεν ανήκει στο σύνολο voting\_options οπότε και θα εμφανιστεί μήνυμα λάθους που προέρχεται από το circuit publish\_vote. Αξίζει να σημειωθεί εδώ, ότι δεν είναι δυνατή η συσχέτιση της ψήφου με τον ψηφοφόρο καθώς η χρήση Merkle Trees αποτρέπει τη σύνδεση του public key με το transaction που εκτελείται.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{user_with_his_own_vote_tries_to_publish_it.png}
+  \caption{Ο χρήστης προσπαθεί να δημοσιεύσει μη έγκυρη ψήφο}
+  \label{fig:user_with_his_own_vote_tries_to_publish_it}
+\end{figure}
+
+\subsection{Κακόβουλη χρήση - Αλλαγή ψήφου}
+Παρόμοια με το προηγούμενο παράδειγμα, έστω ότι έχουμε ένα χρήστη ο οποίος αρχικά επιλέγει κανονικά μία από τις διαθέσιμες επιλογές και εκτελεί το cast\_vote transaction. Το hash της έγκυρης ψήφου θα καταχωρηθεί ως γνωστόν στο hashed\_votes. 
+Έστω τώρα ότι ο κακόβουλος χρήστης αλλάζει το private state του και θέτει στο secret\_vote είτε κάποια άλλη επιλογή είτε κάποια δική του. Αν εκτελέσει το transaction publish\_vote για να δημοσιεύσει την ωήφο του, τότε τα δύο hashes δε θα ταιριάζουν (δηλαδή το hash της αρχικής ψήφου και το hash της αλλαγμένης ψήφου), συνεπώς θα εμφανιστεί μήνυμα λάθους που έρχεται από το αντίστοιχο circuit.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{change_vote.png}
+  \caption{Ο χρήστης άλλαξε το private state της ψήφου και προσπάθησε να δημοσιεύσει}
+  \label{fig:change_vote}
+\end{figure}
+
+
+
 
 \end{document}
