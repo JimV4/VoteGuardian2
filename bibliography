@@ -1,0 +1,35 @@
+@misc{surveyonblockchain,
+  author       = {Huaqun Guo, Xingjie Yu},
+  title        = {A survey on blockchain technology and its security},
+  year         = {2022},
+  url          = {https://www.sciencedirect.com/science/article/pii/S2096720922000070?via%3Dihub},
+}
+
+@misc{katanemhmena,
+  author       = {CSLAB NTUA},
+  title        = {Κατανεμημένα Συστήματα, Bitcoin and Blockchain},
+  year         = {2023},
+  url          = {https://helios.ntua.gr/2023-24/pluginfile.php/56269/mod_page/content/30/distributed_10_2023.pdf},
+}
+
+@misc{midnightdocs,
+  author       = {Midnight},
+  title        = {Midnight Docs},
+  year         = {},
+  url          = {https://docs.midnight.network/},
+}
+
+@misc{cadranostakepools,
+  author       = {Cardano Docs},
+  title        = {Cardano Docs},
+  year         = {},
+  url          = {https://docs.cardano.org/stake-pool-operators/about-stake-pools},
+}
+
+@misc{zachpagour,
+  author       = {ΕΥΣΤΑΘΙΟΣ ΖΑΧΟΣ, ΑΡΙΣΤΕΙΔΗΣ ΠΑΓΟΥΡΤΖΗ, ΠΑΝΑΓΙΩΤΗΣ ΓΡΟΝΤΑΣ},
+  title        = {ΥΠΟΛΟΓΙΣΤΙΚΗ ΚΡΥΠΤΟΓΡΑΦΙΑ},
+  year         = {},
+  url          = {https://repository.kallipos.gr/bitstream/11419/5439/25/main-KOY.pdf},
+}
+
