@@ -110,7 +110,7 @@ async function runIssuanceFlow() {
   const [issuerClient, holderClient] = await getOrCreateClients(2);
 
   // 2. Create AIDs
-  const [issuerAid, holderAid] = await Promise.all([createAid(issuerClient, 'issuer'), createAid(holderClient, 'holder')]);
+  const [issuerAid, holderAid] = await Promise.all([createAid(issuerClient, 'issuer'), createAid(holderClient, 'Jim')]);
 
   console.log('--- Phase 2: Issuance (Issuer Side) ---');
 

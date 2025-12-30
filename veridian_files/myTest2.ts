@@ -11,6 +11,7 @@ import signify, {
 } from 'signify-ts';
 import assert from 'assert';
 import { waitAndMarkNotification } from './utils/test-util';
+import { randomBytes } from 'crypto';
 
 await ready();
 
@@ -30,7 +31,7 @@ console.log(client);
 /* ------------------------------------------------------------------------- */
 // Dhmioyrgia identifier toy bob
 
-const resultBob = await client.identifiers().create('bobj');
+const resultBob = await client.identifiers().create('bobk');
 const operationBob = await resultBob.op();
 const prefixBob = resultBob.serder.ked.i;
 
@@ -47,7 +48,7 @@ await client
 console.log('bob');
 // Dhmioyrgia identifier ths alice
 
-const result = await client.identifiers().create('alicej');
+const result = await client.identifiers().create('alicek');
 const operation = await result.op();
 const prefix = result.serder.ked.i;
 console.log(prefix);
@@ -62,10 +63,11 @@ console.log('alice2');
 // DHmioyrgoyme to registry ths alice
 const result2 = await client.registries().create({
   name: prefix,
-  registryName: 'Alice5',
+  registryName: 'Alice6',
   nonce: 'AAd7Zfk6072acq_37bw29qiHOkG3-vErjQGdtjPRmVE_',
 });
 const registryPrefix = result2.regser.pre;
+const midnightSecret = randomBytes(32).toString('hex');
 
 const QVI_SCHEMA_SAID = 'EBfdlu8R27Fbx-ehrqwImnK-8Cm79sqbAQ4MmvEAYqao';
 
@@ -78,6 +80,7 @@ const result3 = await client.credentials().issue(prefix, {
   s: QVI_SCHEMA_SAID,
   a: {
     i: prefixBob,
+    voting_secret: midnightSecret,
     LEI: '5493001KJTIIGC8Y1R17',
   },
 });
