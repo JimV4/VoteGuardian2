@@ -10,6 +10,7 @@ import { JoinContract } from './components/JoinContract';
 import { ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import { ViewVotingsCreateVoting } from './components/ViewVotingCreateVoting';
 import { EditComponent } from './components/EditComponent';
+import { LoginComponent } from './components/LoginComponent';
 
 /**
  * The root bulletin VoteGuardian application component.
@@ -54,6 +55,8 @@ const App: React.FC = () => {
         >
           <Routes>
             <Route path="/" element={<JoinContract onJoinVoteGuardianCallback={onJoinVoteGuardian} />} />
+            {/* 2. Add the authentication route */}
+            <Route path="/authenticate" element={<LoginComponent />} />
             <Route
               path="/votings"
               element={

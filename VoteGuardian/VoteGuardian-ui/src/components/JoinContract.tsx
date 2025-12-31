@@ -5,7 +5,8 @@ import VoteGuardianAddIcon from '@mui/icons-material/PostAddOutlined';
 import { TextPromptDialog } from './TextPromptDialog';
 import { Backdrop, CircularProgress } from '@mui/material';
 import StopIcon from '@mui/icons-material/HighlightOffOutlined';
-
+import { useNavigate } from 'react-router-dom';
+import LoginIcon from '@mui/icons-material/LoginOutlined';
 const subtle = window.crypto.subtle;
 /**
  * The props required by the {@link JoinContractProps} component.
@@ -29,6 +30,7 @@ export const JoinContract: React.FC<Readonly<JoinContractProps>> = ({ onJoinVote
   const [secretPromptOpen, setSecretPromptOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -50,6 +52,19 @@ export const JoinContract: React.FC<Readonly<JoinContractProps>> = ({ onJoinVote
           data-testid="vote-guardian-join-btn"
         >
           Join Contract
+        </Button>
+
+        {/* New Authenticate Button */}
+        <Button
+          variant="outlined"
+          size="large"
+          color="primary"
+          fullWidth
+          startIcon={<LoginIcon />}
+          onClick={() => navigate('/authenticate')} // 3. Navigation logic
+          data-testid="authenticate-btn"
+        >
+          Authenticate
         </Button>
       </Stack>
 

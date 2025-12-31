@@ -761,7 +761,7 @@ db.once('open', () => {
 const userSchema = new mongoose.Schema({
   username: String,
   password: String,
-  encryptionPublicKey: String,
+  publicKey: String,
 });
 
 const User = mongoose.model('User', userSchema);
@@ -814,20 +814,40 @@ const decryptSecret = (encryptedHex: string, ivHex: string, tagHex: string): str
 };
 
 app.post('/login', async (req: Request, res: Response): Promise<void> => {
-  const { username, password } = req.body.subject;
+  const { username, password, publicKey } = req.body.subject;
 
-  if (!username || !password) {
-    res.status(400).json({ message: 'Username and password are required.' });
+  // 1. Basic presence validation
+  if (!username || !password || !publicKey) {
+    res.status(400).json({ message: 'Username, password, and publicKey are required.' });
+    return; // Ensure we return to prevent further execution
+  }
+
+  // 2. Validate Uint8Array(32) hex format
+  // 32 bytes = 64 hex characters. ^[0-9a-fA-F]{64}$ checks for exactly 64 hex chars.
+  const hexRegex = /^[0-9a-fA-F]{64}$/;
+  if (typeof publicKey !== 'string' || !hexRegex.test(publicKey)) {
+    res.status(400).json({ message: 'Invalid format: publicKey must be a 64-character hex string (32 bytes).' });
+    return;
   }
 
   try {
-    // Query the database
+    // 3. Find the user first
     const user = await User.findOne({ username, password });
 
-    if (user) {
-      res.status(200).json({ message: 'User found.' });
+    if (!user) {
+      res.status(404).json({ message: 'User not found or invalid credentials.' });
+      return;
+    }
+
+    // 4. Check if the credential field already exists/matches
+    // Assuming your DB field is named 'credential'
+    if (user.publicKey) {
+      res.status(200).json({ message: 'Already received a credential.' });
     } else {
-      res.status(404).json({ message: 'User not found.' });
+      // 5. Store the hex if it doesn't exist
+      user.publicKey = publicKey;
+      await user.save();
+      res.status(201).json({ message: 'Credential stored successfully.' });
     }
   } catch (error) {
     console.error(error);
