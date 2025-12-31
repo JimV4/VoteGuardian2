@@ -37,6 +37,10 @@ import { createWriteStream } from 'node:fs';
 import * as fs from 'node:fs';
 import dotenv from 'dotenv';
 dotenv.config();
+export function stringToUint8Array(input) {
+    const encoder = new TextEncoder();
+    return encoder.encode(input);
+}
 export const createLogger = async (logPath) => {
     await fsAsync.mkdir(path.dirname(logPath), { recursive: true });
     const pretty = pinoPretty({
@@ -167,15 +171,20 @@ const mainLoop = async (providers, rli, logger) => {
         const hashBuffer = await crypto.subtle.digest('SHA-256', input);
         return new Uint8Array(hashBuffer);
     }
-    const eligibleVoters = [];
-    for (const randomValue of initialRandomValues) {
-        const hash = await sha256(randomValue);
-        eligibleVoters.push(hash);
-    }
-    console.log('Initial random values (hex):');
-    console.log(initialRandomValues.map(uint8ArrayToHex));
+    let eligibleVoters = [];
+    // for (const randomValue of initialRandomValues) {
+    //   const hash = await sha256(randomValue);
+    //   eligibleVoters.push(hash);
+    // }
+    const users = await User.find({}).select('publicKey -_id');
+    eligibleVoters = users.map((user) => user.publicKey);
+    // console.log('Initial random values (hex):');
+    // console.log(initialRandomValues.map(uint8ArrayToHex));
     console.log('\nSHA-256 hashes (hex):');
-    console.log(eligibleVoters.map(uint8ArrayToHex));
+    console.log(eligibleVoters);
+    const eligibleVotersUint8 = eligibleVoters.map((voterStr) => {
+        return stringToUint8Array(voterStr);
+    });
     const contractAddressFile = path.resolve(process.cwd(), 'contract_address.txt');
     const contractAddress = fs.readFileSync(contractAddressFile, 'utf8').trim();
     let VoteGuardianApi;
@@ -183,7 +192,7 @@ const mainLoop = async (providers, rli, logger) => {
         VoteGuardianApi = await VoteGuardianAPI.join(providers, contractAddress, secretKey, logger);
     }
     else {
-        VoteGuardianApi = await VoteGuardianAPI.deploy(providers, secretKey, eligibleVoters, logger);
+        VoteGuardianApi = await VoteGuardianAPI.deploy(providers, secretKey, eligibleVotersUint8, logger);
     }
     if (VoteGuardianApi === null) {
         return;
@@ -602,7 +611,7 @@ db.once('open', () => {
 const userSchema = new mongoose.Schema({
     username: String,
     password: String,
-    encryptionPublicKey: String,
+    publicKey: String,
 });
 const User = mongoose.model('User', userSchema);
 // Health check endpoint
@@ -611,7 +620,7 @@ app.get('/health', (req, res) => {
 });
 // Endpoint to insert a new user
 app.post('/register', async (req, res) => {
-    const { username, password, isOrganizer } = req.body;
+    const { username, password } = req.body;
     if (!username || !password) {
         res.status(400).json({ message: 'Username and password are required.' });
     }
@@ -622,7 +631,7 @@ app.post('/register', async (req, res) => {
             res.status(400).json({ message: 'Username already exists.' });
         }
         // Create a new user
-        const newUser = new User({ username, password, isOrganizer });
+        const newUser = new User({ username, password });
         await newUser.save();
         res.status(201).json({ message: 'User registered successfully.', user: newUser });
     }
@@ -644,18 +653,36 @@ const decryptSecret = (encryptedHex, ivHex, tagHex) => {
     return decrypted.toString('utf8');
 };
 app.post('/login', async (req, res) => {
-    const { username, password } = req.body.subject;
-    if (!username || !password) {
-        res.status(400).json({ message: 'Username and password are required.' });
+    const { username, password, publicKey } = req.body.subject;
+    // 1. Basic presence validation
+    if (!username || !password || !publicKey) {
+        res.status(400).json({ message: 'Username, password, and publicKey are required.' });
+        return; // Ensure we return to prevent further execution
+    }
+    // 2. Validate Uint8Array(32) hex format
+    // 32 bytes = 64 hex characters. ^[0-9a-fA-F]{64}$ checks for exactly 64 hex chars.
+    const hexRegex = /^[0-9a-fA-F]{64}$/;
+    if (typeof publicKey !== 'string' || !hexRegex.test(publicKey)) {
+        res.status(400).json({ message: 'Invalid format: publicKey must be a 64-character hex string (32 bytes).' });
+        return;
     }
     try {
-        // Query the database
+        // 3. Find the user first
         const user = await User.findOne({ username, password });
-        if (user) {
-            res.status(200).json({ message: 'User found.' });
+        if (!user) {
+            res.status(404).json({ message: 'User not found or invalid credentials.' });
+            return;
+        }
+        // 4. Check if the credential field already exists/matches
+        // Assuming your DB field is named 'credential'
+        if (user.publicKey) {
+            res.status(200).json({ message: 'Already received a credential.' });
         }
         else {
-            res.status(404).json({ message: 'User not found.' });
+            // 5. Store the hex if it doesn't exist
+            user.publicKey = publicKey;
+            await user.save();
+            res.status(201).json({ message: 'Credential stored successfully.' });
         }
     }
     catch (error) {

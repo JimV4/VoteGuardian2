@@ -67,6 +67,10 @@ import * as fs from 'node:fs';
 import dotenv from 'dotenv';
 
 dotenv.config();
+export function stringToUint8Array(input: string): Uint8Array {
+  const encoder = new TextEncoder();
+  return encoder.encode(input);
+}
 
 export const createLogger = async (logPath: string): Promise<pino.Logger> => {
   await fsAsync.mkdir(path.dirname(logPath), { recursive: true });
@@ -234,18 +238,23 @@ const mainLoop = async (providers: VoteGuardianProviders, rli: Interface, logger
     return new Uint8Array(hashBuffer);
   }
 
-  const eligibleVoters = [];
+  let eligibleVoters = [];
 
-  for (const randomValue of initialRandomValues) {
-    const hash = await sha256(randomValue);
-    eligibleVoters.push(hash);
-  }
+  // for (const randomValue of initialRandomValues) {
+  //   const hash = await sha256(randomValue);
+  //   eligibleVoters.push(hash);
+  // }
+  const users = await User.find({}).select('publicKey -_id');
 
-  console.log('Initial random values (hex):');
-  console.log(initialRandomValues.map(uint8ArrayToHex));
+  eligibleVoters = users.map((user) => user.publicKey);
+  // console.log('Initial random values (hex):');
+  // console.log(initialRandomValues.map(uint8ArrayToHex));
 
   console.log('\nSHA-256 hashes (hex):');
-  console.log(eligibleVoters.map(uint8ArrayToHex));
+  console.log(eligibleVoters);
+  const eligibleVotersUint8: Uint8Array[] = eligibleVoters.map((voterStr) => {
+    return stringToUint8Array(voterStr!);
+  });
 
   const contractAddressFile = path.resolve(process.cwd(), 'contract_address.txt');
   const contractAddress = fs.readFileSync(contractAddressFile, 'utf8').trim();
@@ -254,7 +263,7 @@ const mainLoop = async (providers: VoteGuardianProviders, rli: Interface, logger
   if (contractAddress) {
     VoteGuardianApi = await VoteGuardianAPI.join(providers, contractAddress, secretKey, logger);
   } else {
-    VoteGuardianApi = await VoteGuardianAPI.deploy(providers, secretKey, eligibleVoters, logger);
+    VoteGuardianApi = await VoteGuardianAPI.deploy(providers, secretKey, eligibleVotersUint8, logger);
   }
 
   if (VoteGuardianApi === null) {
@@ -773,7 +782,7 @@ app.get('/health', (req, res) => {
 
 // Endpoint to insert a new user
 app.post('/register', async (req: Request, res: Response): Promise<void> => {
-  const { username, password, isOrganizer } = req.body;
+  const { username, password } = req.body;
 
   if (!username || !password) {
     res.status(400).json({ message: 'Username and password are required.' });
@@ -787,7 +796,7 @@ app.post('/register', async (req: Request, res: Response): Promise<void> => {
     }
 
     // Create a new user
-    const newUser = new User({ username, password, isOrganizer });
+    const newUser = new User({ username, password });
     await newUser.save();
 
     res.status(201).json({ message: 'User registered successfully.', user: newUser });

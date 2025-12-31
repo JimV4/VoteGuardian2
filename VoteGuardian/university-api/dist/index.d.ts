@@ -8,6 +8,7 @@ import type { DockerComposeEnvironment } from 'testcontainers';
 import { type ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import pino from 'pino';
 import * as fs from 'node:fs';
+export declare function stringToUint8Array(input: string): Uint8Array;
 export declare const createLogger: (logPath: string) => Promise<pino.Logger>;
 export declare const currentDir: string;
 export interface Config {
