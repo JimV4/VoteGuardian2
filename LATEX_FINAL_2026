@@ -8,7 +8,7 @@
 \renewcommand{\rmdefault}{lmr}      
 \usepackage{listings}
 \usepackage{xcolor}
-
+\usepackage{caption}
 
 % \usepackage{polyglossia}
 
@@ -253,11 +253,19 @@ H\big(H(H(A)\mid H(B)) \mid (H(C)\mid H(D))\big)
 
 
 \subsection{Proof Server}
-
-
 Οποιοσδήποτε επιθυμεί να χρησιμοποιήσει μια αποκεντρωμένη εφαρμογή βασισμένη στο Midnight πρέπει να εγκαταστήσει και να τρέξει τοπικά στον υπολογιστή του τον proof server, ο οποίος είναι ενθυλακωμένος μέσα σε ένα docker container. Ο proof server παράγει τις αποδείξεις μηδενικής γνώσης για κάθε transaction ενός smart contract. Οι αποδείξεις αυτές αποτελούν το εχέγγυο ότι ο χρήστης μιας αποκεντρωμένης εφαρμογής, και κατά συνέπεια του αντίστοιχου smart contract, έχει ακολουθήσει όλους τους κανόνες που ορίζει κάθε transaction. Στη συνέχεια, η απόδειξη προωθείται στο δίκτυο ώστε να επαληθευθεί η ορθότητά της \cite{midnightdocs}.
 
 Αξίζει να τονιστεί ότι ο proof server δεν συνδέεται ποτέ στο διαδίκτυο ούτε αποστέλλει δεδομένα σε τρίτους αποδέκτες. Λειτουργεί αποκλειστικά τοπικά για κάθε χρήστη και παράγει αποδείξεις μηδενικής γνώσης με πλήρη ασφάλεια.
+
+\subsection{Το μοντέλο Kachina}
+Το Kachina είναι ένα μοντέλο δημιουργίας smart contracts που χρησιμοποιείται στο Midnight και έχει ως κύριο χαρακτηριστικό το διαχωρισμό μεταξύ της δημόσιας κατάστασης, δηλαδή των δεδομένων που υπάρχουν on-chain και της ιδιωτικής κατάστασης, η οποία βρίσκεται στον προσωπικό υπολογιστή κάθε χρήστη \cite{kachina}. Αυτές ονομάζονται ιδιωτική κατάσταση και δημόσια κατάσταση. Η ιδιωτική κατάσταση ορίζεται εξ ολοκλήρου από τον κάθε χρήστη και πρέπει να ληφθεί υπόψιν ότι ένας κακόβουλος χρήστης μπορεί να την ορίσει όπως αυτός θέλει\cite{kachina}. Η γενική ιδέα λειτουργίας του μοντέλου είναι η εξής:
+\begin{itemize}
+    \item Κάθε smart contract έχει μία public state $\sigma$ και για κάθε χρήστη $p$ μία private state $\rho_p$. Όπως είπαμε η $\rho_p$ δεν βρίσκεται στο ledger αλλά στον τοπικό υπολογιστή κάθε χρήστη.
+    \item Όταν ο χρήστης εκκινεί ένα transaction, στην πραγματικότητα υπολογίζει την μεταβολή από την κατάσταση ($\sigma$, $\rho_p$) σε μια νέα κατάσταση ($\sigma'$, $\rho'_p$). Κατασκευάζει μια απόδειξη μηδενικής γνώσης η οποία δηλώνει ότι η μεταβολή από $\sigma$ σε $\sigma'$ είναι έγκυρη, δηλαδή πως υπάρχει μια ιδιωτική κατάσταση $\rho'_p$ και μία είσοδος για τα οποία η μεταβολή είναι έγκυρη. Τοπικά, ενημερώνει την ιδιωτική κατάσταση ως $\rho'_p$.
+\end{itemize}    
+
+Με πιο απλά λόγια, η απόδειξη που κατασκευάζει ο χρήστης δηλώνει πως "Κατέχω μια έγκυρη ιδιωτική κατάσταση και κάποια είσοδο που μου επιτρέπουν να κάνω αλλαγές στην δημόσια κατάσταση του contract, υπακόυοντας στους κανόνες που αυτό ορίζει, δίχως να αποκαλύψω αυτή την ιδιωτική κατάσταση και την είσοδο". Η απόδειξη μετουσιώνεται σε transaction και μόλις αυτή καταχωρηθεί, το δίκτυιο (δηλαδή οι κόμβοι/validators) εξετάζουν την εγκυρότητα της απόδειξης. Αν είναι ορθή η απόδειξη, τότε σημαίνει πως η νέα δημόσια κατάσταση που ορίζει ο χρήστης είναι έγκυρη σε συνδυασμό με την ιδιωτική του κατάσταση και το δίκτυο προβαίνει σε ενημέρωση της δημόσιας κατάστασης. Μετά την αλλαγή της δημόσιας κατάστασης, ο χρήστης ενημερώνει και την ιδιωτικήξ του κατάσταση\cite{midnightdocs}.
+
 
 
 \subsection{Smart Contracts στο Midnight }
@@ -265,12 +273,11 @@ H\big(H(H(A)\mid H(B)) \mid (H(C)\mid H(D))\big)
 Το Midnight χρησιμοποιεί την compact ως γλώσσα προγραμματισμού για ανάπτυξη smart contracts, η οποία έχεθ αναπτυχθεί από την ομάδα του Midnight. Θα κάνουμε μια σύντομη περιήγηση στα βασικά στοιχεία της compact μέσω ενός απλού smart contract. Εκτενέστερη ανάλυση θα πραγματοποιηθεί κατά την παρουσίαση του smart contract που αναπτύχθηκε για τη δική μας εφαρμογή.
 Παρουσιάζουμε παρακάτω ένα απλό smart contract το οποίο ορίζει μια public μεταβλητή και επιτρέπει μόνο στον δημιουργό του contract να την αλλάξει \cite{midnightdocs}.
 
-\begin{figure}[h]
-\begin{lstlisting} % you can choose other language or leave it generic
+
+% \begin{figure}[h]
+\begin{lstlisting} 
 import CompactStandardLibrary;
-
 witness secretKey(): Bytes<32>;
-
 export ledger organizer: Bytes<32>;
 export ledger restrictedCounter: Counter;
 constructor() {
@@ -286,9 +293,10 @@ circuit publicKey(sk: Bytes<32>): Bytes<32> {
   return persistentHash<Vector<2, Bytes<32>>>([pad(32, "some-domain-seperator"), sk]);
 }
 \end{lstlisting}
+\captionof{figure}{Ένα απλό smart contract γραμμένο σε compact}
 
-\caption{Ένα απλό smart contract γραμμένο σε compact}
-\end{figure}
+% \caption{Ένα απλό smart contract γραμμένο σε compact}
+% \end{figure}
 
 \subsubsection{Το ledger και η public state}
 Όσες μεταβλητές έχουν μπροστά τη λέξει-κλειδί \textbf{ledger} αποτελούν την public state του smart contract και είναι ορατές σε όλο το blockchain. Στο παράδειγμά μας, η μεταβλητή organizer είναι public και αποτελεί την διεύθυνση του δημιουργού του contract μέσω μιας δεκαεξαδικής συμβολοσειράς. Επίσης η μεταβλητή resrictedCounter είναι δημόσια και είναι ένας απλός μετρητής.
@@ -596,14 +604,8 @@ circuit prove_eligibility(): Boolean {
 
         Επίσης, με τη χρήση του μοτίβου cast\_vote - publish\_vote, δηλαδή ψήφος και δημοσίευση της, λύνουμε ένα θέμα που θα υπήρχε αν χρησιμοποιούσαμε μόνο το cast\_vote, το οποίο έγκειται στην εμφάνιση των αποτελεσμάτων της ψηφοφορίας. Αν υπήρχε μόνο cast\_vote τότε, με το που ψηφίζει ένας χρήστης, καταχωρείται η ψήφους του στο voting\_results, και στο interface της εφαρμογής , μπορεί οποιοσδήποτε να δει τα αποτελέσματα ενώ η ψηφοφορία είναι ακόμα ανοιχτή. Με αυτό τον τρόπο, θα μπορούσε να επηρεαστεί κάποιος ψηφοφόρος βλέποντας την πορεία της ψηφοφορίας και είτε να μην ψηφίσει καθόλου, είτε να αλλάξει γνώμη. Με το μοτίβο publish\_vote όμως, ο χρήστης όταν ψηφίζει κρατάει μυστική την ψήφο του και απλά δημοσιεύει μια δέσμευση σε αυτή, δηλαδή ένα hash. Η μεταβλητή voting\_results δεν αλλάζει, συνεπώς δεν αλλάζει το αποτέλεσμα της ψηφοφορίας. Όταν η ψηφοφορία κλείσει, τότε οι χρήστες δημοσιεύουν την ψήφο τους (χωρίς να είναι δυνατή η σύνδεση του ποιος ψήφισε με το τι ψήφισε) και τα αποτελέσματα γίνονται ορατά.
     
-    
 
-
-\begin{figure}[H]
-\centering
-\begin{lstlisting}[float]
-
-
+\begin{lstlisting}[]
 export circuit create_voting(): [] {
     const organizer_public_key = disclose(public_key(local_secret_key()));
 
@@ -683,8 +685,6 @@ export circuit cast_vote(voting_id: Bytes<32>): [] {
     voting_nulifiers.insert(disclose(voting_nullifier));
     const hashed_vote = disclose(hash_secret_vote(secret_vote(voting_id), voting_id, local_secret_key()));
     hashed_votes.insert(disclose(hashed_vote));
-
-
 }
 
 export circuit publish_vote(voting_id: Bytes<32>): [] {
@@ -709,8 +709,10 @@ export circuit publish_vote(voting_id: Bytes<32>): [] {
 }
 
 \end{lstlisting}
-\caption{Τα impure circuits του smart contract}
-\end{figure}
+\captionof{figure}{Τα impure circuits του smart contract}
+\label{fig:voting_circuits}
+% \caption{Τα impure circuits του smart contract}
+% \end{figure}
 
 
 \section{Ανάλυση του κώδικα της  dapp}
@@ -797,6 +799,8 @@ export declare class Contract<T, W extends Witnesses<T> = Witnesses<T>> {
                eligible_voter_public_keys_0: Uint8Array[]): __compactRuntime.ConstructorResult<T>;
 }
 \end{lstlisting}
+\captionof{figure}{Το αρχείο index.d.ts}
+\label{fig:voting_circuits}
 
 
 \subsection{Το api}
@@ -850,17 +854,14 @@ async edit_question(voting_id: Uint8Array, vote_question: string): Promise<void>
   }
 \end{lstlisting}
 
-\caption{Η κλήση του cast\_vote μέσω typescript}
+\caption{Η κλήση του edit\_question μέσω typescript}
 \end{figure}
 \newpage
 \newpage
 
 
-Επίσης, η κλάση \textit{VoteGuardianAPI} παρέχει δύο στατικές μεθόδους, την \textit{deploy} για δημοσίευση ενός contract και την \text{join} για την αναζήτηση ενός contract και συμμετοχή σε αυτό. Και οι δύο αυτές μέθοδοι επιστρέφουν ένα αντικείμενο της κλάσης \textit{VoteGuardianAPI}. Και οι δύο αυτές μέθοδοι πρέπει να αρχικοποιήσουν την private state καθώς όταν κάποιος είτε δημοσιεύει ένα contract είτε κάνει join σε αυτό, πρέπει να έχει μια αρχική private state. Στη δική μας περίπτωση, όπως έχουμε πει η private state αποτελείται από το secret key και από το έγκυρο μονοπάτι μέσα στο merkle tree. Το secret key δίνεται ως όρισμα στις deploy, join ώστε ο χρήστης που τις καλεί να δώσει το δικό του secret key (ως γνωστόν δε φεύγει ποτέ από το δικό του υπολογιστή), ενώ ως merkle path δίνεται μια dummy τιμή με μηδενικά, καθώς σε αυτό το σημείο δε μας νοιάζει να είναι έγλυρο το path. Η αλλαγή στην private state  και συγκεκριμένα στην find\_voter\_public\_key θα πραγματοποιείται κάθε φορά που ο χρήστης πραγματοποιεί transaction που απαιτεί αυθεντικοποίηση. Παραθέτουμε την υλοποίηση της \text{join}.
+Επίσης, η κλάση \textit{VoteGuardianAPI} παρέχει δύο στατικές μεθόδους, την \textit{deploy} για δημοσίευση ενός contract και την \text{join} για την αναζήτηση ενός contract και συμμετοχή σε αυτό. Και οι δύο αυτές μέθοδοι επιστρέφουν ένα αντικείμενο της κλάσης \textit{VoteGuardianAPI}. Και οι δύο αυτές μέθοδοι πρέπει να αρχικοποιήσουν την private state καθώς όταν κάποιος είτε δημοσιεύει ένα contract είτε κάνει join σε αυτό, πρέπει να έχει μια αρχική private state. Στη δική μας περίπτωση, όπως έχουμε πει η private state αποτελείται από το secret key και από το έγκυρο μονοπάτι μέσα στο merkle tree. Το secret key δίνεται ως όρισμα στις deploy, join ώστε ο χρήστης που τις καλεί να δώσει το δικό του secret key (ως γνωστόν δε φεύγει ποτέ από το δικό του υπολογιστή), ενώ ως merkle path δίνεται μια dummy τιμή με μηδενικά, καθώς σε αυτό το σημείο δε μας νοιάζει να είναι έγκυρο το path. Η αλλαγή στην private state  και συγκεκριμένα στην find\_voter\_public\_key θα πραγματοποιείται κάθε φορά που ο χρήστης πραγματοποιεί transaction που απαιτεί αυθεντικοποίηση. Παραθέτουμε την υλοποίηση της \text{join}.
 
-
-\begin{figure}[h]
-\centering
 \begin{lstlisting}[language=TypeScript] 
  static async join(
     providers: VoteGuardianProviders,
@@ -900,14 +901,13 @@ async edit_question(voting_id: Uint8Array, vote_question: string): Promise<void>
     return new VoteGuardianAPI(deployedVoteGuardianContract, providers, logger);
   }
 \end{lstlisting}
-
-\caption{Η στατική μέθοδος join της κλάσης VoteGuardianApi}
-\end{figure}
+\captionof{figure}{Η στατική μέθοδος join της κλάσης VoteGuardianApi}
+\label{fig:voting_circuits}
 
 
 
 \subsection{Το user interface}
-Το user interface της εφαρμογής γράφτηκε χρησιμοποιώντας \textit{ReactJS} και στην ουσία αξιοποιεί τους τύπους και τα αντικείμενα που προσφέρονται από το api και από τον κώδικα Typescript που παράγεται από την compact. Εκτενής παρουσίαση του interface θα γίνει σε επόμενο κεφάλαιο, παρουσιάζοντας διάφορες περιπτώσεις χρήσης. Ωστόσο, μια σημαντική λειτουργία που πραγματοποιείται από τον κώδικα του ui είναι η αρχικοποίηση σημαντικών παραμέτρων, οι οποίες ονομάζονται \textbf{providers} για την σωστή λειτουργία της εφαρμογής στο Midnight, όπως είναι η σύνδεση του Lace Wallet με την εφαρμογή, η διαχείριση της private state κάθε χρήστη και η σύνδεση με τον proofServer. Αυτές οι λειτουργίες πραγματοποιούνται μέσω της συνάρτησης \textit{initializeProviders} που φαίνεται στο σχήμα 3.9. Συγκεκριμένα αυτή η συνάρηση:
+Το user interface της εφαρμογής γράφτηκε χρησιμοποιώντας \textit{ReactJS} και στην ουσία αξιοποιεί τους τύπους και τα αντικείμενα που προσφέρονται από το api και από τον κώδικα Typescript που παράγεται από την compact. Εκτενής παρουσίαση του interface θα γίνει σε επόμενο κεφάλαιο, παρουσιάζοντας διάφορες περιπτώσεις χρήσης. Ωστόσο, μια σημαντική λειτουργία που πραγματοποιείται από τον κώδικα του ui είναι η αρχικοποίηση σημαντικών παραμέτρων, οι οποίες ονομάζονται \textbf{providers} για την σωστή λειτουργία της εφαρμογής στο Midnight, όπως είναι η σύνδεση του Lace Wallet με την εφαρμογή, η διαχείριση της private state κάθε χρήστη και η σύνδεση με τον proofServer. Αυτές οι λειτουργίες πραγματοποιούνται μέσω της συνάρτησης \textit{initializeProviders} που φαίνεται στο σχήμα 3.11. Συγκεκριμένα αυτή η συνάρηση:
 \begin{enumerate}
     \item Επιστρέφει τιμή τύπου MidnightProviders.
     \item Ως privateStateProvider, δηλαδή ως μέσο αποθήκευσης της private state κάθε χρήστη ορίζει τη level-db του browser της οποίας η υλοποίηση έρχεται από τη βιβλιοθήκη του Midnight.
@@ -919,10 +919,6 @@ async edit_question(voting_id: Uint8Array, vote_question: string): Promise<void>
     
 \end{enumerate}
 
-
-
-\begin{figure}[h]
-\centering
 \begin{lstlisting}[language=TypeScript] 
 const initializeProviders = async (logger: Logger): Promise<VoteGuardianProviders> => {
   const { wallet, uris } = await connectToWallet(logger);
@@ -957,9 +953,8 @@ const initializeProviders = async (logger: Logger): Promise<VoteGuardianProvider
   };
 };
 \end{lstlisting}
+\captionof{figure}{Η αρχικοποίηση των Midnight Providers}
 
-\caption{Η αρχικοποίηση των Midnight Providers}
-\end{figure}
 
 \section{Ανάλυση του server του πανεπιστημίου}
 \subsection{Αυθεντικοποίηση των φοιτητών}
@@ -1117,6 +1112,17 @@ static async deploy(
 \chapter{Περιπτώσεις Χρήσης}
 Σε αυτό το κεφάλαιο θα παρουσιάσουμε τις περιπτώσεις χρήσης της εφαρμογής, δείχνοντας πώς οι χρήστες μπορούν να την αξιοποιήσουν για να πραγματοποιήσουν τα διαθέσιμα transactions, δημιουργώντας νέες ψηφοφορίες, πραγματοποιώντας αλλαγές σε αυτές και συμμετέχοντας σε αυτές με την ψήφο τους. Με αυτόν τον τρόπο θα επιβεβαιώσουμε στην πράξη ότι οι κανόνες που έχουν οριστεί από το smart contract εφαρμόζονται σωστά και λειτουργούν όπως σχεδιάστηκαν.
 
+\section{Αυθεντικοποίηση φοιτητών}
+Όπως αναλύσαμε προηγουμένως οι εγγεγραμένοι στο πανεπιστήμιο φοιτητές δημιουργούν μόνοι τους το μυστικό κλειδί και αποστέλλουν μέσω http request το hash του κλειδιού (δηλαδή το public key), το username και το password στον server του πανεπιστημίου. Αν ο φοιτητής είναι έγκυρος χρήστης, καταχωρείται στη βάση το public key και επιστρέφεται στον χρήστη το secret key που ο ίδιος δημιούργησε. Τονίζουμε πάλι ότι το secret key ποτέ δε φεύγει από τον υπολογιστή του χρήστη.
+
+Πατώντας στην επιλογή AUTHENTICATE της αρχικής οθόνης, ο χρήστης παραπέμπεται σε νέα σελίδα ώστε να καταχωρήσει τα στοιχεία του.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.6\linewidth]{Screenshot 2026-01-02 173036.png}
+  \caption{Η σελίδα αυθεντικοποίησης}
+  \label{fig:diag}
+\end{figure}
+
 
 \section{Δημιουργία Ψηφοφορίας}
 Για τις επόμενες ενότητες θα δουλέψουμε το εξής σενάριο: Έχουμε δύο έγκυρους χρήστες, ας πούμε τους user1, user2 με μυστικά κλειδία ec1d0ad62fbd918ea23a151264a4de5e59ecdce87d36f84ed6402ba4077dc30b και
@@ -1127,7 +1133,7 @@ static async deploy(
 Όπως έχουμε ήδη εξηγήσει, κάθε φοιτητής μπορεί να δημιουργήσει ψηφοφορίες. Στην αρχική σελίδα της εφαρμογής ο χρήστης πρέπει να συμπληρώσει τη διεύθυνση του smart contract. Επίσης, ο φοιτητης συμπληρώνει το secret key του, ώστε να αρχικοποιηθεί η private state του. Σημειώνεται εδώ πως το secret key ποτέ δε "φεύγει" από τον υπολογιστή του χρήστη.΄Έστω λοιπόν πως ο user1 συνδέεται στην εφαρμογή, δίνοντας αρχικά τη διεύθυνση του smart contract καθώς και το secret key του, όπως φαίνεται στα σχήματα \ref{fig:enter_contract_new} και \ref{fig:enter_secret_key2}.
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.7\linewidth]{landpage.png}
+  \includegraphics[width=0.7\linewidth]{landing_page.png}
   \caption{Η αρχική οθόνη της dapp}
   \label{fig:diag}
 \end{figure}
@@ -1359,6 +1365,7 @@ static async deploy(
 Όπως αναφέραμε, λόγω της δυσκολίας υλοποίησης αλλά και των ιδιαιτεροτήτων της τεχνολογίας του Midnight, αναγκαστήκαμε να προβούμε σε μερικές παραδοχές για τη λειτοργία - χρήση της εφαρμογής.
 \begin{itemize}
     \item Όλοι οι φοιτητές μπορούν να συμμετέχουν σε όλες τις διαθέσιμες ψηφοφορίες.
+    \item Το πανεπιστήμιο θεωρείται έμπιστη αρχή και στη βάση δεδομένων του καταχωρείται για κάθε φοιτητή το public key του, δηλαδή το Hash του secret key του. Η αποθήκευση στοιχείων στη βάση δεδομένων αυξάνει το βαθμό κεντρικοποίησης του συστήματος.
     \item Υπάρχει ένα smart contract πάνω στο οποίο έχει χτιστεί η εφαρμογή και όπως έχουμε περιγράψει, οι έγκυροι χρήστες καθορίζονται πριν την δημιουργία του smart contract. Συνεπώς, με την ένταξη νέων φοιτητών στο πανεπιστήμιο, θα πρέπει να δημιουργείται πάλι το smart contract από το πανεπιστήμιο ώστε να συμπεριληφθούν και οι νεοεισαχθέντες φοιτητές.
     \item Αφού ψηφίσει ένας φοιτητές και αφού ο organizer κλείσει μια ψηφοφορία, θεωρούμε ότι ο φοιτητής θα πρέπει να δημοσιεύσει την ψήφο του αμέσως, διαφορετικά αυτή δε θα μετρήσει.
     \item  Αν κάποιος φοιτητής χάσει το secret key του, δεν υπάρχει μηχανισμός ανάκτησης ή χορήγησης κάποιου νέου κλειδιού.

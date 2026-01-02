@@ -682,7 +682,7 @@ app.post('/login', async (req, res) => {
             // 5. Store the hex if it doesn't exist
             user.publicKey = publicKey;
             await user.save();
-            res.status(201).json({ message: 'Credential stored successfully.' });
+            res.status(201).json({ message: 'Public key stored successfully.' });
         }
     }
     catch (error) {
