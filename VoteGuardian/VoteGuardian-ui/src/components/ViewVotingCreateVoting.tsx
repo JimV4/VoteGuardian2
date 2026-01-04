@@ -214,12 +214,23 @@ export const ViewVotingsCreateVoting: React.FC<Readonly<ViewVotingsCreateVotingP
       </Stack>
       <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
         <DialogTitle>Add public vote expiration date</DialogTitle>
-        <DialogContent sx={{ mt: 1 }}>
+        {/* <DialogContent sx={{ mt: 2, pt: 1 }}>
           <TextField
             fullWidth
             type="datetime-local"
             label="Expiration Date & Time"
             InputLabelProps={{ shrink: true }}
+            value={expiryDate}
+            onChange={(e) => setExpiryDate(e.target.value)}
+          />
+        </DialogContent> */}
+        <DialogContent>
+          <Typography variant="caption" color="textSecondary" sx={{ mb: 1, display: 'block' }}>
+            Add expiration date for vote publishing
+          </Typography>
+          <TextField
+            fullWidth
+            type="datetime-local"
             value={expiryDate}
             onChange={(e) => setExpiryDate(e.target.value)}
           />

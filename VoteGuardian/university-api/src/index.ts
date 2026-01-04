@@ -925,7 +925,7 @@ app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
 
   console.log('starting run...');
-  const config = new TestnetRemoteConfig();
+  const config = new StandaloneConfig();
   config.setNetworkId();
   logger = await createLogger(config.logDir);
   console.log('1 before run');
