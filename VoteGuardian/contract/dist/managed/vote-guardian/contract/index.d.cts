@@ -16,7 +16,8 @@ export type Witnesses<T> = {
 }
 
 export type ImpureCircuits<T> = {
-  create_voting(context: __compactRuntime.CircuitContext<T>): __compactRuntime.CircuitResults<T, []>;
+  create_voting(context: __compactRuntime.CircuitContext<T>,
+                expiration_time_0: bigint): __compactRuntime.CircuitResults<T, []>;
   edit_question(context: __compactRuntime.CircuitContext<T>,
                 voting_id_0: Uint8Array,
                 voting_question_0: string): __compactRuntime.CircuitResults<T, []>;
@@ -36,7 +37,8 @@ export type PureCircuits = {
 }
 
 export type Circuits<T> = {
-  create_voting(context: __compactRuntime.CircuitContext<T>): __compactRuntime.CircuitResults<T, []>;
+  create_voting(context: __compactRuntime.CircuitContext<T>,
+                expiration_time_0: bigint): __compactRuntime.CircuitResults<T, []>;
   edit_question(context: __compactRuntime.CircuitContext<T>,
                 voting_id_0: Uint8Array,
                 voting_question_0: string): __compactRuntime.CircuitResults<T, []>;
@@ -130,6 +132,13 @@ export type Ledger = {
     size(): bigint;
     member(elem_0: Uint8Array): boolean;
     [Symbol.iterator](): Iterator<Uint8Array>
+  };
+  publish_vote_expiration_time: {
+    isEmpty(): boolean;
+    size(): bigint;
+    member(key_0: Uint8Array): boolean;
+    lookup(key_0: Uint8Array): bigint;
+    [Symbol.iterator](): Iterator<[Uint8Array, bigint]>
   };
 }
 

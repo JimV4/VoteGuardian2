@@ -36,6 +36,16 @@ import pino from 'pino';
 import { createWriteStream } from 'node:fs';
 import * as fs from 'node:fs';
 import dotenv from 'dotenv';
+const hexToBytes = (hex) => {
+    if (hex.length % 2 !== 0) {
+        throw new Error('Invalid hex string');
+    }
+    const bytes = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < hex.length; i += 2) {
+        bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+    }
+    return bytes;
+};
 dotenv.config();
 export function stringToUint8Array(input) {
     const encoder = new TextEncoder();
@@ -183,7 +193,7 @@ const mainLoop = async (providers, rli, logger) => {
     console.log('\nSHA-256 hashes (hex):');
     console.log(eligibleVoters);
     const eligibleVotersUint8 = eligibleVoters.map((voterStr) => {
-        return stringToUint8Array(voterStr);
+        return hexToBytes(voterStr);
     });
     const contractAddressFile = path.resolve(process.cwd(), 'contract_address.txt');
     const contractAddress = fs.readFileSync(contractAddressFile, 'utf8').trim();
@@ -561,16 +571,16 @@ export const saveState = async (wallet, filename) => {
 const app = express();
 app.use(express.json());
 app.use(cors());
-const hexToBytes = (hex) => {
-    if (hex.length % 2 !== 0) {
-        throw new Error('Invalid hex string');
-    }
-    const bytes = new Uint8Array(hex.length / 2);
-    for (let i = 0; i < hex.length; i += 2) {
-        bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
-    }
-    return bytes;
-};
+// const hexToBytes = (hex: string) => {
+//   if (hex.length % 2 !== 0) {
+//     throw new Error('Invalid hex string');
+//   }
+//   const bytes = new Uint8Array(hex.length / 2);
+//   for (let i = 0; i < hex.length; i += 2) {
+//     bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+//   }
+//   return bytes;
+// };
 function pad(s, n) {
     const encoder = new TextEncoder();
     const utf8Bytes = encoder.encode(s);

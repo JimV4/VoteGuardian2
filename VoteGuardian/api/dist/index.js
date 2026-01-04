@@ -79,6 +79,7 @@ export class VoteGuardianAPI {
                 votingList: [],
                 publishVotingNulifiers: ledgerState.publish_voting_nulifiers,
                 hashedVotes: ledgerState.hashed_votes,
+                publishVoteExpirationTime: ledgerState.publish_vote_expiration_time,
                 // votingList: (() => {
                 //   const list: Voting[] = [];
                 //   for (const votingId of ledgerState.votings) {
@@ -131,10 +132,10 @@ export class VoteGuardianAPI {
      * and private state data.
      */
     state$;
-    async create_voting() {
+    async create_voting(expiration_time) {
         // try {
         console.log('before create voting inside api');
-        const txData = await this.deployedContract.callTx.create_voting();
+        const txData = await this.deployedContract.callTx.create_voting(expiration_time);
         console.log('after create voting inside api');
         this.logger?.trace({
             transactionAdded: {

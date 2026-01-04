@@ -17,7 +17,7 @@ export interface DeployedVoteGuardianAPI {
     close_voting: (voting_id: Uint8Array) => Promise<void>;
     open_voting: (voting_id: Uint8Array) => Promise<void>;
     edit_question: (voting_id: Uint8Array, vote_question: string) => Promise<void>;
-    create_voting: () => Promise<void>;
+    create_voting: (expiration_time: bigint) => Promise<void>;
     add_option: (voting_id: Uint8Array, vote_option: Uint8Array) => Promise<void>;
     publish_vote: (voting_id: Uint8Array) => Promise<void>;
 }
@@ -51,7 +51,7 @@ export declare class VoteGuardianAPI implements DeployedVoteGuardianAPI {
      * and private state data.
      */
     readonly state$: Observable<VoteGuardianDerivedState>;
-    create_voting(): Promise<void>;
+    create_voting(expiration_time: bigint): Promise<void>;
     add_option(voting_id: Uint8Array, vote_option: Uint8Array): Promise<void>;
     /**
      * Attempts to caste a vote .

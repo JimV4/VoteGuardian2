@@ -6,7 +6,7 @@
 
 // αυτό το αρχείο περιέχει την κύρια λογική του VoteGuardian dapp
 
-import { type ContractAddress, convert_bigint_to_Uint8Array, MerkleTreePath } from '@midnight-ntwrk/compact-runtime';
+import { type ContractAddress, MerkleTreePath } from '@midnight-ntwrk/compact-runtime';
 import { type Logger } from 'pino';
 import type {
   VoteGuardianDerivedState,
@@ -48,7 +48,7 @@ export interface DeployedVoteGuardianAPI {
   close_voting: (voting_id: Uint8Array) => Promise<void>;
   open_voting: (voting_id: Uint8Array) => Promise<void>;
   edit_question: (voting_id: Uint8Array, vote_question: string) => Promise<void>;
-  create_voting: () => Promise<void>;
+  create_voting: (expiration_time: bigint) => Promise<void>;
   add_option: (voting_id: Uint8Array, vote_option: Uint8Array) => Promise<void>;
   publish_vote: (voting_id: Uint8Array) => Promise<void>;
 }
@@ -127,6 +127,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
           votingList: [],
           publishVotingNulifiers: ledgerState.publish_voting_nulifiers,
           hashedVotes: ledgerState.hashed_votes,
+          publishVoteExpirationTime: ledgerState.publish_vote_expiration_time,
 
           // votingList: (() => {
           //   const list: Voting[] = [];
@@ -189,10 +190,10 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
    */
   readonly state$: Observable<VoteGuardianDerivedState>;
 
-  async create_voting(): Promise<void> {
+  async create_voting(expiration_time: bigint): Promise<void> {
     // try {
     console.log('before create voting inside api');
-    const txData = await this.deployedContract.callTx.create_voting();
+    const txData = await this.deployedContract.callTx.create_voting(expiration_time);
     console.log('after create voting inside api');
 
     this.logger?.trace({

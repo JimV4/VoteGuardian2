@@ -66,6 +66,17 @@ import { createWriteStream } from 'node:fs';
 import * as fs from 'node:fs';
 import dotenv from 'dotenv';
 
+const hexToBytes = (hex: string) => {
+  if (hex.length % 2 !== 0) {
+    throw new Error('Invalid hex string');
+  }
+
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+  }
+  return bytes;
+};
 dotenv.config();
 export function stringToUint8Array(input: string): Uint8Array {
   const encoder = new TextEncoder();
@@ -253,7 +264,7 @@ const mainLoop = async (providers: VoteGuardianProviders, rli: Interface, logger
   console.log('\nSHA-256 hashes (hex):');
   console.log(eligibleVoters);
   const eligibleVotersUint8: Uint8Array[] = eligibleVoters.map((voterStr) => {
-    return stringToUint8Array(voterStr!);
+    return hexToBytes(voterStr!);
   });
 
   const contractAddressFile = path.resolve(process.cwd(), 'contract_address.txt');
@@ -710,17 +721,17 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const hexToBytes = (hex: string) => {
-  if (hex.length % 2 !== 0) {
-    throw new Error('Invalid hex string');
-  }
+// const hexToBytes = (hex: string) => {
+//   if (hex.length % 2 !== 0) {
+//     throw new Error('Invalid hex string');
+//   }
 
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < hex.length; i += 2) {
-    bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
-  }
-  return bytes;
-};
+//   const bytes = new Uint8Array(hex.length / 2);
+//   for (let i = 0; i < hex.length; i += 2) {
+//     bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+//   }
+//   return bytes;
+// };
 
 function pad(s: string, n: number): Uint8Array {
   const encoder = new TextEncoder();

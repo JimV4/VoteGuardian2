@@ -10,7 +10,7 @@ import { Observable } from 'rxjs';
 import { VoteGuardianDeployment } from '../contexts';
 import { DeployedVoteGuardianAPI, VoteGuardianDerivedState } from '@midnight-ntwrk/vote-guardian-api';
 import { useDeployedVoteGuardianContext } from '../hooks';
-
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material';
 const subtle = window.crypto.subtle;
 
 export interface ViewVotingsCreateVotingProps {
@@ -24,6 +24,12 @@ export const ViewVotingsCreateVoting: React.FC<Readonly<ViewVotingsCreateVotingP
   const [deployedVoteGuardianAPI, setDeployedVoteGuardianAPI] = useState<DeployedVoteGuardianAPI>();
   const [voteGuardianState, setVoteGuardianState] = useState<VoteGuardianDerivedState>();
   const [secretKey, setSecretKey] = useState<string>();
+  // 1. Add these new states
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [expiryDate, setExpiryDate] = useState('');
+
+  // 2. Modify the button click to open the dialog instead of calling the API directly
+  const handleOpenDialog = () => setIsDialogOpen(true);
 
   const voteGuardianApiProvider = useDeployedVoteGuardianContext();
   const [isWorking, setIsWorking] = useState(false);
@@ -50,30 +56,43 @@ export const ViewVotingsCreateVoting: React.FC<Readonly<ViewVotingsCreateVotingP
     }
   };
 
-  const onCreateVoting = useCallback(async () => {
-    setIsWorking(true);
-    try {
-      if (deployedVoteGuardianAPI) {
-        console.log('before vreate');
-        setIsWorking(true);
-        await deployedVoteGuardianAPI.create_voting();
-        console.log('after vreate');
-        navigate('/votings');
-      }
-    } catch (error: unknown) {
-      // setErrorMessage(error instanceof Error ? error.message : String(error));
-      let message = error instanceof Error ? error.message : String(error);
+  const onCreateVoting = useCallback(
+    async (timestamp: number) => {
+      setIsWorking(true);
+      try {
+        if (deployedVoteGuardianAPI) {
+          console.log('before vreate');
+          setIsWorking(true);
+          await deployedVoteGuardianAPI.create_voting(BigInt(timestamp));
+          console.log('after vreate');
+          navigate('/votings');
+        }
+      } catch (error: unknown) {
+        // setErrorMessage(error instanceof Error ? error.message : String(error));
+        let message = error instanceof Error ? error.message : String(error);
 
-      if (message.includes('type error:')) {
-        message = 'Not authorized';
-      }
+        if (message.includes('type error:')) {
+          message = 'Not authorized';
+        }
 
-      setErrorMessage(message);
-    } finally {
-      setIsWorking(false);
+        setErrorMessage(message);
+      } finally {
+        setIsWorking(false);
+      }
+    },
+    [deployedVoteGuardianAPI, setErrorMessage, setIsWorking],
+  );
+
+  // 4. Helper to handle the "Confirm" button in the popup
+  const handleConfirmCreate = () => {
+    if (!expiryDate) {
+      alert('Please select a date and time');
+      return;
     }
-  }, [deployedVoteGuardianAPI, setErrorMessage, setIsWorking]);
-
+    // Convert ISO string to Unix Timestamp (Seconds)
+    const unixTimestamp = Math.floor(new Date(expiryDate).getTime() / 1000);
+    onCreateVoting(unixTimestamp);
+  };
   // Subscribes to the `voteGuardianDeployment$` observable so that we can receive updates on the deployment.
   useEffect(() => {
     if (!voteGuardianDeployment$) {
@@ -146,7 +165,7 @@ export const ViewVotingsCreateVoting: React.FC<Readonly<ViewVotingsCreateVotingP
           variant="contained"
           size="large"
           color="primary"
-          onClick={onCreateVoting}
+          onClick={handleOpenDialog}
           data-testid="vote-guardian-join-btn"
         >
           Create Voting
@@ -193,6 +212,25 @@ export const ViewVotingsCreateVoting: React.FC<Readonly<ViewVotingsCreateVotingP
           </Typography>
         </Backdrop>
       </Stack>
+      <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
+        <DialogTitle>Add public vote expiration date</DialogTitle>
+        <DialogContent sx={{ mt: 1 }}>
+          <TextField
+            fullWidth
+            type="datetime-local"
+            label="Expiration Date & Time"
+            InputLabelProps={{ shrink: true }}
+            value={expiryDate}
+            onChange={(e) => setExpiryDate(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleConfirmCreate} variant="contained" disabled={!expiryDate}>
+            Create
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };
