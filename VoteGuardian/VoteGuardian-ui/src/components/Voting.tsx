@@ -400,6 +400,15 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
                   : 'No State'}
               </Typography>
 
+              <Typography color="primary">
+                Publish vote until{' '}
+                {voteGuardianState && voteGuardianState.publishVoteExpirationTime.member(votingIdBytes)
+                  ? new Date(
+                      Number(voteGuardianState.publishVoteExpirationTime.lookup(votingIdBytes)) * 1000,
+                    ).toLocaleString()
+                  : 'No publish vote expiration time'}
+              </Typography>
+
               {/* <Stack spacing={2} alignItems="center"> */}
               {/* // VOTE STATE */}
               {voteGuardianState?.votingStates && (

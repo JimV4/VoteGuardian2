@@ -192,6 +192,7 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
 
   async create_voting(expiration_time: bigint): Promise<void> {
     // try {
+    console.log('expiration time ' + expiration_time);
     console.log('before create voting inside api');
     const txData = await this.deployedContract.callTx.create_voting(expiration_time);
     console.log('after create voting inside api');
