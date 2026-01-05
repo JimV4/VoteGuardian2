@@ -274,7 +274,7 @@ H\big(H(H(A)\mid H(B)) \mid (H(C)\mid H(D))\big)
     \item Όταν ο χρήστης εκκινεί ένα transaction, στην πραγματικότητα υπολογίζει την μεταβολή από την κατάσταση ($\sigma$, $\rho_p$) σε μια νέα κατάσταση ($\sigma'$, $\rho'_p$). Κατασκευάζει μια απόδειξη μηδενικής γνώσης η οποία δηλώνει ότι η μεταβολή από $\sigma$ σε $\sigma'$ είναι έγκυρη, δηλαδή πως υπάρχει μια ιδιωτική κατάσταση $\rho'_p$ και μία είσοδος για τα οποία η μεταβολή είναι έγκυρη. Τοπικά, ενημερώνει την ιδιωτική κατάσταση ως $\rho'_p$.
 \end{itemize}    
 
-Με πιο απλά λόγια, η απόδειξη που κατασκευάζει ο χρήστης δηλώνει πως "Κατέχω μια έγκυρη ιδιωτική κατάσταση και κάποια είσοδο που μου επιτρέπουν να κάνω αλλαγές στην δημόσια κατάσταση του contract, υπακόυοντας στους κανόνες που αυτό ορίζει, δίχως να αποκαλύψω αυτή την ιδιωτική κατάσταση και την είσοδο". Η απόδειξη μετουσιώνεται σε transaction και μόλις αυτή καταχωρηθεί, το δίκτυιο (δηλαδή οι κόμβοι/validators) εξετάζουν την εγκυρότητα της απόδειξης. Αν είναι ορθή η απόδειξη, τότε σημαίνει πως η νέα δημόσια κατάσταση που ορίζει ο χρήστης είναι έγκυρη σε συνδυασμό με την ιδιωτική του κατάσταση και το δίκτυο προβαίνει σε ενημέρωση της δημόσιας κατάστασης. Μετά την αλλαγή της δημόσιας κατάστασης, ο χρήστης ενημερώνει και την ιδιωτική του κατάσταση\cite{midnightdocs}.
+Με πιο απλά λόγια, η απόδειξη που κατασκευάζει ο χρήστης δηλώνει πως "Κατέχω μια έγκυρη ιδιωτική κατάσταση και κάποια είσοδο που μου επιτρέπουν να κάνω αλλαγές στην δημόσια κατάσταση του contract, υπακόυοντας στους κανόνες που αυτό ορίζει, δίχως να αποκαλύψω αυτή την ιδιωτική κατάσταση και την είσοδο". Η απόδειξη μετουσιώνεται σε transaction και μόλις αυτή καταχωρηθεί, το δίκτυιο (δηλαδή οι κόμβοι/validators) εξετάζουν την εγκυρότητα της απόδειξης. Αν είναι ορθή η απόδειξη, τότε σημαίνει πως η νέα δημόσια κατάσταση που ορίζει ο χρήστης είναι έγκυρη σε συνδυασμό με την ιδιωτική του κατάσταση και το δίκτυο προβαίνει σε ενημέρωση της δημόσιας κατάστασης. Μετά την αλλαγή της δημόσιας κατάστασης, ο χρήστης ενημερώνει και την ιδιωτική του κατάσταση\cite{midnightdocs} \cite{kachina}.
 
 
 
@@ -387,6 +387,8 @@ circuit publicKey(sk: Bytes<32>): Bytes<32> {
     \item \textbf{publish\_voting\_nulifiers}: Είναι ένα σύνολο από μοναδικές δεκαεξαδικές τιμές που δρουν σαν tokens προς κάθε ψηφοφόρο ώστε να μην μπορεί ο κάθε ψηφοφόρος να δημοσιεύεσει 2 φορές την ψήφο του. Θα μιλήσουμε εκτενέστερα στη συνέχεια για τη δημοσίευση ψήφου.
     \item \textbf{hashed\_votes}: Είναι ένα σύνολο που περιέχει όλες τις ψήφους, αλλά κατακερματισμένες από hash function.
     \item \textbf{voting\_organizers}: Είναι ένα Map όπου κλειδί είναι το id της ψηφοφορίας και τιμή το δημόσιο κλειδί (δηλαδή το hash του ιδιωτικού κλειδιού) του διοργανωτή της συγκεκριμένης ψηφοφορίας.
+    \item \textbf{cast\_vote\_expiration\_time}: Είναι ένα Map όπου κλειδί είναι το id της ψηφοφορίας και τιμή η τελική ημερομηνία μέχρι την οποία ο χρήστης μπορεί να υποβάλλει την ψήφο του. Η τελική ημερομηνία είναι ακέραιος και μετριέται σε Unix epoch.
+    \item \textbf{publish\_vote\_expiration\_time}: Είναι ένα Map όπου κλειδί είναι το id της ψηφοφορίας και τιμή η τελική ημερομηνία μέχρι την οποία ο χρήστης μπορεί να δημοσιεύσει την ψήφο του. Η τελική ημερομηνία είναι ακέραιος και μετριέται σε Unix epoch.
     
 \end{itemize}
 
@@ -396,13 +398,15 @@ circuit publicKey(sk: Bytes<32>): Bytes<32> {
 export ledger votings: Set<Bytes<32>>;               
 export ledger voting_options: Map<Bytes<32>, Set<Bytes<32>>>; 
 export ledger voting_questions: Map<Bytes<32>, Opaque<"string">>;
-export ledger voting_results: Map<Bytes<32>, Map<Bytes<32>, Counter>>;        
-export ledger eligible_voters: HistoricMerkleTree<5, Bytes<32>>;      
+export ledger voting_results: Map<Bytes<32>, Map<Bytes<32>, Counter>>;       
+export ledger eligible_voters: HistoricMerkleTree<5, Bytes<32>>;     
 export ledger voting_states: Map<Bytes<32>, VOTE_STATE>;                
-export ledger voting_nulifiers: Set<Bytes<32>>;         
-export ledger publish_voting_nulifiers: Set<Bytes<32>>;         
+export ledger voting_nulifiers: Set<Bytes<32>>;        
+export ledger publish_voting_nulifiers: Set<Bytes<32>>;        
 export ledger voting_organizers: Map<Bytes<32>, Bytes<32>>;       
-export ledger hashed_votes: Set<Bytes<32>>;      
+export ledger hashed_votes: Set<Bytes<32>>;
+export ledger publish_vote_expiration_time: Map<Bytes<32>, Uint<64>>;
+export ledger cast_vote_expiration_time: Map<Bytes<32>, Uint<64>>;
 \end{lstlisting}
 
 \caption{Οι ledger μεταβλητές του smart contract}
@@ -427,6 +431,8 @@ constructor(eligible_voter_public_keys: Vector<5, Bytes<32>>) {
     voting_questions.resetToDefault();
     hashed_votes.resetToDefault();
     publish_voting_nulifiers.resetToDefault();
+    publish_vote_expiration_time.resetToDefault();
+    cast_vote_expiration_time.resetToDefault();
     count.increment(1);
 
     for (const v of disclose(eligible_voter_public_keys)) {
@@ -589,10 +595,10 @@ circuit prove_eligibility(): Boolean {
 \end{enumerate}
 
 Για όλους τους παραπάνω κανόνες, σε περίπτωση που δεν ισχύει κάποιος από αυτούς κατά την πραγματοποίηση ενός transaction μέσω ων circuits, τότε το transaction δεν ολοκληρώνεται και εμφανίζεται αντίστοιχο μήνυμα λάθους στον μη έγκυρο χρήστη που το εκτέλεσε.
-Συγκεκριμένα, το smart contract περιλαμβάνει τα ακόλουθα impuure circuits:
+Συγκεκριμένα, το smart contract περιλαμβάνει τα ακόλουθα impure circuits:
 
 \begin{itemize}
-    \item \textbf{create\_voting}: Με αυτό το transaction δημιουργείται μια νέα ψηφοφορία. Ισχύουν τα (1) και (2) από παραπάνω. Η ψηφοφορία αποκτά ένα μοναδικό id και γίνεται είσοδος αυτού του id στη μεταβλητή votings, και σαν διοργανωτής ορίζεται το τρέχων public key. Αυτό πραγματοποιείται με είσοδο στη μεταβλητή voting\_organizers. Η ψηφοφορία αρχικοποιείται ως OPEN και οι υπόλοιπες ledger μεταβλητές αρχικοποιούνται με default τιμές έχοντας ως κλειδί σε κάθε Map το id.
+    \item \textbf{create\_voting}: Με αυτό το transaction δημιουργείται μια νέα ψηφοφορία. Ισχύουν τα (1) και (2) από παραπάνω. Η ψηφοφορία αποκτά ένα μοναδικό id και γίνεται είσοδος αυτού του id στη μεταβλητή votings, και σαν διοργανωτής ορίζεται το τρέχων public key. Αυτό πραγματοποιείται με είσοδο στη μεταβλητή voting\_organizers. Η ψηφοφορία αρχικοποιείται ως OPEN και οι υπόλοιπες ledger μεταβλητές αρχικοποιούνται με default τιμές έχοντας ως κλειδί σε κάθε Map το id. Το circuit αυτό παίρνει ως παραμέτρους δύο ακέραιες τιμές, οι οποίες αντιστοιχούν στις ημερομηνίες λήξης για υποβολή ψήφου και για δημοσίευση ψήφου. Μετά το πέρας αυτών των ημερομηνιών οι χρήστες δε θα μπορούν να υποβάλλουν ή να δημοσιεύσουν την ψήφο τους. Το circuit περιέχει έλεγχο ότι η ημερομηνία λήξης δημοσίευσης πρέπει να είναι μεταγενέστερη της ημεροηνίας λήξης υποβολής, καθώς πρώτα οι χρήστες ψηφίζουν και μετά δημοσιεύουν την ψήφο.(θα μιλήσουμε εκτενέστερα στη συνέχεια για τη δημοσίευση ψήφου).
     \item \textbf{edit\_question}: Με αυτό το transaction καθορίζεται η ερώτηση της συγκεκριμένης ωηφοφορίας. Ισχύουν τα (1), (2) και (3) από παραπάνω. Το circuit δέχεται ορίσματα το id της ψηφοφορίας και την ερώτηση και εισάγει στη ledger μεταβλητή voting\_questions το ζεύγος αυτό.
     \item \textbf{add\_option}: Με αυτό το transaction εισάγεται μια επιλογή για την ψηφοφορία. Ισχύουν τα (1), (2) και (3) από παραπάνω. Το circuit δέχεται ως όρισμα το id της ψηφοφορίας και την επιλογή. Γίνεται εισαγωγή στη ledger μεταβλητή voting\_options το id της ψηφοφορίας σαν κλειδί και προστίθεται στο σύνολο η επιλογή Επίσης, αρχικοποιείται με τον default μετρητή και η ledger μεταβλητή voting\_results για τη συγκεκριμένη επιλογή.
     \item \textbf{open\_voting}: Με αυτό το transaction ανοίγει η συγκεκριμένη ψηφοφορία, δηλαδή τίθεται η κατάστασή της ως OPEN. Ισχύουν τα (1), (2) και (3) από παραπάνω. Το transaction δέχεται ως όρισμα το id της ψηφοφορίας και ελέγχει μέσω \textit{assert} ότι η ψηφοφορία είναι κλειστή, διαφορετικά εμφανίζει μήνυμα λάθους. Στη συνέχεια, γίνεται εισαγωγή στη ledger μεταβλητή
@@ -600,7 +606,8 @@ circuit prove_eligibility(): Boolean {
     \item \textbf{close\_voting}: Συμμετρικό του open\_voting.
     \item \textbf{cast\_vote}: Με αυτό το transaction ένας έγκυρος χρήστης μπορεί να ψηφίσει. 
     \begin{enumerate}
-        \item Αρχικά ελέγχεται ότι η ψηφοφορία είναι ανοικτή μέσω σχετικής δήλωσης \textit{assert}. Αν δεν είναι ανοικτή, εμφανίζεται σχετικό μήνυμα λάθους και το transaction εγκαταλείπεται.
+        \item Αρχικά ελέγχεται ότι η τρέχουσα ημερομηνία είναι προγενέστερη της ημερομηνίας λήξης υποβολής ψήφου για τη συγκεκριμένη ψηφοφορία, χρησιμοποιώντας τη συνάρτηση βιβλιοθήκης \textit{blockTimeLte} μέσω δήλωσης assert. Αν δεν είναι τότε εμφανίζεται κατάλληλο μήνυμα λάθους.
+        \item Ελέγχεται ότι η ψηφοφορία είναι ανοικτή μέσω σχετικής δήλωσης \textit{assert}. Αν δεν είναι ανοικτή, εμφανίζεται σχετικό μήνυμα λάθους και το transaction εγκαταλείπεται.
         \item Πραγματοποιούνται οι έλεγχοι (1), (2) από παραπάνω και αν κάποιος αποτύχει δηλαδή αν ο χρήστης είναι το πανεπιστήμιο, ή αν ο χρήστης δεν είναι έγκυρος τότε το transaction εγκαταλείπεται με σχετικό μήνυμα λάθους. Σημειώνεται εδώ ότι όλοι οι έγκυροι χρήστες μπορούν να ψηφίσουν σε όλες τις ψηφοφορίες.
         \item Στη συνέχεια γίνεται ο έλεγχος για double-voting δηλαδή έλεγχος για το αν ο τρέχων χρήστης έχει ήδη ψηφίσει για αυτή την ψηφοφορία. Για να δούμε πως γίνεται αυτό υποθέτουμε ότι έχουμε φτάσει στο τέλος των ελέγχων όπου ο χρήστης έχει καταχωρίσει την ψήφο του. Μόλις γίνει αυτό, υπολογίζεται το \textit{voting\_nullifier} το οποίο είναι hash του secret key με διαφορετικό domain για να ξεχωρίζει από το public key. Το hash αυτό πραγματοποιείται μέσω του pure circuit nullifier και δέχεται επίσης ως όρισμα μαζί με το secret key και το \textit{voting\_id} ώστε να είναι μοναδικό ανά χρήστη ανά ψηφοφορία. Το \textit{voting\_nullifier} καταχωρείται στο ledger σύνολο \textit{voting\_nulifiers}. Όταν λοιπόν το circuit φτάσει στον έλεγχο για double-voting ελέγχεται αν το hash με τη nullifier του secret key του τρέχοντος χρήστη για τη συγκεκριμένη ψηφοφορία υπάρχει στο σύνολο των \textit{voting\_nulifiers}. Αν ναι σημαίνει πως ο χρήστης έχει ήδη ψηφίσει οπότε εμφανίζεται μήνυμα λάθους και εγκαταλείπεται το transaction, διαφορετικά συνεχίζονται οι ενέργειες.
         \item Στη συνέχεια, ο typescript κώδικας της dapp φροντίζει ώστε να ενημερωθεί η private state του χρήστη με τη συγκεκριμένη ψήφο, έτσι ώστε η κλήση της witness μεταβλητής \textit{secret\_vote(voting\_id)} να επιστρέψει την ψήφο του ψηφοφόρου για τη συγκεκριμένη ψηφοφορία. Υπενθυμίζουμε ότι παρότι ο κώδικας της dapp θα ενημερώσει την private state με την επιλεγμένη ψήφο, στην πραγματικότητα ο χρήστης μπορεί να τροποποιήσει τον κώδικα και να αναθέσει στην επιλεγμένη ψήφο του όποια τιμή θέλει. Ο έλεγχος για το αν η ψήφος είναι έγκυρη, θα πραγματοποιηθεί σε επόμενο transaction.
@@ -612,11 +619,12 @@ circuit prove_eligibility(): Boolean {
     \end{enumerate}
     \item \textbf{publish\_vote}:
     \begin{enumerate}
-        \item Αρχικά ελέγχεται ότι η ψηφοφορία είναι ανοικτή μέσω σχετικής δήλωσης \textit{assert}. Αν δεν είναι ανοικτή, εμφανίζεται σχετικό μήνυμα λάθους και το transaction εγκαταλείπεται.
+        \item Αρχικά ελέγχεται ότι η τρέχουσα ημερομηνία είναι προγενέστερη της ημερομηνίας λήξης δημοσίευσης ψήφου για τη συγκεκριμένη ψηφοφορία, χρησιμοποιώντας τη συνάρτηση βιβλιοθήκης \textit{blockTimeLte} μέσω δήλωσης assert. Αν δεν είναι τότε εμφανίζεται κατάλληλο μήνυμα λάθους.
+        \item Ελέγχεται ότι η ψηφοφορία είναι ανοικτή μέσω σχετικής δήλωσης \textit{assert}. Αν δεν είναι ανοικτή, εμφανίζεται σχετικό μήνυμα λάθους και το transaction εγκαταλείπεται.
         \item Πραγματοποιούνται οι έλεγχοι (1), (2) από παραπάνω και αν κάποιος αποτύχει δηλαδή αν ο χρήστης είναι το πανεπιστήμιο, ή αν ο χρήστης δεν είναι έγκυρος τότε το transaction εγκαταλείπεται με σχετικό μήνυμα λάθους. 
         \item Ελέγχεται ότι ο χρήστης δεν έχει εκτελέσει δεύτερη φορά το ίδιο transaction , ακολουθώντας ίδια λογική με το cast\_vote transaction χρησιμοποιώντας nulifiers.
         \item Υπολογίζεται το hash της ψήφου, καλώντας το circuit hash\_secret\_vote με ορίσματα την ψήφο του χρήστη η οποία εξάγεται από τη witness μεταβλητή secret\_vote, το id της ψηφοφορίας και το secret key. Μετά ελέγχεται αν αυτό το hash υπάρχει στο σύνολο hashed\_votes στο ledger. Η ουσία εδώ είναι πως, αν τα δύο hashes δεν ταυτίζονται, σημαίνει πως μετά την εκτέλεση του cast\_vote ο χρήστης άλλαξε το private state του και δηλαδή την ψήφο του, γιατί όπως έχουμε εξηγήσει, την private state μπορεί να την αλλάζει ο κάθε χρήστης όπως θέλει. Τότε απορρίπτεται το transaction και εμφανίζεται κατάλληλο μήνυμα λάθους. Αν από την άλλη ταυτίζονται τα 2 hashes, τότε η ψήφος δεν άλλαξε και συνεχίζονται οι έλεγχοι.
-        \item Τέλος, ελέγχεται αν η ψήφος είναι έγκυρη, δηλαδή αν το secret\_vote για τη συγκεκριμένη ψηφοφορία ανήκει στο map voting\_options του συγκεκριμένου id ψηφοφορίας.\item Τέλος, γίνεται καταχώρηση της ψήφου στη ledger μεταβλητή \textit{voting\_results} όπου για το συγκεκριμένο \textit{voting\_id} αναζητάται το συγκεκριμένο \textit{vote\_option} και αυξάνεται ο μετρητής που του αντιστοιχεί κατά 1.
+        \item Ελέγχεται αν η ψήφος είναι έγκυρη, δηλαδή αν το secret\_vote για τη συγκεκριμένη ψηφοφορία ανήκει στο map voting\_options του συγκεκριμένου id ψηφοφορίας.\item Τέλος, γίνεται καταχώρηση της ψήφου στη ledger μεταβλητή \textit{voting\_results} όπου για το συγκεκριμένο \textit{voting\_id} αναζητάται το συγκεκριμένο \textit{vote\_option} και αυξάνεται ο μετρητής που του αντιστοιχεί κατά 1.
        \end{enumerate} 
 \end{itemize}
         Σε αυτό το σημείο, αξίζει να σημειωθεί πως οι ψήφοι σαν οντότητες δεν κρυπτογραφούνται, αλλά εισάγονται στο ledger σύνολο \textit{voting\_results}. Ωστόσο, υπάρχει πλήρης ανωνυμία καθώς η χρήση Merkle Tree εγγυάται ότι όταν ο τρέχων χρήστης αποδεικνύει εγκυρότητα βρίσκοντας ένα έγκυρο μονοπάτι μέσα στο δέντρο, δεν αποκαλύπτεται καμία πληροφορία για το public key του, και προφανώς για το secet key που χρησιμοποιήθηκε.
@@ -625,8 +633,11 @@ circuit prove_eligibility(): Boolean {
     
 
 \begin{lstlisting}[]
-export circuit create_voting(): [] {
+export circuit create_voting(publish_vote_expiration_time_v: Uint<64>, cast_vote_expiration_time_v: Uint<64>): [] {
     const organizer_public_key = disclose(public_key(local_secret_key()));
+
+    assert (publish_vote_expiration_time_v > cast_vote_expiration_time_v,
+        "Publish vote deadline must be after cast vote deadline");
 
     assert (university_public_key != organizer_public_key,
         "University cannot create votings");
@@ -641,25 +652,32 @@ export circuit create_voting(): [] {
     voting_states.insert(disclose(voting_id), VOTE_STATE.open);
     voting_options.insert(disclose(voting_id), default<Set<Bytes<32>>>);
     voting_results.insert(disclose(voting_id), default<Map<Bytes<32>, Counter>>);
+    publish_vote_expiration_time.insert(disclose(voting_id), disclose(publish_vote_expiration_time_v));
+    cast_vote_expiration_time.insert(disclose(voting_id), disclose(cast_vote_expiration_time_v));
     count.increment(1);
 }
 
 export circuit edit_question(voting_id: Bytes<32>, voting_question: Opaque<"string">): [] {
     const organizer_public_key = disclose(public_key(local_secret_key()));
+    
     assert (prove_eligibility(),
         "Not authorized");
+
     assert (voting_organizers.lookup(disclose(voting_id)) == organizer_public_key,
         "Not authorized");   
+
     voting_questions.insert(disclose(voting_id), disclose(voting_question));
 }
 
 export circuit add_option(voting_id: Bytes<32>, vote_option: Bytes<32>): [] {
-    const organizer_public_key = public_key(local_secret_key());   
+    const organizer_public_key = public_key(local_secret_key());
+    
     assert (prove_eligibility(),
         "Not authorized");
 
     assert (voting_organizers.lookup(disclose(voting_id)) == organizer_public_key,
         "Not authorized");   
+
     voting_options.lookup(disclose(voting_id)).insert(disclose(vote_option));
     voting_results.lookup(disclose(voting_id)).insert(disclose(vote_option), default<Counter>);
 
@@ -668,57 +686,86 @@ export circuit add_option(voting_id: Bytes<32>, vote_option: Bytes<32>): [] {
 
 export circuit close_voting(voting_id: Bytes<32>): [] {
     const organizer_public_key = public_key(local_secret_key());
+
     assert (prove_eligibility(),
         "Not authorized");   
+
     assert (voting_organizers.lookup(disclose(voting_id)) == organizer_public_key,
         "Not authorized");       
+
     const current_voting_state = voting_states.lookup(disclose(voting_id));
+
     assert (current_voting_state == VOTE_STATE.open,
-        "Voting phase is not open or has already closed");    
+        "Voting phase is not open or has already closed");
+    
     voting_states.insert(disclose(voting_id), VOTE_STATE.closed);
 }
 
 export circuit open_voting(voting_id: Bytes<32>): [] {
     const organizer_public_key = public_key(local_secret_key());
+
     assert (prove_eligibility(),
         "Not authorized");    
+
     assert (voting_organizers.lookup(disclose(voting_id)) == organizer_public_key,
         "Not authorized");       
+
     const current_voting_state = voting_states.lookup(disclose(voting_id));
+
     assert (current_voting_state == VOTE_STATE.closed,
-        "Voting phase is not closed or has already opened");    
+        "Voting phase is not closed or has already opened");
+    
     voting_states.insert(disclose(voting_id), VOTE_STATE.open);
 }
 
 
 export circuit cast_vote(voting_id: Bytes<32>): [] {
     const current_voting_state = voting_states.lookup(disclose(voting_id));
+    const current_expiration_time = cast_vote_expiration_time.lookup(disclose(voting_id));
+    assert (blockTimeLte(disclose(current_expiration_time)),
+        "The deadline for vote casting has expired");
+
     assert (current_voting_state == VOTE_STATE.open, 
         "Voting is not open");
+
     const voter_public_key = disclose(public_key(local_secret_key()));
+
     assert (prove_eligibility(), 
         "Not authorized!");
+
     const voting_nullifier = disclose(nullifier(local_secret_key(), voting_id));
+
     assert (!voting_nulifiers.member(voting_nullifier),
         "Already voted for this voting");
+
     voting_nulifiers.insert(disclose(voting_nullifier));
     const hashed_vote = disclose(hash_secret_vote(secret_vote(voting_id), voting_id, local_secret_key()));
     hashed_votes.insert(disclose(hashed_vote));
+
 }
 
 export circuit publish_vote(voting_id: Bytes<32>): [] {
     const current_voting_state = voting_states.lookup(disclose(voting_id));
+    const current_expiration_time = publish_vote_expiration_time.lookup(disclose(voting_id));
+    assert (blockTimeLte(disclose(current_expiration_time)),
+        "The deadline for vote publishing has expired");
+
     assert (current_voting_state == VOTE_STATE.closed, 
         "Voting is not closed");
+
     assert (prove_eligibility(), 
         "Not authorized!");   
+
     const publish_voting_nullifier = disclose(publish_nullifier(local_secret_key(), voting_id));
+
     assert (!publish_voting_nulifiers.member(publish_voting_nullifier),
         "Already published the vote for this voting");    
 
     const hashed_vote = disclose(hash_secret_vote(secret_vote(voting_id), voting_id, local_secret_key()));
+
     assert (hashed_votes.member(disclose(hashed_vote)),
         "Vote not correct!");     
+
     assert (voting_options.lookup(disclose(voting_id)).member(disclose(secret_vote(voting_id))),
         "Not a valid option!");
 
@@ -726,7 +773,6 @@ export circuit publish_vote(voting_id: Bytes<32>): [] {
     publish_voting_nulifiers.insert(publish_voting_nullifier);
 
 }
-
 \end{lstlisting}
 \captionof{figure}{Τα impure circuits του smart contract}
 \label{fig:voting_circuits}
@@ -755,9 +801,8 @@ export type Ledger = {
     lookup(key_0: Uint8Array): {
       isEmpty(): boolean;
       size(): bigint;
-      member(key_1: string): boolean;
-      lookup(key_1: string): string;
-      [Symbol.iterator](): Iterator<[string, string]>
+      member(elem_0: Uint8Array): boolean;
+      [Symbol.iterator](): Iterator<Uint8Array>
     }
   };
   voting_questions: {
@@ -774,8 +819,8 @@ export type Ledger = {
     lookup(key_0: Uint8Array): {
       isEmpty(): boolean;
       size(): bigint;
-      member(key_1: string): boolean;
-      lookup(key_1: string): { read(): bigint }
+      member(key_1: Uint8Array): boolean;
+      lookup(key_1: Uint8Array): { read(): bigint }
     }
   };
   eligible_voters: {
@@ -800,12 +845,38 @@ export type Ledger = {
     member(elem_0: Uint8Array): boolean;
     [Symbol.iterator](): Iterator<Uint8Array>
   };
+  publish_voting_nulifiers: {
+    isEmpty(): boolean;
+    size(): bigint;
+    member(elem_0: Uint8Array): boolean;
+    [Symbol.iterator](): Iterator<Uint8Array>
+  };
   voting_organizers: {
     isEmpty(): boolean;
     size(): bigint;
     member(key_0: Uint8Array): boolean;
     lookup(key_0: Uint8Array): Uint8Array;
     [Symbol.iterator](): Iterator<[Uint8Array, Uint8Array]>
+  };
+  hashed_votes: {
+    isEmpty(): boolean;
+    size(): bigint;
+    member(elem_0: Uint8Array): boolean;
+    [Symbol.iterator](): Iterator<Uint8Array>
+  };
+  publish_vote_expiration_time: {
+    isEmpty(): boolean;
+    size(): bigint;
+    member(key_0: Uint8Array): boolean;
+    lookup(key_0: Uint8Array): bigint;
+    [Symbol.iterator](): Iterator<[Uint8Array, bigint]>
+  };
+  cast_vote_expiration_time: {
+    isEmpty(): boolean;
+    size(): bigint;
+    member(key_0: Uint8Array): boolean;
+    lookup(key_0: Uint8Array): bigint;
+    [Symbol.iterator](): Iterator<[Uint8Array, bigint]>
   };
 }
 
@@ -817,6 +888,7 @@ export declare class Contract<T, W extends Witnesses<T> = Witnesses<T>> {
   initialState(context: __compactRuntime.ConstructorContext<T>,
                eligible_voter_public_keys_0: Uint8Array[]): __compactRuntime.ConstructorResult<T>;
 }
+
 \end{lstlisting}
 \captionof{figure}{Το αρχείο index.d.ts}
 \label{fig:voting_circuits}
@@ -832,12 +904,13 @@ export interface DeployedVoteGuardianAPI {
   readonly deployedContractAddress: ContractAddress;
   readonly state$: Observable<VoteGuardianDerivedState>;
 
-  cast_vote: (voting_id: Uint8Array, encrypted_vote: string) => Promise<void>;
+  cast_vote: (voting_id: Uint8Array) => Promise<void>;
   close_voting: (voting_id: Uint8Array) => Promise<void>;
   open_voting: (voting_id: Uint8Array) => Promise<void>;
   edit_question: (voting_id: Uint8Array, vote_question: string) => Promise<void>;
-  create_voting: () => Promise<void>;
-  add_option: (voting_id: Uint8Array, vote_option: string, index: string) => Promise<void>;
+  create_voting: (publish_vote_expiration_time: bigint, cast_vote_expiration_time: bigint) => Promise<void>;
+  add_option: (voting_id: Uint8Array, vote_option: Uint8Array) => Promise<void>;
+  publish_vote: (voting_id: Uint8Array) => Promise<void>;
 }
 \end{lstlisting}
 
@@ -984,7 +1057,9 @@ const initializeProviders = async (logger: Logger): Promise<VoteGuardianProvider
     \item Αν για τον συγκεκριμένο χρήστη, δηλαδή για το συγκεκριμένο ζεύγος username, password δεν υπάρχει καταχωρημένη τιμή στο πεδίο publicKey, σημαίνει πως ο χρήστης πρώτη φορά αυθεντικοποιείται, συνεπώς η διαδικασία είναι επιτυχής. Ταυτόχρονα εμφανίζεται στον χρήστη το secret key του με προτροπή να το αποθηκεύσει κάπου με ασφάλεια. Είναι σημαντικό να τονίσουμε εδώ ότι το secret key δεν φεύγει ποτέ από το τοπικό περιβάλλον του χρήστη, διότι υπολογίζεται τοπικά και αποστέλεται με request μόνο το hash του.
     \item Αν ο χρήστης δεν υπάρχει στη βάση ή αν έχει ήδη δηλώσει κάποιο άλλο secret key τότε η διαδικασία αποτυγχάνει και εμφανίζεται αντίστοιχο μήνυμα λάθους.
 \end{enumerate}
-Σημειώνουμε ότι υπάρχει και ένα δεύτερο endpoint που παρέχει ο server του πανεπιστημίου, το /register, μέσω του οποίου καταχωρούνται οι φοιτητές στη βάση δεδομένων
+Σημειώνουμε ότι υπάρχει και ένα δεύτερο endpoint που παρέχει ο server του πανεπιστημίου, το /register, μέσω του οποίου καταχωρούνται οι φοιτητές στη βάση δεδομένων. 
+
+Σε αυτό το σημείο πρέπει να σημειώσουμε ότι η αποθήκευση των public keys κάθε φοιτητή στη βάση δεδομένων αυξάνει το βαθμό κεντρικοποίησης του συστήματός μας. Ωστόσο, κατά την υποβολή και δημοσίευση ψήφων, επειδή η αυθεντικοποίηση γίνεται με χρήση Merkle Tree, δεν γίνεται ορατό στον έξω κόσμο το τρέχον public key που χρησιμοποείται. Δηλαδή, το γεγονός ότι υπάρχει συσχέτιση μεταξύ της ταυτότητας κάθε φοιτητή με το public key του δεν μπορεί να αποκαλύψει το τι ψήφισε κάθε φοιτητής επειδή η απόδειξη μηδενικής γνώσης που υποβάλλεται δεν περιέχει στις δημόσιες πληροφορίες το public key του φοιτητή που ψηφίζει ακόμα κι αν περιέχει την ψήφο του. Έτσι, ποτέ δεν υπάρχει συσχετισμός public key φοιτητή με ψήφο φοιτητή. 
 
 \subsection{Δημοσίευση του smart contract από το πανεπιστήμιο}
 Όπως έχουμε προαναφέρει η συμμετοχή του πανεπιστημίου στο σύστημα έγγειται στη δημιουργία και δημοσίευση του smart contract στο Midnight, έχοντας συγκεντρώσει τα public keys των έγγυρων χρηστών από τη βάση δεδομένων. Για να δημοσιεύσει ένα smart contract στο Midnight, το πανεπιστήμιο θα πρέπει να τρέξει τοπικά τον proof server όπως και όλοι οι voters ενώ θα χρειαστεί να έχει το δικό του wallet, καθώς το deploy ενός smart contract στο δίκτυο χρεώνεται. Καθώς όμως το πανεπιστήμιο δεν έχει user interface, δε θα χρησιμοποιήσει το lace wallet, αντιθέτως θα δημιουργήσει ένα δικό του wallet μέσω βιβλιοθηκών του Midnight, το οποίο ωστόσο θα έχει τις ίδιες δυνατότητες με το lace wallet. 
@@ -1178,7 +1253,22 @@ static async deploy(
   \label{fig:create_or_view}
 \end{figure}
 \subsection{Δημιουργία ψηφοφορίας}
-Καθώς δεν υπάρχουν ακόμα ψηφοφορίες, ο χρήστης επιλέγει τη δημιουργία μιας νέας ψηφοφορίας μέσω του transaction create\_voting. Με αυτή την επιλογή, θα εμφανιστεί το παράθυρο του lace wallet όπου ο χρήστης πρέπει να υπογράψει το transaction. Αυτό γίνεται σε κάθε transaction που πραγματοποιεί ο χρήστης και φαίνεται στο σχήμα \ref{fig:sign_transaction}.
+Καθώς δεν υπάρχουν ακόμα ψηφοφορίες, ο χρήστης επιλέγει τη δημιουργία μιας νέας ψηφοφορίας μέσω του transaction create\_voting. Πριν την υποβολή του transaction ομως, πρέπει να δηλώσει σε αντίστοιχο popup τις ημερομηνίες λήξης υποβολής ψηφοφορίας και δημοσίευσης ψηφοφορίας.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{cast_vote_deadline.png}
+  \caption{Ο χρήστης δηλώνει την ημερομηνία λήξης υποβολής ψήφων}
+  \label{fig:sign_transaction}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{publish_vote_deadline.png}
+  \caption{Ο χρήστης δηλώνει την ημερομηνία λήξης δημοσίευσης ψήφων}
+  \label{fig:sign_transaction}
+\end{figure}
+
+Με αυτές τις επιλογές, θα εμφανιστεί το παράθυρο του lace wallet όπου ο χρήστης πρέπει να υπογράψει το transaction. Αυτό γίνεται σε κάθε transaction που πραγματοποιεί ο χρήστης και φαίνεται στο σχήμα \ref{fig:sign_transaction}.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.7\linewidth]{sign_transaction.png}
@@ -1192,7 +1282,7 @@ static async deploy(
   \caption{Η αρχικά άδεια δημιουργημένη ψηφοφορία}
   \label{fig:no_question_yet}
 \end{figure}
-Επιλέγοντας τη συγκεκριμένη ψηφοφορία, ο χρήστης οδειγήτεαι στο μενού της, όπου υπάρχει η ακόλουθη εικόνα.
+Επιλέγοντας τη συγκεκριμένη ψηφοφορία, ο χρήστης οδηγείτεαι στο μενού της, όπου υπάρχει η ακόλουθη εικόνα.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.7\linewidth]{voting_menu.png}
@@ -1201,6 +1291,15 @@ static async deploy(
 \end{figure}
 
 Ο χρήστης μπορεί να ανοίξει ή να κλείσει την ψηφοφορία ανάλογα με την κατάσταση της, μπορεί να προσθέσει την ερώτηση της ψηφοφορίας, να προσθέσει επιλογές, να ψηφίσει, να δημοσιεύεσει την ψήφο του, να δει τα αποτελέσματα της ψηφοφορίας (τα οποία όπως έχουμε εγηγήσει εμφανίζονται μετά την λήξη της έχοντας εκτελέσει publish\_vote) και να δει την ψήφο που έχει επιλέξει για τη συγκεκριμένη ψηφοφορία. 
+
+Επίσης ο χρήστης βλέπει στο μενού της ψηφοφορίας τις ημερομηνίες λήξης υποβολής και δημοσίευσης ψήφου.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{new_overview.png}
+  \caption{Οι ημερομηνίες λήξης υποβολής και δημοσίευσης ψήφου}
+  \label{fig:voting_menu}
+\end{figure}
+
 
 \subsection{Προσθήκη ερώτησης}
 Ο χρήστης επιλέγει το κουμπί QUESTION οπότε οδηγείται στο μενού επεξεργασίας της ερώτησης όπως φαίνεται στο σχήμα \ref{fig:edit_question}. Ας πούμε πως η ερώτηση είναι η question1.
@@ -1313,6 +1412,15 @@ static async deploy(
   \label{fig:user_outside_merkle_Tree_tries_to_vote}
 \end{figure}
 
+\subsection{Κακόβουλη χρήση - Υποβολή ψήφου μετά την ημερομηνία λήξης}
+Σε περίπτωση που ο χρήστης υποβάλλει την ψήφο μετά την ημερομηνία λήξης υποβολής ψήφου για τη συγκεκριμένη ψηφοφορία τότε εμφανίζεται κατάλληλο μήνυμα λάθους το οποίο προέρχεται από το smart contract όπως έχουμε δει.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{cast_vote_expired.png}
+  \caption{Χρήστης ψηφίζει μετά το χρονικό deadline}
+  \label{fig:cast_vote_expired}
+\end{figure}
+
 
 
 \section{Δημοσίευση ψήφου}
@@ -1368,6 +1476,15 @@ static async deploy(
   \includegraphics[width=0.7\linewidth]{change_vote.png}
   \caption{Ο χρήστης άλλαξε το private state της ψήφου και προσπάθησε να δημοσιεύσει}
   \label{fig:change_vote}
+\end{figure}
+
+\subsection{Κακόβουλη χρήση - Υποβολή ψήφου μετά την ημερομηνία λήξης}
+Σε περίπτωση που ο χρήστης δημοσιεύσει την ψήφο μετά την ημερομηνία λήξης δημοσίευσης ψήφου για τη συγκεκριμένη ψηφοφορία τότε εμφανίζεται κατάλληλο μήνυμα λάθους το οποίο προέρχεται από το smart contract όπως έχουμε δει.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{publish_vote_expired.png}
+  \caption{Χρήστης δημοσιεύει την ψήφο μετά το χρονικό deadline}
+  \label{fig:publish_vote_expired}
 \end{figure}
 
 \chapter{Επίλογος}
