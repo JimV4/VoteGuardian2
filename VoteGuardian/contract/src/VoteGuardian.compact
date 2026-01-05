@@ -19,6 +19,7 @@ export ledger publish_voting_nulifiers: Set<Bytes<32>>;         // Unique tokens
 export ledger voting_organizers: Map<Bytes<32>, Bytes<32>>;        // Map with the votings of each organizer
 export ledger hashed_votes: Set<Bytes<32>>;
 export ledger publish_vote_expiration_time: Map<Bytes<32>, Uint<64>>;
+export ledger cast_vote_expiration_time: Map<Bytes<32>, Uint<64>>;
 
 // Constructor initializes the ADTs and predefines eligible voters
 constructor(eligible_voter_public_keys: Vector<5, Bytes<32>>) {
@@ -33,6 +34,7 @@ constructor(eligible_voter_public_keys: Vector<5, Bytes<32>>) {
     hashed_votes.resetToDefault();
     publish_voting_nulifiers.resetToDefault();
     publish_vote_expiration_time.resetToDefault();
+    cast_vote_expiration_time.resetToDefault();
     count.increment(1);
 
     for (const v of disclose(eligible_voter_public_keys)) {
@@ -67,8 +69,11 @@ circuit voting_belongs_to_organizer(voting_id: Bytes<32>, organizer_public_key: 
 }
 
 
-export circuit create_voting(expiration_time: Uint<64>): [] {
+export circuit create_voting(publish_vote_expiration_time_v: Uint<64>, cast_vote_expiration_time_v: Uint<64>): [] {
     const organizer_public_key = disclose(public_key(local_secret_key()));
+
+    assert (publish_vote_expiration_time_v > cast_vote_expiration_time_v,
+        "Publish vote deadline must be after cast vote deadline");
 
     assert (university_public_key != organizer_public_key,
         "University cannot create votings");
@@ -83,7 +88,8 @@ export circuit create_voting(expiration_time: Uint<64>): [] {
     voting_states.insert(disclose(voting_id), VOTE_STATE.open);
     voting_options.insert(disclose(voting_id), default<Set<Bytes<32>>>);
     voting_results.insert(disclose(voting_id), default<Map<Bytes<32>, Counter>>);
-    publish_vote_expiration_time.insert(disclose(voting_id), disclose(expiration_time));
+    publish_vote_expiration_time.insert(disclose(voting_id), disclose(publish_vote_expiration_time_v));
+    cast_vote_expiration_time.insert(disclose(voting_id), disclose(cast_vote_expiration_time_v));
     count.increment(1);
 }
 
@@ -152,6 +158,9 @@ export circuit open_voting(voting_id: Bytes<32>): [] {
 // Function to cast a vote, only accessible when voting is open and the voter hasn’t already voted
 export circuit cast_vote(voting_id: Bytes<32>): [] {
     const current_voting_state = voting_states.lookup(disclose(voting_id));
+    const current_expiration_time = cast_vote_expiration_time.lookup(disclose(voting_id));
+    assert (blockTimeLte(disclose(current_expiration_time)),
+        "The deadline for vote casting has expired");
 
     assert (current_voting_state == VOTE_STATE.open, 
         "Voting is not open");

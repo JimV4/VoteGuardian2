@@ -128,6 +128,7 @@ export type VoteGuardianDerivedState = {
   readonly hashedVotes: Ledger['hashed_votes'];
   readonly publishVotingNulifiers: Ledger['publish_voting_nulifiers'];
   readonly publishVoteExpirationTime: Ledger['publish_vote_expiration_time'];
+  readonly castVoteExpirationTime: Ledger['cast_vote_expiration_time'];
 
   readonly votingList: Voting[];
 };

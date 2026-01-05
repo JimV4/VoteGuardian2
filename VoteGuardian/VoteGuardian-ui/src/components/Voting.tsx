@@ -399,6 +399,14 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
                     : 'closed'
                   : 'No State'}
               </Typography>
+              <Typography color="primary">
+                Cast vote until{' '}
+                {voteGuardianState && voteGuardianState.castVoteExpirationTime.member(votingIdBytes)
+                  ? new Date(
+                      Number(voteGuardianState.castVoteExpirationTime.lookup(votingIdBytes)) * 1000,
+                    ).toLocaleString()
+                  : 'No cast vote expiration time'}
+              </Typography>
 
               <Typography color="primary">
                 Publish vote until{' '}

@@ -5,7 +5,14 @@
       "pure": false,
       "arguments": [
         {
-          "name": "expiration_time",
+          "name": "publish_vote_expiration_time_v",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          }
+        },
+        {
+          "name": "cast_vote_expiration_time_v",
           "type": {
             "type-name": "Uint",
             "maxval": 18446744073709551615

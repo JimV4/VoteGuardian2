@@ -25,11 +25,18 @@ export const ViewVotingsCreateVoting: React.FC<Readonly<ViewVotingsCreateVotingP
   const [voteGuardianState, setVoteGuardianState] = useState<VoteGuardianDerivedState>();
   const [secretKey, setSecretKey] = useState<string>();
   // 1. Add these new states
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [expiryDate, setExpiryDate] = useState('');
+  // const [isDialogOpen, setIsDialogOpen] = useState(false);
+  // const [expiryDate, setExpiryDate] = useState('');
 
   // 2. Modify the button click to open the dialog instead of calling the API directly
-  const handleOpenDialog = () => setIsDialogOpen(true);
+  // const handleOpenDialog = () => setIsDialogOpen(true);
+  // Keep your existing isDialogOpen
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1); // 1 = Cast Deadline, 2 = Publish Deadline
+
+  // Two separate date states
+  const [castExpiryDate, setCastExpiryDate] = useState('');
+  const [publishExpiryDate, setPublishExpiryDate] = useState('');
 
   const voteGuardianApiProvider = useDeployedVoteGuardianContext();
   const [isWorking, setIsWorking] = useState(false);
@@ -57,13 +64,14 @@ export const ViewVotingsCreateVoting: React.FC<Readonly<ViewVotingsCreateVotingP
   };
 
   const onCreateVoting = useCallback(
-    async (timestamp: number) => {
+    async (timestamp1: number, timestamp2: number) => {
       setIsWorking(true);
       try {
         if (deployedVoteGuardianAPI) {
           console.log('before vreate');
           setIsWorking(true);
-          await deployedVoteGuardianAPI.create_voting(BigInt(timestamp));
+          await deployedVoteGuardianAPI.create_voting(BigInt(timestamp1), BigInt(timestamp2));
+
           console.log('after vreate');
           navigate('/votings');
         }
@@ -84,14 +92,41 @@ export const ViewVotingsCreateVoting: React.FC<Readonly<ViewVotingsCreateVotingP
   );
 
   // 4. Helper to handle the "Confirm" button in the popup
-  const handleConfirmCreate = () => {
-    if (!expiryDate) {
-      alert('Please select a date and time');
-      return;
+  // const handleConfirmCreate = () => {
+  //   if (!expiryDate) {
+  //     alert('Please select a date and time');
+  //     return;
+  //   }
+  //   // Convert ISO string to Unix Timestamp (Seconds)
+  //   const unixTimestamp = Math.floor(new Date(expiryDate).getTime() / 1000);
+  //   setIsDialogOpen(false);
+
+  //   onCreateVoting(unixTimestamp);
+  // };
+  const handleOpenDialog = () => {
+    setCastExpiryDate('');
+    setPublishExpiryDate('');
+    setCurrentStep(1); // Reset to first step
+    setIsDialogOpen(true);
+  };
+
+  const handleNextStep = () => {
+    if (currentStep === 1) {
+      if (!castExpiryDate) return alert('Please set a casting deadline');
+      setCurrentStep(2); // Move to the second dialog view
+    } else {
+      if (!publishExpiryDate) return alert('Please set a publishing deadline');
+
+      // Convert dates to timestamps
+      const castTimestamp = Math.floor(new Date(castExpiryDate).getTime() / 1000);
+      const publishTimestamp = Math.floor(new Date(publishExpiryDate).getTime() / 1000);
+
+      setIsDialogOpen(false); // Close dialog
+
+      // Call your API with both timestamps (assuming your API supports two)
+      // If your API only takes one, pass the relevant one here:
+      onCreateVoting(publishTimestamp, castTimestamp);
     }
-    // Convert ISO string to Unix Timestamp (Seconds)
-    const unixTimestamp = Math.floor(new Date(expiryDate).getTime() / 1000);
-    onCreateVoting(unixTimestamp);
   };
   // Subscribes to the `voteGuardianDeployment$` observable so that we can receive updates on the deployment.
   useEffect(() => {
@@ -213,32 +248,32 @@ export const ViewVotingsCreateVoting: React.FC<Readonly<ViewVotingsCreateVotingP
         </Backdrop>
       </Stack>
       <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)}>
-        <DialogTitle>Add public vote expiration date</DialogTitle>
-        {/* <DialogContent sx={{ mt: 2, pt: 1 }}>
-          <TextField
-            fullWidth
-            type="datetime-local"
-            label="Expiration Date & Time"
-            InputLabelProps={{ shrink: true }}
-            value={expiryDate}
-            onChange={(e) => setExpiryDate(e.target.value)}
-          />
-        </DialogContent> */}
+        <DialogTitle>{currentStep === 1 ? 'Step 1: Cast Vote Deadline' : 'Step 2: Publish Vote Deadline'}</DialogTitle>
+
         <DialogContent>
           <Typography variant="caption" color="textSecondary" sx={{ mb: 1, display: 'block' }}>
-            Add expiration date for vote publishing
+            {currentStep === 1 ? 'Set the cast vote deadline' : 'Set the publish vote deadline'}
           </Typography>
+
           <TextField
             fullWidth
             type="datetime-local"
-            value={expiryDate}
-            onChange={(e) => setExpiryDate(e.target.value)}
+            // Toggle between the two state variables based on the step
+            value={currentStep === 1 ? castExpiryDate : publishExpiryDate}
+            onChange={(e) =>
+              currentStep === 1 ? setCastExpiryDate(e.target.value) : setPublishExpiryDate(e.target.value)
+            }
           />
         </DialogContent>
+
         <DialogActions>
           <Button onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleConfirmCreate} variant="contained" disabled={!expiryDate}>
-            Create
+          <Button
+            onClick={handleNextStep}
+            variant="contained"
+            disabled={currentStep === 1 ? !castExpiryDate : !publishExpiryDate}
+          >
+            {currentStep === 1 ? 'Next' : 'Create'}
           </Button>
         </DialogActions>
       </Dialog>
