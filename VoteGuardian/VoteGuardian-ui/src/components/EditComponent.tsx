@@ -133,7 +133,7 @@ export const EditComponent: React.FC<Readonly<EditComponentProps>> = ({ voteGuar
             console.log(`option bytes: ${voteOptionUint8}`);
             console.log(`option str: ${voteOption}`);
             await voteGuardianApiProvider.setPrivateStateVote(votingId!, voteOption!);
-            // await voteGuardianApiProvider.setPrivateStateVote(votingId!, 'option1');
+            // await voteGuardianApiProvider.setPrivateStateVote(votingId!, 'option2');
             await deployedVoteGuardianAPI.cast_vote(votingIdBytes);
           }
         }
@@ -211,7 +211,7 @@ export const EditComponent: React.FC<Readonly<EditComponentProps>> = ({ voteGuar
         </Typography>
       )}
 
-      {action === 'option' &&
+      {/* {action === 'option' &&
         (voteGuardianState?.votingOptions?.isEmpty?.() ? (
           <Typography data-testid="vote-guardian-option" color="black">
             No options yet.
@@ -238,9 +238,48 @@ export const EditComponent: React.FC<Readonly<EditComponentProps>> = ({ voteGuar
               </Typography>
             );
           })()
-        ))}
+        ))} */}
+      {action === 'option' &&
+        (() => {
+          try {
+            // 1. Check if votingOptions map exists at all
+            if (!voteGuardianState?.votingOptions) {
+              throw new Error('Map not initialized');
+            }
 
-      {action === 'cast' &&
+            // 2. Attempt the lookup
+            const optionsIterable = voteGuardianState.votingOptions.lookup?.(votingIdBytes);
+
+            // 3. Convert to array (safely checking if iterable exists)
+            const options = optionsIterable ? Array.from(optionsIterable as Iterable<Uint8Array>) : [];
+
+            // 4. If we have options, map them to Typography
+            if (options.length > 0) {
+              return options.map((key, index) => {
+                const keyStr = utils.fromBytes32(key);
+                return (
+                  <Typography key={keyStr} data-testid="vote-guardian-option" minHeight={20} color="black">
+                    {index + 1}. {keyStr}
+                  </Typography>
+                );
+              });
+            }
+
+            // 5. If array is empty, fall through to the default return below
+          } catch (error) {
+            // This catches "Map undefined" or indexing errors
+            console.warn('Midnight State Syncing:', error);
+          }
+
+          // Default "No options" view for empty arrays OR caught errors
+          return (
+            <Typography data-testid="vote-guardian-option" color="black">
+              No options yet.
+            </Typography>
+          );
+        })()}
+
+      {/* {action === 'cast' &&
         (() => {
           const optionsIterable = voteGuardianState?.votingOptions?.lookup?.(votingIdBytes);
           const options = optionsIterable ? Array.from(optionsIterable as Iterable<Uint8Array>) : [];
@@ -278,6 +317,62 @@ export const EditComponent: React.FC<Readonly<EditComponentProps>> = ({ voteGuar
               </Button>
             </>
           ) : (
+            <Typography data-testid="vote-guardian-option" color="black">
+              No options yet.
+            </Typography>
+          );
+        })()} */}
+      {action === 'cast' &&
+        (() => {
+          try {
+            // 1. Safety check for the map
+            if (!voteGuardianState?.votingOptions) {
+              throw new Error('Map not ready');
+            }
+
+            const optionsIterable = voteGuardianState.votingOptions.lookup?.(votingIdBytes);
+            const options = optionsIterable ? Array.from(optionsIterable as Iterable<Uint8Array>) : [];
+
+            if (options.length > 0) {
+              return (
+                <>
+                  <RadioGroup value={selectedOption} onChange={(e) => setSelectedOption(e.target.value)}>
+                    {options.map((keyBytes, index) => {
+                      const keyStr = utils.fromBytes32(keyBytes);
+                      return (
+                        <FormControlLabel
+                          key={keyStr}
+                          value={keyStr}
+                          control={<Radio />}
+                          label={
+                            <Typography data-testid="vote-guardian-option" minHeight={20} color="black">
+                              {index + 1}. {keyStr}
+                            </Typography>
+                          }
+                        />
+                      );
+                    })}
+                  </RadioGroup>
+
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    onClick={() => selectedOption && onAdd('cast', selectedOption).catch(console.error)}
+                    disabled={!selectedOption}
+                    sx={{ mt: 2 }}
+                  >
+                    Vote
+                  </Button>
+                </>
+              );
+            }
+          } catch (error) {
+            console.warn('Cast view lookup failed, likely still syncing:', error);
+          }
+
+          // Fallback if lookup fails or options are empty
+          return (
             <Typography data-testid="vote-guardian-option" color="black">
               No options yet.
             </Typography>
