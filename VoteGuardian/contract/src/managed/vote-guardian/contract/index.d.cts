@@ -25,8 +25,6 @@ export type ImpureCircuits<T> = {
   add_option(context: __compactRuntime.CircuitContext<T>,
              voting_id_0: Uint8Array,
              vote_option_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
-  close_voting(context: __compactRuntime.CircuitContext<T>,
-               voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
   open_voting(context: __compactRuntime.CircuitContext<T>,
               voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
   cast_vote(context: __compactRuntime.CircuitContext<T>, voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
@@ -47,8 +45,6 @@ export type Circuits<T> = {
   add_option(context: __compactRuntime.CircuitContext<T>,
              voting_id_0: Uint8Array,
              vote_option_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
-  close_voting(context: __compactRuntime.CircuitContext<T>,
-               voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
   open_voting(context: __compactRuntime.CircuitContext<T>,
               voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;
   cast_vote(context: __compactRuntime.CircuitContext<T>, voting_id_0: Uint8Array): __compactRuntime.CircuitResults<T, []>;

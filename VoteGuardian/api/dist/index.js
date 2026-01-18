@@ -260,18 +260,18 @@ export class VoteGuardianAPI {
      * @remarks
      * This method can fail during local circuit execution if the voting is not open.
      */
-    async close_voting(voting_id) {
-        this.logger?.info('close voting...');
-        console.log('here');
-        const txData = await this.deployedContract.callTx.close_voting(voting_id);
-        this.logger?.trace({
-            transactionAdded: {
-                circuit: 'close_voting',
-                txHash: txData.public.txHash,
-                blockHeight: txData.public.blockHeight,
-            },
-        });
-    }
+    // async close_voting(voting_id: Uint8Array): Promise<void> {
+    //   this.logger?.info('close voting...');
+    //   console.log('here');
+    //   const txData = await this.deployedContract.callTx.close_voting(voting_id);
+    //   this.logger?.trace({
+    //     transactionAdded: {
+    //       circuit: 'close_voting',
+    //       txHash: txData.public.txHash,
+    //       blockHeight: txData.public.blockHeight,
+    //     },
+    //   });
+    // }
     async open_voting(voting_id) {
         this.logger?.info('open voting...');
         console.log('here');

@@ -45,7 +45,7 @@ export interface DeployedVoteGuardianAPI {
   readonly state$: Observable<VoteGuardianDerivedState>;
 
   cast_vote: (voting_id: Uint8Array) => Promise<void>;
-  close_voting: (voting_id: Uint8Array) => Promise<void>;
+  // close_voting: (voting_id: Uint8Array) => Promise<void>;
   open_voting: (voting_id: Uint8Array) => Promise<void>;
   edit_question: (voting_id: Uint8Array, vote_question: string) => Promise<void>;
   create_voting: (publish_vote_expiration_time: bigint, cast_vote_expiration_time: bigint) => Promise<void>;
@@ -330,20 +330,20 @@ export class VoteGuardianAPI implements DeployedVoteGuardianAPI {
    * This method can fail during local circuit execution if the voting is not open.
    */
 
-  async close_voting(voting_id: Uint8Array): Promise<void> {
-    this.logger?.info('close voting...');
-    console.log('here');
+  // async close_voting(voting_id: Uint8Array): Promise<void> {
+  //   this.logger?.info('close voting...');
+  //   console.log('here');
 
-    const txData = await this.deployedContract.callTx.close_voting(voting_id);
+  //   const txData = await this.deployedContract.callTx.close_voting(voting_id);
 
-    this.logger?.trace({
-      transactionAdded: {
-        circuit: 'close_voting',
-        txHash: txData.public.txHash,
-        blockHeight: txData.public.blockHeight,
-      },
-    });
-  }
+  //   this.logger?.trace({
+  //     transactionAdded: {
+  //       circuit: 'close_voting',
+  //       txHash: txData.public.txHash,
+  //       blockHeight: txData.public.blockHeight,
+  //     },
+  //   });
+  // }
 
   async open_voting(voting_id: Uint8Array): Promise<void> {
     this.logger?.info('open voting...');

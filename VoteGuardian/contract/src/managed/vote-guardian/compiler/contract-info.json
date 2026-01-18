@@ -76,24 +76,6 @@
       }
     },
     {
-      "name": "close_voting",
-      "pure": false,
-      "arguments": [
-        {
-          "name": "voting_id",
-          "type": {
-            "type-name": "Bytes",
-            "length": 32
-          }
-        }
-      ],
-      "result-type": {
-        "type-name": "Tuple",
-        "types": [
-        ]
-      }
-    },
-    {
       "name": "open_voting",
       "pure": false,
       "arguments": [

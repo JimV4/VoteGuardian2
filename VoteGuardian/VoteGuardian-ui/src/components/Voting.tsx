@@ -202,7 +202,7 @@ export const Voting: React.FC<Readonly<VotingProps>> = ({ voteGuardianDeployment
         if (deployedVoteGuardianAPI) {
           setIsWorking(true);
           if (state === 'open') {
-            await deployedVoteGuardianAPI.close_voting(votingIdBytes);
+            // await deployedVoteGuardianAPI.close_voting(votingIdBytes);
             setVotingState('closed');
           } else {
             await deployedVoteGuardianAPI.open_voting(votingIdBytes);
