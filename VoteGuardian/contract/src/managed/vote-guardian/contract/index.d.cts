@@ -109,14 +109,24 @@ export type Ledger = {
   voting_nulifiers: {
     isEmpty(): boolean;
     size(): bigint;
-    member(elem_0: Uint8Array): boolean;
-    [Symbol.iterator](): Iterator<Uint8Array>
+    member(key_0: Uint8Array): boolean;
+    lookup(key_0: Uint8Array): {
+      isEmpty(): boolean;
+      size(): bigint;
+      member(elem_0: Uint8Array): boolean;
+      [Symbol.iterator](): Iterator<Uint8Array>
+    }
   };
   publish_voting_nulifiers: {
     isEmpty(): boolean;
     size(): bigint;
-    member(elem_0: Uint8Array): boolean;
-    [Symbol.iterator](): Iterator<Uint8Array>
+    member(key_0: Uint8Array): boolean;
+    lookup(key_0: Uint8Array): {
+      isEmpty(): boolean;
+      size(): bigint;
+      member(elem_0: Uint8Array): boolean;
+      [Symbol.iterator](): Iterator<Uint8Array>
+    }
   };
   voting_organizers: {
     isEmpty(): boolean;
@@ -128,8 +138,13 @@ export type Ledger = {
   hashed_votes: {
     isEmpty(): boolean;
     size(): bigint;
-    member(elem_0: Uint8Array): boolean;
-    [Symbol.iterator](): Iterator<Uint8Array>
+    member(key_0: Uint8Array): boolean;
+    lookup(key_0: Uint8Array): {
+      isEmpty(): boolean;
+      size(): bigint;
+      member(elem_0: Uint8Array): boolean;
+      [Symbol.iterator](): Iterator<Uint8Array>
+    }
   };
   publish_vote_expiration_time: {
     isEmpty(): boolean;
