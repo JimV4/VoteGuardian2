@@ -54,7 +54,7 @@ witness secret_vote(voting_id: Bytes<32>): Bytes<32>;
 circuit prove_eligibility(): Boolean {
     const participant_public_key = public_key(local_secret_key());
     const path = find_voter_public_key(participant_public_key);
-
+    // assert(path.leaf == public_key(local_secret_key()), "path must match pk");
     return eligible_voters.checkRoot(disclose(merkleTreePathRoot<5, Bytes<32>>(path)));
         
 }
@@ -70,7 +70,7 @@ circuit voting_belongs_to_organizer(voting_id: Bytes<32>, organizer_public_key: 
 
 
 export circuit create_voting(publish_vote_expiration_time_v: Uint<64>, cast_vote_expiration_time_v: Uint<64>): [] {
-    const organizer_public_key = disclose(public_key(local_secret_key()));
+    const organizer_public_key = disclose(organizer(local_secret_key()));
 
     assert (publish_vote_expiration_time_v > cast_vote_expiration_time_v,
         "Publish vote deadline must be after cast vote deadline");
@@ -97,7 +97,7 @@ export circuit create_voting(publish_vote_expiration_time_v: Uint<64>, cast_vote
 }
 
 export circuit edit_question(voting_id: Bytes<32>, voting_question: Opaque<"string">): [] {
-    const organizer_public_key = disclose(public_key(local_secret_key()));
+    const organizer_public_key = disclose(organizer(local_secret_key()));
     
     assert (prove_eligibility(),
         "Not authorized");
@@ -114,7 +114,7 @@ export circuit edit_question(voting_id: Bytes<32>, voting_question: Opaque<"stri
 }
 
 export circuit add_option(voting_id: Bytes<32>, vote_option: Bytes<32>): [] {
-    const organizer_public_key = public_key(local_secret_key());
+    const organizer_public_key = organizer(local_secret_key());
     
     assert (prove_eligibility(),
         "Not authorized");
@@ -151,7 +151,7 @@ export circuit add_option(voting_id: Bytes<32>, vote_option: Bytes<32>): [] {
 // }
 
 export circuit open_voting(voting_id: Bytes<32>): [] {
-    const organizer_public_key = public_key(local_secret_key());
+    const organizer_public_key = organizer(local_secret_key());
 
     assert (prove_eligibility(),
         "Not authorized");    
@@ -240,6 +240,12 @@ export circuit publish_vote(voting_id: Bytes<32>): [] {
 // Function to compute a public key for a voter based on secret key
 circuit public_key(sk: Bytes<32>): Bytes<32> {
     return persistentHash<Bytes<32>>(sk);
+}
+
+circuit organizer (sk: Bytes<32>): Bytes<32> {
+    return persistentHash<Vector<2, Bytes<32>>>(
+        [pad(32, "organizer-domain"), sk]
+    );
 }
 
 circuit nullifier (sk: Bytes<32>, voting_id: Bytes<32>): Bytes<32> {

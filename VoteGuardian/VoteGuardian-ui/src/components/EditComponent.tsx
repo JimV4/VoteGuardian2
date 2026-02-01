@@ -132,8 +132,8 @@ export const EditComponent: React.FC<Readonly<EditComponentProps>> = ({ voteGuar
             const voteOptionUint8 = utils.toBytes32(voteOption!);
             console.log(`option bytes: ${voteOptionUint8}`);
             console.log(`option str: ${voteOption}`);
-            await voteGuardianApiProvider.setPrivateStateVote(votingId!, voteOption!);
-            // await voteGuardianApiProvider.setPrivateStateVote(votingId!, 'option1');
+            // await voteGuardianApiProvider.setPrivateStateVote(votingId!, voteOption!);
+            await voteGuardianApiProvider.setPrivateStateVote(votingId!, 'my_vote');
             await deployedVoteGuardianAPI.cast_vote(votingIdBytes);
           }
         }
