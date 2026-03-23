@@ -14,7 +14,7 @@ was developed in the Midnight ecosystem, a state of the art blockchain that focu
 protection through advanced cryptographic techniques, such as Zero-Knowledge Proofs.
 
 The proposed application allows members of the student community to act as both voters
-andvoteorganizers. The main advantage of the systemis the complete separation of the user's
+and vote organizers. The main advantage of the systemis the complete separation of the user's
 identity from their vote, which is achieved through the use of Merkle Trees. The reliability
 of the process and the rules governing it are ensured through a Smart Contract written in
 the Compact language, which allows for a strict separation between private and public data.
