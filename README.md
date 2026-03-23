@@ -3,15 +3,17 @@
 A decentralized application for student voting on Midnight Blockchain. This project is my diploma thesis on NTUA ECE
 
 
-Traditional voting methods,bothpaper-basedandconventionalelectronic,presentsignificant
+Traditional voting methods,bothpaper-based and conventional electronic,present significant
 challenges in terms of security and transparency. Reliance on central servers and databases
-carries risks of violating voter anonymity, whilecentralized managementmakesresultsvulnerable
+carries risks of violating voter anonymity, while centralized management makes results vulnerable
 to tampering or human counting errors, without providing participants with a mechanism for
 independent verification.
+
 In this thesis, a decentralized solution based on blockchain technology is designed and
-implemented,whichensuresimmutabilityandtransparencybydesign.Specifically,theapplication
+implemented,which ensures immutability and transparency by design.Specifically,the application
 was developed in the Midnight ecosystem, a state of the art blockchain that focuses on privacy
 protection through advanced cryptographic techniques, such as Zero-Knowledge Proofs.
+
 The proposed application allows members of the student community to act as both voters
 andvoteorganizers. The main advantage of the systemis the complete separation of the user's
 identity from their vote, which is achieved through the use of Merkle Trees. The reliability
