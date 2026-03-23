@@ -1,9 +1,8 @@
 # VoteGuardian
 
-A decentralized application for student voting on Midnight Blockchain. This project is my diploma thesis on NTUA ECE
+A privacy-preserving decentralized application for secure student voting on the Midnight blockchain, developed as my Diploma Thesis at the School of Electrical and Computer Engineering, NTUA.
 
-
-Traditional voting methods,bothpaper-based and conventional electronic,present significant
+Traditional voting methods, both paper-based and conventional electronic,present significant
 challenges in terms of security and transparency. Reliance on central servers and databases
 carries risks of violating voter anonymity, while centralized management makes results vulnerable
 to tampering or human counting errors, without providing participants with a mechanism for
